@@ -602,24 +602,49 @@ function startStars() {
 /* ═══════════ APP: LETTER ═══════════ */
 const LETTER = [
   { c: 'greet', t: 'Dear Reet,' },
-  { t: "Happy Friendship Day. I built you an entire operating system because a card felt a little insufficient." },
-  { t: "Here's the thing about you — you make people feel like the version of themselves they were hoping to be. You listen properly. You remember the small stuff. You show up without being asked, and you never once make it feel like a favour." },
-  { t: "Thank you for the 2am voice notes, for laughing at jokes that genuinely were not funny, and for being the person I want to tell things to first." },
-  { t: "Every app on this desktop is something I think about when I think about you. Poke around. There's more hidden in the terminal." },
+  { t: "Happy Friendship Day. I built you an entire operating system, because a card felt a little insufficient." },
+  { t: "Here's the thing about you — you make people feel like the version of themselves they were hoping to be. You listen properly, the way most people don't. You remember the small stuff nobody else bothered to keep. You show up without being asked, and you have never once made it feel like a favour." },
+  { t: "Thank you for the late night messages. For laughing at jokes that genuinely were not funny. For being the person I want to tell things to first — before I've worked out how I feel about them, before they're even a story worth telling." },
+  { t: "Friendship gets spoken about like it's the smaller thing. It isn't. Nobody signs anything. You just choose it, quietly, over and over, with nothing owed either way. That's the part that gets me." },
+  { t: "Every app on this desktop is something I think about when I think about you. The photos worth keeping. The songs that sound like specific evenings. A list of things we still haven't done — add to it, it saves." },
+  { t: "Poke around. There's more hidden in the terminal than it lets on." },
   { c: 'sig', t: 'always your person ✦' },
 ];
 
 function initLetter(win) {
   const body = win.querySelector('#letterBody');
+  const hint = win.querySelector('#letterHint');
   body.innerHTML = '';
-  let bi = 0;
 
-  function nextBlock() {
-    if (bi >= LETTER.length) return;
-    const block = LETTER[bi];
+  let bi = 0;
+  let timer = null;
+  let finished = false;
+
+  function makeEl(block) {
     const el = document.createElement(block.c ? 'span' : 'p');
     if (block.c) el.className = block.c;
     else el.style.marginBottom = '.9rem';
+    return el;
+  }
+
+  // Render everything at once and stop typing — for anyone who'd rather just read.
+  function finish() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    body.innerHTML = '';
+    LETTER.forEach(block => {
+      const el = makeEl(block);
+      el.textContent = block.t;
+      body.appendChild(el);
+    });
+    if (hint) hint.remove();
+  }
+
+  function nextBlock() {
+    if (bi >= LETTER.length) { finished = true; if (hint) hint.remove(); return; }
+    const block = LETTER[bi];
+    const el = makeEl(block);
     body.appendChild(el);
 
     const caret = document.createElement('span');
@@ -627,21 +652,24 @@ function initLetter(win) {
     caret.innerHTML = '&nbsp;';
 
     let ci = 0;
-    const speed = block.c ? 46 : 15;
+    const speed = block.c ? 44 : 14;
     (function typeChar() {
+      if (finished) return;
       if (ci <= block.t.length) {
         el.textContent = block.t.slice(0, ci);
         el.appendChild(caret);
         ci++;
         body.parentElement.scrollTop = body.parentElement.scrollHeight;
-        setTimeout(typeChar, speed);
+        timer = setTimeout(typeChar, speed);
       } else {
         caret.remove();
         bi++;
-        setTimeout(nextBlock, 300);
+        timer = setTimeout(nextBlock, 290);
       }
     })();
   }
+
+  win.querySelector('.letter-app').addEventListener('click', finish);
   nextBlock();
 }
 
