@@ -50,6 +50,18 @@ const ICONS = {
     <path d="M13 17h22" ${S}/>
     <path d="M16.5 17l1.4 18a2.5 2.5 0 002.5 2.3h7.2a2.5 2.5 0 002.5-2.3L31.5 17" ${S}/>
     <path d="M20 17v-2.5a2 2 0 012-2h4a2 2 0 012 2V17" ${S}/>`),
+  appStory: sq('y', '#ffb8c8', '#e87a9e', `
+    <circle cx="24" cy="13" r="2.6" fill="#fff"/>
+    <circle cx="24" cy="24" r="2.6" fill="#fff"/>
+    <circle cx="24" cy="35" r="2.6" fill="#fff"/>
+    <path d="M24 15.6v5.8M24 26.6v5.8" ${S}/>
+    <path d="M29 13h7M29 24h5M29 35h8" ${S}/>`),
+  appQuiz: sq('q', '#a8dcff', '#6db4e8', `
+    <path d="M18.5 18.5a5.5 5.5 0 1111 .5c0 3.5-5.5 4-5.5 8" ${S}/>
+    <circle cx="24" cy="34.5" r="1.9" fill="#fff"/>`),
+  appReply: sq('w', '#ffe0a8', '#f5b85a', `
+    <path d="M12 33.5V27l14.5-14.5a3 3 0 014.2 0l2.8 2.8a3 3 0 010 4.2L19 34h-7z" ${S}/>
+    <path d="M25 15.5l7 7" ${S}/>`),
   appShayari: sq('s', '#f2b8ff', '#c98fe8', `
     <path d="M17 32c-3-8 1-16 9-19.5" ${S}/>
     <path d="M26 12.5c1.6 5.4.6 11-3 14.2-2.3 2-5.2 2.4-7.4 1.2" ${S}/>
@@ -75,6 +87,7 @@ const ICONS = {
   next: `<svg viewBox="0 0 16 16"><path d="M4 3v10l7-5z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="11.5" y="3" width="1.9" height="10" rx="1" fill="currentColor"/></svg>`,
   vinyl: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/><circle cx="20" cy="20" r="14" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1"/><circle cx="20" cy="20" r="9.5" fill="#ff8fb8"/><circle cx="20" cy="20" r="2.6" fill="#fff6fa"/><path d="M20 10.5a9.5 9.5 0 018.6 5.5" stroke="rgba(255,255,255,.55)" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`,
   check: `<svg viewBox="0 0 16 16"><path d="M3 8.4l3.4 3.4L13 4.8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+  download: `<svg viewBox="0 0 16 16"><path d="M8 2v8.5M4.6 7.6L8 11l3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M3 13.5h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
   trashBig: `<svg viewBox="0 0 48 48"><path d="M11 16h26" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M15 16l1.7 21.5A3 3 0 0019.7 40h8.6a3 3 0 003-2.5L33 16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M19.5 16v-3a2.5 2.5 0 012.5-2.5h4a2.5 2.5 0 012.5 2.5v3" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
 
   /* ── reason glyphs ── */
@@ -120,6 +133,23 @@ function toast(msg) {
   }, 2600);
 }
 
+/* ═══════════ PWA INSTALL ═══════════ */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+
 /* ═══════════ BOOT SEQUENCE ═══════════ */
 const BOOT_LINES = [
   ['initializing reetOS kernel', 'ok'],
@@ -141,7 +171,7 @@ function runBoot() {
   if (bootStep >= BOOT_LINES.length) {
     bootFill.style.width = '100%';
     bootPct.textContent = '100%';
-    setTimeout(showLock, 550);
+    setTimeout(offerInstallOrLock, 1000);   // let 100% actually register before moving on
     return;
   }
   const [label, status, cls] = BOOT_LINES[bootStep];
@@ -154,17 +184,102 @@ function runBoot() {
   const pctVal = Math.round((bootStep / BOOT_LINES.length) * 100);
   bootFill.style.width = pctVal + '%';
   bootPct.textContent = pctVal + '%';
-  setTimeout(runBoot, 260 + Math.random() * 180);
+  // uneven, slightly slow — a boot that flies past reads as a loading flicker
+  setTimeout(runBoot, 430 + Math.random() * 320);
 }
-setTimeout(runBoot, 700);
+setTimeout(runBoot, 1100);
+
+/* Offer the "add to home screen" panel — mobile only, and only if there's
+   somewhere useful to add it (not already installed, not on desktop). */
+function offerInstallOrLock() {
+  const panel = $('#bootInstall');
+  const canOffer = isMobile() && !isStandalone() && (deferredInstallPrompt || isIOS());
+
+  if (!canOffer) { showLock(); return; }
+
+  panel.classList.remove('hidden');
+  const installBtn = $('#installBtn');
+  const continueBtn = $('#continueBtn');
+  renderIcons(panel);
+
+  if (isIOS() && !deferredInstallPrompt) {
+    installBtn.querySelector('span:last-child').textContent = 'tap ⬆ share, then "Add to Home Screen"';
+  }
+
+  installBtn.addEventListener('click', async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice.catch(() => {});
+      deferredInstallPrompt = null;
+      showLock();
+    }
+    // iOS has no programmatic install — the label itself is the instruction,
+    // so a tap here just moves on once she's read it.
+    else showLock();
+  }, { once: true });
+
+  continueBtn.addEventListener('click', showLock, { once: true });
+}
 
 /* ═══════════ LOCK SCREEN ═══════════ */
+/* Dynamic lock screen slideshow cycling through all photos in her sheet (her01.jpg .. her22.jpg) */
+const LOCK_PHOTOS = Array.from({ length: 22 }, (_, i) => `photos/her/her${pad(i + 1)}.jpg`);
+let lockPhotoIdx = Math.floor(Math.random() * LOCK_PHOTOS.length);
+let activeLockPhotoEl = 'A';
+let lockSlideshowTimer = null;
+
+function changeLockPhoto() {
+  const nextIdx = (lockPhotoIdx + 1) % LOCK_PHOTOS.length;
+  lockPhotoIdx = nextIdx;
+  const src = LOCK_PHOTOS[nextIdx];
+  
+  const currentEl = $('#lockPhoto' + activeLockPhotoEl);
+  const nextElKey = activeLockPhotoEl === 'A' ? 'B' : 'A';
+  const nextEl = $('#lockPhoto' + nextElKey);
+  
+  if (!nextEl) return;
+  const img = new Image();
+  img.onload = () => {
+    nextEl.style.backgroundImage = `url("${src}")`;
+    nextEl.style.opacity = '1';
+    if (currentEl) currentEl.style.opacity = '0';
+    activeLockPhotoEl = nextElKey;
+  };
+  img.src = src;
+}
+
+function startLockSlideshow() {
+  if (!lockSlideshowTimer) {
+    lockSlideshowTimer = setInterval(changeLockPhoto, 5000);
+  }
+}
+
+function stopLockSlideshow() {
+  if (lockSlideshowTimer) {
+    clearInterval(lockSlideshowTimer);
+    lockSlideshowTimer = null;
+  }
+}
+
 function showLock() {
   $('#boot').classList.add('out');
   const lock = $('#lock');
+  
+  const initialSrc = LOCK_PHOTOS[lockPhotoIdx];
+  const photoA = $('#lockPhotoA');
+  if (photoA) {
+    const img = new Image();
+    img.onload = () => {
+      photoA.style.backgroundImage = `url("${initialSrc}")`;
+      photoA.style.opacity = '1';
+    };
+    img.src = initialSrc;
+  }
+  
   lock.classList.remove('hidden');
   updateLockClock();
   setInterval(updateLockClock, 1000);
+  startLockSlideshow();
 }
 
 function updateLockClock() {
@@ -184,6 +299,7 @@ let desktopReady = false;
 function unlock() {
   if (unlocked) return;
   unlocked = true;
+  stopLockSlideshow();
   $('#lock').classList.add('out');
   $('#desktop').classList.remove('hidden');
 
@@ -191,26 +307,40 @@ function unlock() {
     desktopReady = true;
     initDesktop();
     setTimeout(() => {
-      toast('welcome back, Reet 🎀');
-      setTimeout(() => openApp('letter'), 900);
-    }, 700);
+      toast('welcome to reetOS, Reet 🎀');
+      checkBadges();
+      checkWelcomeModal();
+    }, 1200);
   } else {
-    setTimeout(() => toast('welcome back again 🎀'), 500);
+    setTimeout(() => toast('welcome back again 🎀'), 900);
   }
 }
 
 /* ═══════════ APP REGISTRY ═══════════ */
 const APPS = {
-  terminal: { name: 'terminal',    icon: 'appTerminal', tpl: 'tpl-terminal', w: 520, h: 380, init: initTerminal, desktop: true },
-  photos:   { name: 'memories',    icon: 'appPhotos',   tpl: 'tpl-photos',   w: 480, h: 420, init: initPhotos,   desktop: true },
-  videos:   { name: 'clips',       icon: 'appVideos',   tpl: 'tpl-videos',   w: 460, h: 460, init: initVideos,   desktop: true },
+  terminal: { name: 'reet.sh',     icon: 'appTerminal', tpl: 'tpl-terminal', w: 520, h: 380, init: initTerminal, desktop: true },
+  photos:   { name: 'her albums',  icon: 'appPhotos',   tpl: 'tpl-photos',   w: 480, h: 420, init: initPhotos,   desktop: true },
+  videos:   { name: 'reet in motion', icon: 'appVideos',   tpl: 'tpl-videos',   w: 460, h: 460, init: initVideos,   desktop: true },
   letter:   { name: 'letter.txt',  icon: 'appLetter',   tpl: 'tpl-letter',   w: 440, h: 430, init: initLetter,   desktop: true },
-  music:    { name: 'music',       icon: 'appMusic',    tpl: 'tpl-music',    w: 320, h: 460, init: initMusic },
+  music:    { name: 'reet radio',  icon: 'appMusic',    tpl: 'tpl-music',    w: 320, h: 460, init: initMusic },
+  story:    { name: 'us, so far',  icon: 'appStory',    tpl: 'tpl-story',    w: 420, h: 500, init: initStory,   desktop: true },
   shayari:  { name: 'shayari',     icon: 'appShayari',  tpl: 'tpl-shayari',  w: 380, h: 440, init: initShayari, desktop: true },
-  reasons:  { name: 'reasons',     icon: 'appReasons',  tpl: 'tpl-reasons',  w: 360, h: 400, init: initReasons },
+  quiz:     { name: 'reet 101',    icon: 'appQuiz',     tpl: 'tpl-quiz',     w: 380, h: 460, init: initQuiz },
+  reply:    { name: 'reet replies',icon: 'appReply',    tpl: 'tpl-reply',    w: 380, h: 440, init: initReply },
+  reasons:  { name: 'why reet',    icon: 'appReasons',  tpl: 'tpl-reasons',  w: 360, h: 400, init: initReasons },
   notes:    { name: 'our list',    icon: 'appNotes',    tpl: 'tpl-notes',    w: 380, h: 420, init: initNotes },
   about:    { name: 'about this friendship', icon: 'appAbout', tpl: 'tpl-about', w: 380, h: 440, init: initAbout },
-  trash:    { name: 'trash',       icon: 'appTrash',    tpl: 'tpl-trash',    w: 340, h: 280, init: null, desktop: true },
+  trash:    { name: 'regrets',     icon: 'appTrash',    tpl: 'tpl-trash',    w: 340, h: 280, init: null, desktop: true },
+  mood:     { name: 'mood check',  icon: 'appReply',    tpl: 'tpl-mood',     w: 360, h: 440, init: initMood },
+  scratch:  { name: 'scratch card',icon: 'appLetter',   tpl: 'tpl-scratch',  w: 340, h: 420, init: initScratch },
+  magic8:   { name: 'magic 8 reet',icon: 'appAbout',    tpl: 'tpl-magic8',   w: 340, h: 460, init: initMagic8 },
+  match:    { name: 'memory match',icon: 'appPhotos',   tpl: 'tpl-match',    w: 400, h: 500, init: initMatch },
+  slot:     { name: 'compliment 🎰',icon: 'appReasons', tpl: 'tpl-slot',     w: 340, h: 460, init: initSlot },
+  vibe:     { name: 'guess the vibe',icon: 'appQuiz',   tpl: 'tpl-vibe',     w: 360, h: 480, init: initVibe },
+  snake:    { name: 'reel snake',  icon: 'appVideos',   tpl: 'tpl-snake',    w: 360, h: 500, init: initSnake },
+  sticky:   { name: 'care notes 📌', icon: 'appNotes',   tpl: 'tpl-sticky',   w: 420, h: 480, init: initStickyNotes, desktop: true },
+  theme:    { name: 'themes 🎨',   icon: 'appReasons', tpl: 'tpl-theme',    w: 380, h: 440, init: initThemeApp, desktop: true },
+  quest:    { name: 'reet quest 🏆', icon: 'appStory',  tpl: 'tpl-quest',    w: 380, h: 480, init: initQuestApp, desktop: true },
 };
 
 /* ═══════════ WINDOW MANAGER ═══════════ */
@@ -221,6 +351,7 @@ let cascade = 0;
 function openApp(id) {
   const app = APPS[id];
   if (!app) return;
+  markAppExplored(id);
 
   if (openWindows[id]) {
     const w = openWindows[id];
@@ -246,6 +377,7 @@ function openApp(id) {
   }
 
   win.innerHTML = `
+    <div class="win-grab"></div>
     <div class="win-bar">
       <div class="win-lights">
         <button class="wl wl-close" title="close"></button>
@@ -269,10 +401,12 @@ function openApp(id) {
   win.addEventListener('pointerdown', () => focusWin(win));
 
   if (!isMobile()) makeDraggable(win, win.querySelector('.win-bar'));
+  else makeDismissable(win, id);
 
   openWindows[id] = win;
   focusWin(win);
   markDock(id, true);
+  syncHomeState();
 
   if (app.init) app.init(win);
 }
@@ -287,11 +421,14 @@ function closeWin(id) {
   setTimeout(() => win.remove(), 240);
   delete openWindows[id];
   markDock(id, false);
+  syncHomeState();
 }
 
 function focusWin(win) {
   zTop++;
   win.style.zIndex = zTop;
+  document.querySelectorAll('.win.active-win').forEach(w => w.classList.remove('active-win'));
+  win.classList.add('active-win');
 }
 
 // Minimize keeps the app running (music keeps playing); the dock restores it.
@@ -300,6 +437,7 @@ function minimizeWin(id) {
   if (!win) return;
   win.dataset.min = '1';
   win.style.display = 'none';
+  syncHomeState();
   toast('minimized — tap it in the dock to bring it back');
 }
 
@@ -309,6 +447,7 @@ function restoreWin(id) {
   delete win.dataset.min;
   win.style.display = '';
   focusWin(win);
+  syncHomeState();
 }
 
 function closeAllWindows() {
@@ -363,19 +502,87 @@ function makeDraggable(win, handle) {
   handle.addEventListener('pointercancel', stop);
 }
 
+/* iOS-style dismiss: drag down on the title bar to close the app. */
+function makeDismissable(win, id) {
+  const bar = win.querySelector('.win-bar');
+  if (!bar) return;
+  let y0 = 0, dy = 0, dragging = false;
+
+  bar.addEventListener('touchstart', e => {
+    if (e.target.closest('.wl')) return;
+    dragging = true; y0 = e.touches[0].clientY; dy = 0;
+    win.style.transition = 'none';
+  }, { passive: true });
+
+  bar.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    win.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    win.style.transition = 'transform .28s cubic-bezier(.2,.9,.3,1)';
+    if (dy > 110) { win.style.transform = 'translateY(100%)'; setTimeout(() => closeWin(id), 200); }
+    else win.style.transform = '';
+  };
+  bar.addEventListener('touchend', end);
+  bar.addEventListener('touchcancel', end);
+}
+
+/* The home indicator closes the frontmost app, like swiping up on iOS. */
+function initHomeIndicator() {
+  const bar = $('#homeBar');
+  const goHome = () => {
+    const open = Object.keys(openWindows);
+    if (!open.length) return;
+    open.forEach(closeWin);
+  };
+  bar.addEventListener('click', goHome);
+
+  let y0 = 0;
+  bar.addEventListener('touchstart', e => { y0 = e.changedTouches[0].clientY; }, { passive: true });
+  bar.addEventListener('touchend', e => {
+    if (y0 - e.changedTouches[0].clientY > 24) goHome();
+  }, { passive: true });
+}
+
+// Home screen recedes behind an open app, and returns when the last one closes.
+function syncHomeState() {
+  const anyOpen = Object.values(openWindows).some(w => !w.dataset.min);
+  $('#desktop').classList.toggle('app-open', anyOpen);
+  const home = $('#home');
+  if (home) home.classList.toggle('behind', anyOpen);
+}
+
 /* ═══════════ DESKTOP INIT ═══════════ */
+// On phones the dock behaves like iOS: only these four are pinned,
+// everything else lives on the home screen grid.
+const PINNED = ['letter', 'photos', 'music', 'terminal'];
+
 function initDesktop() {
   const dock = $('#dock');
   const dIcons = $('#desktopIcons');
+  const homeGrid = $('#homeGrid');
 
   Object.entries(APPS).forEach(([id, app]) => {
     const item = document.createElement('div');
-    item.className = 'dock-item';
+    item.className = 'dock-item' + (PINNED.includes(id) ? '' : ' not-pinned');
     item.dataset.app = id;
     item.innerHTML = `<div class="dock-img" data-icon="${app.icon}"></div>
       <div class="dock-tip">${app.name}</div><div class="dock-dot"></div>`;
     item.addEventListener('click', () => openApp(id));
     dock.appendChild(item);
+
+    // iPhone home screen icon
+    const hi = document.createElement('div');
+    hi.className = 'hi-app';
+    hi.dataset.app = id;
+    hi.innerHTML = `<div class="hi-img" data-icon="${app.icon}"></div>
+      <div class="hi-label">${app.name}</div>`;
+    hi.addEventListener('click', () => openApp(id));
+    homeGrid.appendChild(hi);
 
     if (app.desktop) {
       const di = document.createElement('div');
@@ -394,7 +601,15 @@ function initDesktop() {
   renderIcons($('#desktop'));
   initMenuBar();
   restoreWallpaper();
-  if (!isMobile()) initWidget();   // desktop has the room; phones don't
+  restoreTheme();
+  initTimeVibe();
+  initSparkleTrail();
+
+  const themeBtn = $('#themeBtn');
+  if (themeBtn) themeBtn.addEventListener('click', () => openApp('theme'));
+
+  if (!isMobile()) { initWidget(); initStickyWidget(); }   // desktop widgets
+  else initHomeIndicator();
   startClock();
   startStars();
 
@@ -442,19 +657,20 @@ function restoreWallpaper() {
 /* ═══════════ MENU BAR ═══════════ */
 const MENUS = {
   system: [
-    { l: 'About This Friendship', do: () => openApp('about') },
-    { l: 'Our Playlist',          do: () => openApp('music') },
+    { l: 'About Reet', do: () => openApp('about') },
+    { l: 'Reet Radio',          do: () => openApp('music') },
     { l: 'Change Wallpaper', k: '⌥W', do: cycleWallpaper },
+    { l: 'Change Theme',     k: '⌥T', do: () => openApp('theme') },
     { sep: true },
     { l: 'Send Love',   k: '♥', do: () => { heartRain(); } },
     { l: 'Lock Screen', k: '⇧⌘Q', do: relock },
     { l: 'Restart reetOS',        do: () => location.reload() },
   ],
   file: [
-    { l: 'Open Letter',    do: () => openApp('letter') },
-    { l: 'Open Albums',    do: () => openApp('photos') },
-    { l: 'Open Playlist',  do: () => openApp('music') },
-    { l: 'Open Terminal',  do: () => openApp('terminal') },
+    { l: 'The Letter',    do: () => openApp('letter') },
+    { l: 'Her Albums',    do: () => openApp('photos') },
+    { l: 'Reet Radio',  do: () => openApp('music') },
+    { l: 'reet.sh',  do: () => openApp('terminal') },
     { sep: true },
     { l: 'Close All Windows', k: '⌘W', do: () => {
         const n = closeAllWindows();
@@ -462,6 +678,8 @@ const MENUS = {
       } },
   ],
   feelings: [
+    { l: 'Our Story',         do: () => openApp('story') },
+    { l: 'Write Back To Him', do: () => openApp('reply') },
     { l: 'Read Me a Shayari', do: () => openApp('shayari') },
     { l: 'Tell Me a Reason', do: () => {
         const r = REASONS[Math.floor(Math.random() * REASONS.length)];
@@ -473,12 +691,15 @@ const MENUS = {
         toast(c);
       } },
     { sep: true },
-    { l: 'Things To Do Together', do: () => openApp('notes') },
-    { l: 'Reasons App',           do: () => openApp('reasons') },
+    { l: 'Our List', do: () => openApp('notes') },
+    { l: 'Why Reet',           do: () => openApp('reasons') },
   ],
   help: [
-    { l: 'Terminal Commands', do: () => { openApp('terminal'); setTimeout(() => runTerminal('help'), 260); } },
-    { l: 'What Is This?',     do: () => openApp('about') },
+    { l: 'Reet\'s Exploration Quest 🏆', do: () => openApp('quest') },
+    { l: 'Start Welcome Tour ✨',        do: showWelcomeModal },
+    { sep: true },
+    { l: 'What Can reet.sh Do?', do: () => { openApp('terminal'); setTimeout(() => runTerminal('help'), 260); } },
+    { l: 'What Is reetOS?',     do: () => openApp('about') },
     { sep: true },
     { l: 'Who Made This?', do: () => toast('someone who thinks the world of you 🤍') },
   ],
@@ -557,6 +778,7 @@ function relock() {
   $('#desktop').classList.add('hidden');
   unlocked = false;
   cascade = 0;
+  startLockSlideshow();
 }
 
 function startClock() {
@@ -564,6 +786,8 @@ function startClock() {
   const tick = () => {
     const d = new Date();
     el.textContent = `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const left = document.querySelector('.menubar-left');
+    if (left) left.dataset.time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
   tick();
   setInterval(tick, 1000);
@@ -898,7 +1122,9 @@ function initVideos(win) {
 /* ═══════════ APP: MUSIC ═══════════ */
 /* Stations come from music-data.js, generated from assets/music/.
    "Ours" is prepended so their own song stays the default track. */
-const OURS = { name: 'Ours', key: null, tracks: [{ t: 'Falak Tak', f: null, src: '../assets/falak_tak.mp3' }] };
+// Path stays inside this folder so the site can be deployed with
+// "Friendship Day" as the project root (Vercel, Pages, anything static).
+const OURS = { name: 'Ours', key: null, tracks: [{ t: 'Falak Tak', f: null, src: 'assets/falak_tak.mp3' }] };
 const ALL_STATIONS = [OURS, ...(typeof STATIONS !== 'undefined' ? STATIONS : [])];
 
 const trackSrc = (station, tr) =>
@@ -933,13 +1159,29 @@ function initMusic(win) {
   let rows = [];
 
   /* ---- station picker ---- */
+  // The station MP3s are gitignored (2GB of commercial music), so a deployed
+  // copy won't have them. Probe one file per station rather than all 241, and
+  // label the ones whose audio isn't present wherever this is being served.
   ALL_STATIONS.forEach(st => {
     const row = document.createElement('div');
     row.className = 'mu-station';
     row.innerHTML = `<span>${st.name}</span><span class="n">${st.tracks.length}</span>`;
     row.addEventListener('click', () => showStation(st));
     stationsEl.appendChild(row);
+    st._row = row;
+
+    if (location.protocol !== 'file:') {
+      fetch(trackSrc(st, st.tracks[0]), { method: 'HEAD' })
+        .then(r => { if (!r.ok) flagStation(st); })
+        .catch(() => flagStation(st));
+    }
   });
+
+  function flagStation(st) {
+    st.unavailable = true;
+    st._row.classList.add('unavailable');
+    st._row.querySelector('.n').textContent = 'no audio';
+  }
 
   function showStation(st) {
     station = st;
@@ -957,6 +1199,12 @@ function initMusic(win) {
     listEl.classList.remove('hidden');
     listWrap.classList.add('in-station');
     stationName.textContent = st.name;
+    if (st.unavailable) {
+      const n = document.createElement('div');
+      n.className = 'mu-unavail';
+      n.textContent = 'these tracks aren\'t on this copy of the site — they play from the local build';
+      listEl.prepend(n);
+    }
     markActive();
   }
 
@@ -1040,6 +1288,226 @@ function initMusic(win) {
   showStation(ALL_STATIONS[0]);
   load(0, false);
   showStations();
+}
+
+/* ═══════════ APP: OUR STORY ═══════════ */
+/* Counts run from today, so they stay true without anyone editing them. */
+const STORY = [
+  { d: [2011, 6],      approx: true,  what: 'The first time I ever saw you',
+    note: 'You had no idea. Neither did I, really.' },
+  { d: [2013, 4],      approx: true,  what: 'We ended up in the same class',
+    note: 'Two years later, the room finally got smaller.' },
+  { d: [2013, 11],     approx: true,  what: 'We spoke for the first time',
+    note: 'Late, considering.' },
+  { d: [2014, 5],      approx: true,  what: 'Properly friends now',
+    note: 'The kind you stop introducing and just bring along.' },
+  { d: [2015, 6],      approx: true,  what: 'The bond got real',
+    note: 'This is the year it stopped being casual.' },
+  { d: [2019, 6],      approx: true,  what: 'Reconnected',
+    note: 'Some things come back around on their own.' },
+  { d: [2020, 10, 24], break: true,   what: 'Everything fell apart',
+    note: 'No version of this one is easy to write.' },
+  { d: [2020, 11, 20], break: true,   what: 'The last message',
+    note: 'Neither of us knew it was the last one.' },
+  { gap: [[2020, 10, 24], [2024, 11, 18]], label: 'days of not speaking' },
+  { d: [2024, 11, 18], bloom: true,   what: 'A Haldi ceremony, four years later',
+    note: "Friend's sister's wedding. We saw each other again." },
+  { d: [2024, 11, 24], bloom: true,   what: 'The Baraat and the wedding day',
+    note: 'Six days later it already felt easier.' },
+  { d: [2025, 3, 3],   now: true,     what: 'Back — and better than it ever was',
+    note: 'Since this day: talking, sharing, laughing. Not one day missed.' },
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const dayDiff = (a, b) => Math.round((b - a) / 86400000);
+const fmtNum = n => n.toLocaleString('en-IN');
+
+function initStory(win) {
+  const rail = win.querySelector('#stRail');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  const toDate = d => new Date(d[0], d[1] - 1, d[2] || 1);
+
+  win.querySelector('#stTotal').textContent = fmtNum(dayDiff(toDate(STORY[0].d), today));
+  const streak = dayDiff(new Date(2025, 2, 3), today);
+  win.querySelector('#stStreak').textContent = `${fmtNum(streak)} days straight since we came back`;
+
+  STORY.forEach(item => {
+    if (item.gap) {
+      const [a, b] = item.gap;
+      const g = document.createElement('div');
+      g.className = 'st-gap';
+      g.innerHTML = `<div class="st-gap-num"></div><div class="st-gap-label"></div>`;
+      const n = dayDiff(toDate(a), toDate(b));
+      g.querySelector('.st-gap-num').textContent = fmtNum(n);
+      g.querySelector('.st-gap-label').textContent =
+        `${item.label} · about ${(n / 365.25).toFixed(1)} years`;
+      rail.appendChild(g);
+      return;
+    }
+
+    const date = toDate(item.d);
+    const when = item.approx
+      ? `${MONTHS[item.d[1] - 1]} ${item.d[0]}`
+      : `${item.d[2]} ${MONTHS[item.d[1] - 1]} ${item.d[0]}`;
+
+    const node = document.createElement('div');
+    node.className = 'st-node' +
+      (item.break ? ' break' : '') + (item.bloom ? ' bloom' : '') + (item.now ? ' now' : '');
+    node.innerHTML = `<div class="st-when"></div><div class="st-what"></div>
+      <div class="st-note"></div><div class="st-ago"></div>`;
+    node.querySelector('.st-when').textContent = when;
+    node.querySelector('.st-what').textContent = item.what;
+    node.querySelector('.st-note').textContent = item.note;
+    node.querySelector('.st-ago').textContent =
+      `${fmtNum(dayDiff(date, today))} days ago${item.approx ? ' (about)' : ''}`;
+    rail.appendChild(node);
+  });
+}
+
+/* ═══════════ APP: QUIZ ═══════════ */
+const QUIZ = [
+  { q: 'Jab mere paas koi super juicy gossip hoti hai, toh pehla step kya hota hai?', o: ['Formal email likhna', 'Bina kisi context ke direct aag lagana', '10 din baad batana', 'Secret rakh ke bhool jana'], a: 1,
+    n: 'No preamble, no hello. Seedha main point pe aao!' },
+  { q: 'Jab tum koi photo ya status share karti ho, toh mera pehla reaction kya hota hai?', o: ['Chupchap delete kar dena', 'Khushi se memory ki tarah save kar lena (because you look so gorgeous!)', 'Blackmail karne ki dhamki dena', 'Ignore kar dena'], a: 1,
+    n: 'Zero blackmailing — tumhaari har picture hamesha gorgeous hoti hai aur sweet memory ban jati hai! ✨' },
+  { q: 'Humari daily conversation aur connection ka sabse favourite medium kya hai?', o: ['Ghanto lambi formal calls', 'Texting and endless Instagram reels share karna', 'Formal letters', 'Walkie-talkie pe baat karna'], a: 1,
+    n: 'Calls tabhi jab super urgent ho, baki toh texts aur reels ki non-stop streaming!' },
+  { q: 'Agar tumhara din thoda kharab ja raha ho, toh kya karna allowed hai?', o: ['Akele chup chaap bethna', 'Mujhe poora rant sunana aur mood thik karwana', 'Faltu tension lena', 'Khana khana bhool jana'], a: 1,
+    n: 'Hamesha sunne ke liye taiyaar hoon, stress bilkul nahi lene ka!' },
+  { q: 'Kon tumhe bina kisi reason ke pareshan aur irritate karne ka haq rakhta hai?', o: ['Koi bhi nahi', 'Sirf tumhari best friend (yani main!)', 'Neighbors', 'Social media strangers'], a: 1,
+    n: 'Yeh VIP access sirf mere paas reserved hai!' },
+  { q: 'Hum kitne bhi busy ho jayein ya dino baad baat karein, kya change hota hai?', o: ['Hum strangers ban jaate hain', 'Kuch bhi nahi, wahi same pagalpan continue hota hai', 'Formal baatein hone lagti hain', 'Ek doosre ko bhool jaate hain'], a: 1,
+    n: 'Zero distance, zero gap. Wahi se shuru jahan chhoda tha!' },
+  { q: 'Instagram pe reels share karne ka humara unspoken bestie rule kya hai?', o: ['Relatable reels spam karna jo relatable lage without thinking hehe', 'Sirf educational videos bhejna', 'Mahine mein ek reel bhejna', 'Zero reels'], a: 0,
+    n: 'Reels feed is basically our unofficial chat room!' },
+  { q: 'Jab tum koi ajeeb decision lene lagti ho, toh mera duty kya hota hai?', o: ['Taali bajana', 'Sahi raasta dikhana aur hamesha tumhare saath khade rehna', 'Door se dekh ke hasna', 'Ignore karna'], a: 1,
+    n: 'Full support aur saath hamesha milega!' },
+  { q: 'Humari friendship ki expiry date kab tak ki hai?', o: ['Agley mahine tak', 'Exam khatam hone tak', 'Lifetime & beyond — non-negotiable!', 'Sirf 1 saal'], a: 2,
+    n: 'Koi exit door nahi hai, ab jhelna hi padega lifetime!' },
+  { q: 'Is poore quiz aur app ka sabse bada secret truth kya hai?', o: ['Yeh bas ek random test hai', 'You are extremely special, loved and appreciated, hamesha! 🎀', 'Yeh bas ek code project hai', 'Kuch nahi'], a: 1,
+    n: 'Hamesha yaad rakhna, you mean the absolute world! 🎀' },
+];
+
+function initQuiz(win) {
+  const intro = win.querySelector('#qzIntro');
+  const play = win.querySelector('#qzPlay');
+  const done = win.querySelector('#qzDone');
+  const qEl = win.querySelector('#qzQ');
+  const optsEl = win.querySelector('#qzOpts');
+  const noteEl = win.querySelector('#qzNote');
+  const stepEl = win.querySelector('#qzStep');
+  const fill = win.querySelector('#qzBarFill');
+
+  let i = 0, score = 0, locked = false;
+
+  function show() {
+    locked = false;
+    const item = QUIZ[i];
+    stepEl.textContent = `question ${i + 1} of ${QUIZ.length}`;
+    fill.style.width = ((i) / QUIZ.length * 100) + '%';
+    qEl.textContent = item.q;
+    noteEl.textContent = '';
+    optsEl.innerHTML = '';
+    item.o.forEach((opt, n) => {
+      const b = document.createElement('button');
+      b.className = 'qz-opt';
+      b.textContent = opt;
+      b.addEventListener('click', () => choose(n, b));
+      optsEl.appendChild(b);
+    });
+  }
+
+  function choose(n, btn) {
+    if (locked) return;
+    locked = true;
+    const item = QUIZ[i];
+    const buttons = [...optsEl.children];
+    buttons.forEach((b, k) => {
+      if (k === item.a) b.classList.add('right');
+      else if (k === n) b.classList.add('wrong');
+      else b.classList.add('dim');
+    });
+    if (n === item.a) score++;
+    noteEl.textContent = item.n;
+    fill.style.width = ((i + 1) / QUIZ.length * 100) + '%';
+    setTimeout(() => {
+      i++;
+      if (i < QUIZ.length) show(); else finish();
+    }, 1900);
+  }
+
+  function finish() {
+    play.classList.add('hidden');
+    done.classList.remove('hidden');
+    win.querySelector('#qzScore').textContent = `${score} / ${QUIZ.length}`;
+    const v = score === QUIZ.length ? '100% Certified Bestie! Tu toh bilkul topper nikli 🎀'
+      : score >= 8 ? 'Almost 100%! Officially certified bestie status approved 🎀'
+      : score >= 6 ? 'Solid score! Poore marks for being awesome.'
+      : 'Score jo bhi ho, 100% full marks for just being Reet! 🎀';
+    win.querySelector('#qzVerdict').textContent = v;
+  }
+
+  win.querySelector('#qzStart').addEventListener('click', () => {
+    intro.classList.add('hidden'); play.classList.remove('hidden'); show();
+  });
+  win.querySelector('#qzAgain').addEventListener('click', () => {
+    i = 0; score = 0; done.classList.add('hidden'); play.classList.remove('hidden'); show();
+  });
+}
+
+/* ═══════════ APP: WRITE BACK ═══════════ */
+// Put your number here in full international form, digits only, e.g. '918986022102'.
+const REPLY_WHATSAPP = '918986022102';
+const REPLY_KEY = 'reetos-reply';
+
+function initReply(win) {
+  const ta = win.querySelector('#rpText');
+  const count = win.querySelector('#rpCount');
+  const saved = win.querySelector('#rpSaved');
+  const hint = win.querySelector('#rpHint');
+
+  try { ta.value = localStorage.getItem(REPLY_KEY) || ''; } catch (_) {}
+
+  const sync = () => {
+    count.textContent = `${ta.value.length} characters`;
+    try { localStorage.setItem(REPLY_KEY, ta.value); saved.textContent = 'saved'; } catch (_) {}
+    setTimeout(() => { saved.textContent = ''; }, 1200);
+  };
+  ta.addEventListener('input', sync);
+  count.textContent = `${ta.value.length} characters`;
+
+  hint.textContent = REPLY_WHATSAPP
+    ? 'opens WhatsApp with your message ready to send'
+    : 'opens your share sheet — or use copy and paste it anywhere';
+
+  win.querySelector('#rpSend').addEventListener('click', () => {
+    const text = ta.value.trim();
+    if (!text) { toast('write something first 🤍'); ta.focus(); return; }
+    const body = `From Reet, on Friendship Day:\n\n${text}`;
+
+    if (REPLY_WHATSAPP) {
+      window.open(`https://wa.me/${REPLY_WHATSAPP}?text=${encodeURIComponent(body)}`, '_blank');
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({ text: body }).catch(() => {});
+      return;
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(body)
+        .then(() => toast('copied — paste it wherever you like'))
+        .catch(() => toast('could not copy'));
+    } else toast('select the text and copy it manually');
+  });
+
+  win.querySelector('#rpCopy').addEventListener('click', () => {
+    if (!ta.value.trim()) { toast('nothing to copy yet'); return; }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(ta.value)
+        .then(() => toast('copied 🤍')).catch(() => toast('could not copy'));
+    } else toast('could not copy');
+  });
 }
 
 /* ═══════════ APP: SHAYARI ═══════════ */
@@ -1160,6 +1628,71 @@ function initWidget() {
   shuffleIn();
   return wg;
 }
+
+/* ═══════════ DESKTOP STICKY NOTE WIDGET ═══════════ */
+const STICKY_NOTES = [
+  { t: "Don't forget to take care of yourself today 🌸.", c: "st-pink" },
+  { t: "Be Hydrated and Eat food on time 🍲💧.", c: "st-yellow" },
+  { t: "Give hugs and kisses to Ashvik & Atharv 👶💕", c: "st-peach" },
+  { t: "Love and Treat Yourself More ✨", c: "st-lavender" },
+  { t: "Things will be alright , More Beautiful things on your way 🌈.", c: "st-blue" },
+  { t: "Take deep breaths — you're doing better than you think 🌿.", c: "st-mint" },
+  { t: "Remember how loved, valued & appreciated you are 🤍.", c: "st-pink" },
+  { t: "Smile! You look absolutely gorgeous today 🎀.", c: "st-yellow" },
+  { t: "Never shrink yourself to make others comfortable ✨.", c: "st-lavender" },
+  { t: "Chai break time? Take 5 mins just for yourself ☕.", c: "st-peach" },
+  { t: "Don't stress over what you can't control today 🌸.", c: "st-blue" },
+  { t: "You've survived 100% of your tough days — champion status 🌟.", c: "st-mint" },
+];
+
+function initStickyWidget() {
+  const st = document.createElement('div');
+  st.className = 'sticky-widget';
+  st.innerHTML = `
+    <div class="st-tape"></div>
+    <div class="st-w-head"><span>gentle reminder</span><span data-icon="sparkle"></span></div>
+    <div class="st-w-body" id="stWBody"></div>
+    <div class="st-w-foot">tap for next reminder 📌</div>`;
+  $('#desktop').appendChild(st);
+  renderIcons(st);
+
+  const body = st.querySelector('#stWBody');
+  let idx = 0;
+
+  function nextNote() {
+    const note = STICKY_NOTES[idx % STICKY_NOTES.length];
+    st.className = `sticky-widget ${note.c}`;
+    body.textContent = note.t;
+    st.classList.remove('pop');
+    void st.offsetWidth;
+    st.classList.add('pop');
+    idx++;
+  }
+
+  st.addEventListener('click', nextNote);
+  nextNote();
+  return st;
+}
+
+function initStickyNotes(win) {
+  const grid = win.querySelector('#stGrid');
+  grid.innerHTML = '';
+  STICKY_NOTES.forEach((note, i) => {
+    const card = document.createElement('div');
+    card.className = `st-card ${note.c}`;
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.innerHTML = `
+      <div class="st-pin">📌</div>
+      <div class="st-card-txt">${note.t}</div>`;
+    card.addEventListener('click', () => {
+      toast('reminder saved to heart 🤍');
+      card.classList.add('pulse');
+      setTimeout(() => card.classList.remove('pulse'), 400);
+    });
+    grid.appendChild(card);
+  });
+}
+
 
 /* ═══════════ APP: REASONS ═══════════ */
 const REASONS = [
@@ -1340,6 +1873,9 @@ function initTerminal(win) {
       '  memories          open the photo albums',
       '  clips             home videos & reels',
       '  shayari [hi|en]   a couplet, written for you',
+      '  story             every date that mattered',
+      '  quiz              how well do you know us?',
+      '  reply             write something back',
       '  cat letter.txt    read the letter',
       '  play              open the playlist',
       '  songs             list every track',
@@ -1450,6 +1986,20 @@ function initTerminal(win) {
       print('');
       print('   (shayari en  ·  shayari hi  ·  or open the app)', 'dim');
     },
+    story: () => {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const total = dayDiff(new Date(2011, 5, 1), today);
+      const streak = dayDiff(new Date(2025, 2, 3), today);
+      printAll([
+        `${fmtNum(total)} days since I first saw you.`,
+        `${fmtNum(1486)} of those we did not speak at all.`,
+        `${fmtNum(streak)} days straight since we came back — none missed.`,
+      ], 'pink');
+      print('opening the full timeline …', 'dim');
+      openApp('story');
+    },
+    quiz: () => { print('ten questions. good luck.', 'dim'); openApp('quiz'); },
+    reply: () => { print('the floor is yours …', 'dim'); openApp('reply'); },
     wallpaper: () => { cycleWallpaper(); print('wallpaper changed.', 'pink'); },
     date: () => print(new Date().toString(), 'lav'),
     echo: (args) => print(args.join(' ')),
@@ -1582,3 +2132,810 @@ window.addEventListener('resize', () => {
   const hr = $('#heartRain');
   if (hr) { hr.width = window.innerWidth; hr.height = window.innerHeight; }
 });
+
+/* ═══════════ APP: MOOD CHECK-IN ═══════════ */
+const MOODS = [
+  { e: '😊', l: 'Happy / Khush',
+    fn: () => { heartRain(); toast('yaar aaj toh sun shine aaya! acha chal raha hai 🎀'); } },
+  { e: '😔', l: 'Sad / Down',
+    fn: () => { heartRain(); toast('aw yaar 🥺 main hoon na. chalo shayari suno...'); setTimeout(() => openApp('shayari'), 1000); } },
+  { e: '😴', l: 'Tired / Neend',
+    fn: () => { toast('thoda rest kar le 🌙 music chhod deta hoon halka sa'); setTimeout(() => openApp('music'), 1000); } },
+  { e: '🤩', l: 'Excited / Hyped',
+    fn: () => { heartRain(); toast('YEH ENERGY!! Main bhi excited ho gaya 🎉🎉'); } },
+  { e: '😒', l: 'Bored / Faltu',
+    fn: () => { toast('boring? chalo photos dekhtey hain tumhari! 📸'); setTimeout(() => openApp('photos'), 800); } },
+  { e: '😤', l: 'Annoyed / Upset',
+    fn: () => { heartRain(); toast('jo bhi hua — sab theek ho jayega. I promise 🤍'); } },
+  { e: '🥳', l: 'Celebratory',
+    fn: () => { heartRain(); toast('CELEBRATE! Aaj ka din toh yaadgaar hai 🎊🎀'); } },
+  { e: '🤔', l: 'Confused / Soch mein',
+    fn: () => { toast('kya soch rahi ho? khol ke baat karo 🤍'); setTimeout(() => openApp('reply'), 1000); } },
+];
+
+function initMood(win) {
+  const grid = win.querySelector('#moodGrid');
+  const result = win.querySelector('#moodResult');
+  const resEmoji = win.querySelector('#moodResEmoji');
+  const resText = win.querySelector('#moodResText');
+  const again = win.querySelector('#moodAgain');
+
+  MOODS.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'mood-btn';
+    btn.innerHTML = `<span class="mood-emoji">${m.e}</span><span class="mood-label">${m.l}</span>`;
+    btn.addEventListener('click', () => {
+      grid.classList.add('hidden');
+      resEmoji.textContent = m.e;
+      resText.textContent = m.l;
+      result.classList.remove('hidden');
+      m.fn();
+    });
+    grid.appendChild(btn);
+  });
+
+  again.addEventListener('click', () => {
+    result.classList.add('hidden');
+    grid.classList.remove('hidden');
+  });
+}
+
+/* ═══════════ APP: SCRATCH CARD ═══════════ */
+const SCRATCH_MESSAGES = [
+  'you are genuinely one of the most beautiful people I know — inside and out 🌸',
+  'har din tumse baat karna meri favourite part of the day hai 🤍',
+  'you don\'t need to be anything other than exactly what you are 🎀',
+  'some people make life easier just by being in it. you are one of them ✨',
+  'I hope you know how much you are appreciated, seen, and loved 💕',
+  'aaj ka lucky charm: you. obviously. always. 🍀',
+  'tumhari smile genuinely makes the room better — documented fact 🌟',
+  'the world is lowkey a better place because you exist in it 🌸',
+];
+
+function initScratch(win) {
+  const canvas = win.querySelector('#scratchCanvas');
+  const msgEl = win.querySelector('#scratchMsg');
+  const hint = win.querySelector('#scratchHint');
+  const newBtn = win.querySelector('#scratchNew');
+  const ctx = canvas.getContext('2d');
+
+  let revealed = false;
+  let scratching = false;
+  let scratchedPx = 0;
+  const TOTAL_PX = 0;
+
+  function setup() {
+    revealed = false;
+    scratchedPx = 0;
+    newBtn.classList.add('hidden');
+    hint.classList.remove('hidden');
+
+    const msg = SCRATCH_MESSAGES[Math.floor(Math.random() * SCRATCH_MESSAGES.length)];
+    msgEl.textContent = msg;
+
+    const W = canvas.offsetWidth || 280;
+    const H = canvas.offsetHeight || 160;
+    canvas.width = W;
+    canvas.height = H;
+
+    // Fill with shiny gold scratch layer
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#d4a0c8');
+    grad.addColorStop(0.5, '#e8c0e0');
+    grad.addColorStop(1, '#c8a0d4');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw scratch text
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✦  scratch here  ✦', W / 2, H / 2 - 8);
+    ctx.fillText('koi surprise chhupa hai', W / 2, H / 2 + 14);
+  }
+
+  function scratch(x, y) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Check how much is scratched
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let cleared = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] === 0) cleared++;
+    const pct = cleared / (canvas.width * canvas.height);
+    if (pct > 0.55 && !revealed) {
+      revealed = true;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hint.classList.add('hidden');
+      newBtn.classList.remove('hidden');
+      toast('🎁 revealed!');
+    }
+  }
+
+  const getPos = (e, el) => {
+    const r = el.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  };
+
+  canvas.addEventListener('mousedown', e => { scratching = true; const p = getPos(e, canvas); scratch(p.x, p.y); });
+  canvas.addEventListener('mousemove', e => { if (!scratching) return; const p = getPos(e, canvas); scratch(p.x, p.y); });
+  canvas.addEventListener('mouseup', () => scratching = false);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); scratching = true; const p = getPos(e, canvas); scratch(p.x, p.y); }, { passive: false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!scratching) return; const p = getPos(e, canvas); scratch(p.x, p.y); }, { passive: false });
+  canvas.addEventListener('touchend', () => scratching = false);
+
+  newBtn.addEventListener('click', setup);
+  setTimeout(setup, 60);
+}
+
+/* ═══════════ APP: MAGIC 8-BALL ═══════════ */
+const M8_ANSWERS = [
+  'Bilkul haan! 🎀', 'Obviously yes, kya sawaal hai yeh', 'Main hoon na — toh hoga pakka ✨',
+  'Signs are looking very good 🌸', 'Ek dum confirm! No doubt at all',
+  'Haan yaar, trust karo', '100% yes, go for it 💕',
+  'Thoda wait karo, chai pee ke socho ☕', 'Abhi nahi bolunga — mystery rehne do',
+  'Dono sides pe soch lo phir decide karo', 'Kal poochho, aaj nahi bata rahi 😌',
+  'Pata nahi yaar, tumhe better pata hoga', 'Hmm... signs point to chai first',
+  'Nahi yaar, baar baar poochho mat 😂', 'Definitely nahi — aur yeh final hai',
+  'Itna obvious question kyun pooch rahi ho 😭', 'Sleep pe soch ke bata',
+];
+
+function initMagic8(win) {
+  const ball = win.querySelector('#m8Ball');
+  const num = win.querySelector('.m8-num');
+  const answer = win.querySelector('#m8Answer');
+  const input = win.querySelector('#m8Input');
+  const askBtn = win.querySelector('#m8Ask');
+  const hint = win.querySelector('#m8Hint');
+
+  let spinning = false;
+
+  function ask() {
+    if (spinning) return;
+    if (!input.value.trim()) { toast('pehle sawaal toh pucho 😄'); input.focus(); return; }
+    spinning = true;
+    hint.textContent = '';
+    num.classList.remove('hidden');
+    answer.classList.add('hidden');
+    ball.classList.add('m8-shake');
+
+    setTimeout(() => {
+      ball.classList.remove('m8-shake');
+      num.classList.add('hidden');
+      answer.textContent = M8_ANSWERS[Math.floor(Math.random() * M8_ANSWERS.length)];
+      answer.classList.remove('hidden');
+      spinning = false;
+      hint.textContent = 'tap ask for another question ✨';
+    }, 1200);
+  }
+
+  askBtn.addEventListener('click', ask);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+}
+
+/* ═══════════ APP: PHOTO MEMORY MATCH ═══════════ */
+function initMatch(win) {
+  const grid = win.querySelector('#matchGrid');
+  const movesEl = win.querySelector('#mchMoves');
+  const timeEl = win.querySelector('#mchTime');
+  const done = win.querySelector('#matchDone');
+  const doneText = win.querySelector('#matchDoneText');
+  const again = win.querySelector('#matchAgain');
+
+  const TOTAL_PAIRS = 6;
+  let flipped = [], matched = 0, moves = 0, timer = null, secs = 0, locked = false;
+
+  function startGame() {
+    flipped = []; matched = 0; moves = 0; secs = 0; locked = false;
+    movesEl.textContent = '0 moves';
+    timeEl.textContent = '0s';
+    done.classList.add('hidden');
+    grid.innerHTML = '';
+    clearInterval(timer);
+
+    // Pick TOTAL_PAIRS random photos from her album
+    const pool = Array.from({ length: 22 }, (_, i) => `photos/her/her${pad(i + 1)}.jpg`);
+    const chosen = pool.sort(() => Math.random() - 0.5).slice(0, TOTAL_PAIRS);
+    const deck = [...chosen, ...chosen].sort(() => Math.random() - 0.5);
+
+    deck.forEach((src, i) => {
+      const card = document.createElement('div');
+      card.className = 'mc-card';
+      card.dataset.src = src;
+      card.dataset.idx = i;
+      card.innerHTML = `
+        <div class="mc-face mc-back">🎀</div>
+        <div class="mc-face mc-front"><img src="${src}" loading="lazy"></div>`;
+      card.addEventListener('click', () => flip(card));
+      grid.appendChild(card);
+    });
+
+    timer = setInterval(() => { secs++; timeEl.textContent = secs + 's'; }, 1000);
+  }
+
+  function flip(card) {
+    if (locked || card.classList.contains('mc-open') || card.classList.contains('mc-match')) return;
+    card.classList.add('mc-open');
+    flipped.push(card);
+
+    if (flipped.length === 2) {
+      locked = true;
+      moves++;
+      movesEl.textContent = moves + ' moves';
+      const [a, b] = flipped;
+      if (a.dataset.src === b.dataset.src) {
+        a.classList.add('mc-match'); b.classList.add('mc-match');
+        matched++;
+        flipped = []; locked = false;
+        if (matched === TOTAL_PAIRS) {
+          clearInterval(timer);
+          setTimeout(() => {
+            doneText.textContent = `${moves} moves · ${secs}s — her photos are burned in your memory! 🎀`;
+            done.classList.remove('hidden');
+          }, 400);
+        }
+      } else {
+        setTimeout(() => {
+          a.classList.remove('mc-open'); b.classList.remove('mc-open');
+          flipped = []; locked = false;
+        }, 950);
+      }
+    }
+  }
+
+  again.addEventListener('click', startGame);
+  startGame();
+}
+
+/* ═══════════ APP: COMPLIMENT SLOT MACHINE ═══════════ */
+const SLOT_DATA = [
+  ['Absolutely', 'Genuinely', 'Completely', 'Effortlessly', 'Ridiculously', 'Undeniably', 'Clearly', 'So'],
+  ['gorgeous', 'radiant', 'brilliant', 'wonderful', 'stunning', 'lovable', 'iconic', 'glowing'],
+  ['always 🎀', 'no notes ✨', 'fr fr 💕', 'every day 🌸', 'facts only', 'ek dum sach', 'non-stop', 'verified 💯'],
+];
+
+function initSlot(win) {
+  const strips = [win.querySelector('#slotS0'), win.querySelector('#slotS1'), win.querySelector('#slotS2')];
+  const spinBtn = win.querySelector('#slotSpin');
+  const result = win.querySelector('#slotResult');
+  let spinning = false;
+
+  const ITEM_H = 52;
+
+  strips.forEach((strip, ri) => {
+    SLOT_DATA[ri].forEach(word => {
+      const el = document.createElement('div');
+      el.className = 'slot-item';
+      el.textContent = word;
+      strip.appendChild(el);
+    });
+    // Duplicate for seamless loop
+    SLOT_DATA[ri].forEach(word => {
+      const el = document.createElement('div');
+      el.className = 'slot-item';
+      el.textContent = word;
+      strip.appendChild(el);
+    });
+  });
+
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+    result.textContent = '';
+    spinBtn.disabled = true;
+
+    const picks = SLOT_DATA.map(col => Math.floor(Math.random() * col.length));
+
+    strips.forEach((strip, ri) => {
+      const targetIdx = picks[ri] + SLOT_DATA[ri].length;
+      const targetY = -(targetIdx * ITEM_H) + ITEM_H;
+      const duration = 700 + ri * 250;
+
+      strip.style.transition = `transform ${duration}ms cubic-bezier(.17,.67,.3,1.2)`;
+      strip.style.transform = `translateY(${targetY}px)`;
+
+      if (ri === strips.length - 1) {
+        setTimeout(() => {
+          spinning = false;
+          spinBtn.disabled = false;
+          const phrase = picks.map((p, i) => SLOT_DATA[i][p]).join(' ');
+          result.textContent = `"${phrase}"`;
+          toast(SLOT_DATA[0][picks[0]] + ' ' + SLOT_DATA[1][picks[1]] + ' — certified 🎀');
+        }, duration + 100);
+      }
+    });
+  }
+
+  spinBtn.addEventListener('click', spin);
+  // Auto-spin once on open
+  setTimeout(spin, 300);
+}
+
+/* ═══════════ APP: GUESS THE VIBE ═══════════ */
+const VIBES = [
+  { s: '2am mein achanak tumhara favourite song play hota hai 🎵', o: ['So jao', 'Full volume karo aur dance karo', 'Rona shuru karo', 'Screenshot leke bestie ko bhejo'], r: [0,1,2,3], v: 'nostalgia queen' },
+  { s: 'Tumhara bestie ek ajeeb reel forward karta hai bina kisi context ke 📱', o: ['Block kar do', 'Same energy mein 5 reels bhejo wapas', 'Seriously lo', 'Unsubscribe karo'], r: [1], v: 'certified reel bestie' },
+  { s: 'Khana order karte time tumhara favourite item menu pe nahi hai 😩', o: ['Chill ho jao', 'Chef ko bulao', 'Mood kharab ho jaye', 'Order hi cancel karo'], r: [0,2], v: 'foodie drama queen' },
+  { s: 'Tumhara bestie tumhare baare mein kuch sweet bolta hai 🌸', o: ['Ignore karo', '"Shut up yaar" bol ke blush karo', 'Rone lag jao (happy tears)', 'Embarrassed ho ke bhaago'], r: [1,2], v: 'softie with a hard exterior' },
+  { s: 'Naya photo liya hai aur itna acha aaya hai 📸', o: ['Delete karo', 'Instantly stories pe daal do', 'Filter lagao phir socho', 'Bestie ko pehle dikhao'], r: [1,3], v: 'main character' },
+  { s: 'Baarish ho rahi hai aur tum ghar pe ho 🌧️', o: ['Sad feel karo', 'Coffee banao aur khidki ke paas baitho', 'Sone ki koshish karo', 'Bestie ko call karo aur vibe do'], r: [1,3], v: 'cozy season lover' },
+  { s: 'Tumhara phone battery 2% pe hai aur charger nahi mila 😬', o: ['Panic mode ON', 'Shanti se accept kar lo', 'Last message bestie ko bhejo', 'Doosra phone dhundho'], r: [0,2], v: 'phone-dependent bestie' },
+];
+
+function initVibe(win) {
+  const intro = win.querySelector('#vibeIntro');
+  const play = win.querySelector('#vibePlay');
+  const doneSec = win.querySelector('#vibeDone');
+  const bar = win.querySelector('#vibeBarFill');
+  const step = win.querySelector('#vibeStep');
+  const scenario = win.querySelector('#vibeScenario');
+  const opts = win.querySelector('#vibeOpts');
+  const doneResult = win.querySelector('#vibeDoneResult');
+  const doneSub = win.querySelector('#vibeDoneSub');
+  const startBtn = win.querySelector('#vibeStart');
+  const againBtn = win.querySelector('#vibeAgain');
+
+  let qi = 0, vibeMap = {};
+
+  function show() {
+    const item = VIBES[qi];
+    step.textContent = `situation ${qi + 1} of ${VIBES.length}`;
+    bar.style.width = ((qi / VIBES.length) * 100) + '%';
+    scenario.textContent = item.s;
+    opts.innerHTML = '';
+    item.o.forEach((opt, n) => {
+      const b = document.createElement('button');
+      b.className = 'vibe-opt';
+      b.textContent = opt;
+      b.addEventListener('click', () => {
+        [...opts.children].forEach((btn, k) => {
+          if (item.r.includes(k)) btn.classList.add('right');
+          else if (k === n) btn.classList.add('wrong');
+          else btn.classList.add('dim');
+        });
+        vibeMap[item.v] = (vibeMap[item.v] || 0) + (item.r.includes(n) ? 1 : 0);
+        setTimeout(() => { qi++; if (qi < VIBES.length) show(); else finish(); }, 1100);
+      });
+      opts.appendChild(b);
+    });
+  }
+
+  function finish() {
+    play.classList.add('hidden');
+    doneSec.classList.remove('hidden');
+    bar.style.width = '100%';
+    const top = Object.entries(vibeMap).sort((a, b) => b[1] - a[1])[0];
+    const label = top ? top[0] : 'mystery vibe';
+    doneResult.textContent = `✨ ${label} ✨`;
+    doneSub.textContent = 'ekdum accurate! yeh toh sach mein tumhara vibe hai 🎀';
+  }
+
+  startBtn.addEventListener('click', () => { intro.classList.add('hidden'); play.classList.remove('hidden'); show(); });
+  againBtn.addEventListener('click', () => {
+    qi = 0; vibeMap = {};
+    doneSec.classList.add('hidden'); play.classList.remove('hidden'); show();
+  });
+}
+
+/* ═══════════ APP: REEL SNAKE ═══════════ */
+const SNAKE_TOASTS = [
+  'got one! 📱', 'reel unlocked 🎉', 'bestie sent this at 2am 💀',
+  'relatable! 😂', 'us literally 😭', 'this is exactly you btw',
+  'screenshot karo baad mein 📸', 'okay but why is this so us',
+];
+
+function initSnake(win) {
+  const canvas = win.querySelector('#snakeCanvas');
+  const scoreEl = win.querySelector('#snakeScore');
+  const msg = win.querySelector('#snakeMsg');
+  const ctx = canvas.getContext('2d');
+
+  const CELL = 20;
+  let W, H, cols, rows;
+  let snake, dir, nextDir, food, score, running, gameLoop;
+
+  function resize() {
+    const wrap = canvas.parentElement;
+    W = Math.floor((wrap.offsetWidth || 320) / CELL) * CELL;
+    H = Math.floor(Math.min(wrap.offsetHeight || 260, 260) / CELL) * CELL;
+    canvas.width = W; canvas.height = H;
+    cols = W / CELL; rows = H / CELL;
+  }
+
+  function placeFood() {
+    let pos;
+    do { pos = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) }; }
+    while (snake.some(s => s.x === pos.x && s.y === pos.y));
+    food = pos;
+  }
+
+  function startGame() {
+    resize();
+    snake = [{ x: Math.floor(cols / 2), y: Math.floor(rows / 2) }];
+    dir = { x: 1, y: 0 }; nextDir = { x: 1, y: 0 };
+    score = 0; scoreEl.textContent = '0';
+    running = true;
+    msg.classList.add('hidden');
+    placeFood();
+    clearInterval(gameLoop);
+    gameLoop = setInterval(tick, 130);
+  }
+
+  function tick() {
+    if (!running) return;
+    dir = nextDir;
+    const head = { x: (snake[0].x + dir.x + cols) % cols, y: (snake[0].y + dir.y + rows) % rows };
+    if (snake.some(s => s.x === head.x && s.y === head.y)) { endGame(); return; }
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score++; scoreEl.textContent = score;
+      toast(SNAKE_TOASTS[Math.floor(Math.random() * SNAKE_TOASTS.length)]);
+      placeFood();
+    } else snake.pop();
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // Grid
+    ctx.strokeStyle = 'rgba(180,130,200,0.08)';
+    for (let x = 0; x < W; x += CELL) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += CELL) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    // Food
+    ctx.font = `${CELL - 2}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('📱', food.x * CELL + CELL / 2, food.y * CELL + CELL / 2);
+    // Snake
+    snake.forEach((s, i) => {
+      const alpha = 1 - i / snake.length * 0.5;
+      ctx.fillStyle = `rgba(180,100,200,${alpha})`;
+      ctx.beginPath();
+      ctx.roundRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4, 4);
+      ctx.fill();
+    });
+    // Head face
+    ctx.font = `${CELL - 4}px serif`;
+    ctx.fillText('🐍', snake[0].x * CELL + CELL / 2, snake[0].y * CELL + CELL / 2);
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(gameLoop);
+    msg.textContent = `game over! score: ${score} 😭 tap to restart`;
+    msg.classList.remove('hidden');
+    toast(score >= 10 ? `${score} reels! bestie certified 🎀` : `${score} reels collected! ek baar aur try karo`);
+  }
+
+  // Controls
+  win.querySelectorAll('.sd-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!running) { startGame(); return; }
+      const d = btn.dataset.dir;
+      if (d === 'up'    && dir.y === 0) nextDir = { x: 0, y: -1 };
+      if (d === 'down'  && dir.y === 0) nextDir = { x: 0, y: 1 };
+      if (d === 'left'  && dir.x === 0) nextDir = { x: -1, y: 0 };
+      if (d === 'right' && dir.x === 0) nextDir = { x: 1, y: 0 };
+    });
+  });
+
+  canvas.addEventListener('click', () => { if (!running) startGame(); });
+
+  // Swipe support
+  let tx = 0, ty = 0;
+  canvas.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  canvas.addEventListener('touchend', e => {
+    if (!running) { startGame(); return; }
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 20 && dir.x === 0) nextDir = { x: 1, y: 0 };
+      if (dx < -20 && dir.x === 0) nextDir = { x: -1, y: 0 };
+    } else {
+      if (dy > 20 && dir.y === 0) nextDir = { x: 0, y: 1 };
+      if (dy < -20 && dir.y === 0) nextDir = { x: 0, y: -1 };
+    }
+  }, { passive: true });
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if (!running) return;
+    if (e.key === 'ArrowUp'    && dir.y === 0) { nextDir = { x:0, y:-1 }; e.preventDefault(); }
+    if (e.key === 'ArrowDown'  && dir.y === 0) { nextDir = { x:0, y:1  }; e.preventDefault(); }
+    if (e.key === 'ArrowLeft'  && dir.x === 0) { nextDir = { x:-1,y:0  }; e.preventDefault(); }
+    if (e.key === 'ArrowRight' && dir.x === 0) { nextDir = { x:1, y:0  }; e.preventDefault(); }
+  });
+
+  resize();
+  draw();
+}
+
+/* ═══════════ SHAKE FOR SURPRISE ═══════════ (mobile global) */
+(function initShake() {
+  let lastShake = 0;
+  let shakeCount = 0;
+  const SURPRISES = [
+    () => heartRain(),
+    () => toast('tum genuinely bahut acha insaan ho 🌸 yeh fact hai'),
+    () => { const s = SHAYARI.hi[Math.floor(Math.random() * SHAYARI.hi.length)]; toast(s[0] + ' ' + s[1]); },
+    () => toast('bestie scan complete: gorgeous, verified, irreplaceable ✨'),
+    () => { heartRain(); toast('ek hug from here 🤍'); },
+    () => toast('stop shaking me yaar 😭 main gir jaunga'),
+  ];
+
+  if (!window.DeviceMotionEvent) return;
+
+  window.addEventListener('devicemotion', e => {
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+    const mag = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+    if (mag > 25) {
+      const now = Date.now();
+      if (now - lastShake < 800) return;
+      lastShake = now;
+      const idx = Math.min(shakeCount, SURPRISES.length - 1);
+      SURPRISES[idx]();
+      shakeCount++;
+      if (shakeCount >= SURPRISES.length) shakeCount = 0;
+    }
+  });
+})();
+
+/* ═══════════ THEME MANAGER & VIBES ═══════════ */
+const THEMES = [
+  { k: 'sakura',   n: '🌸 Soft Sakura',   c1: '#ff8fb8', c2: '#b79dff', d: 'Pastel Pink & Lavender (Default)' },
+  { k: 'sunset',   n: '🌅 Sunset Glow',   c1: '#f26b38', c2: '#ffb98f', d: 'Warm Amber & Golden Coral' },
+  { k: 'midnight', n: '🌌 Midnight Star', c1: '#b070ff', c2: '#201235', d: 'Deep Velvet & Glowing Starlight' },
+  { k: 'sage',     n: '🌿 Sage & Mint',   c1: '#3b9b78', c2: '#8fe0c4', d: 'Cozy Mint & Soft Emerald' },
+  { k: 'ocean',    n: '💙 Ocean Breeze',  c1: '#3a82ee', c2: '#8fc7ff', d: 'Cool Periwinkle & Sky Blue' },
+];
+
+function setTheme(key, notify = true) {
+  document.documentElement.setAttribute('data-theme', key);
+  try { localStorage.setItem('reetos-theme', key); } catch (_) {}
+  if (notify) {
+    const t = THEMES.find(item => item.k === key);
+    toast(`vibe set: ${t ? t.n : key} ✨`);
+  }
+}
+
+function restoreTheme() {
+  try {
+    const saved = localStorage.getItem('reetos-theme') || 'sakura';
+    setTheme(saved, false);
+  } catch (_) {
+    setTheme('sakura', false);
+  }
+}
+
+function initTimeVibe() {
+  const hr = new Date().getHours();
+  let greeting = '';
+  document.body.classList.remove('vibe-morning', 'vibe-afternoon', 'vibe-night');
+
+  if (hr >= 5 && hr < 12) {
+    greeting = 'good morning Reet ☀️';
+    document.body.classList.add('vibe-morning');
+  } else if (hr >= 12 && hr < 18) {
+    greeting = 'good afternoon Reet ☕';
+    document.body.classList.add('vibe-afternoon');
+  } else {
+    greeting = 'late night? sleep well Reet 🌙';
+    document.body.classList.add('vibe-night');
+  }
+
+  const hint = document.querySelector('.lock-hint');
+  if (hint) hint.textContent = `${greeting} · welcome home`;
+}
+
+function initSparkleTrail() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.createElement('canvas');
+  canvas.id = 'sparkleTrail';
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+  const sparkles = [];
+
+  function addParticle(x, y) {
+    if (sparkles.length > 20) return;
+    sparkles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 0.9,
+      vy: (Math.random() - 0.5) * 0.9 - 0.3,
+      size: Math.random() * 3.5 + 2,
+      alpha: 1,
+      color: ['#ff8fb8', '#b79dff', '#ffb98f', '#ffffff'][Math.floor(Math.random() * 4)]
+    });
+  }
+
+  window.addEventListener('mousemove', e => addParticle(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    if (e.touches && e.touches[0]) addParticle(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+
+  (function render() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = sparkles.length - 1; i >= 0; i--) {
+      const p = sparkles[i];
+      p.x += p.vx; p.y += p.vy; p.alpha -= 0.035; p.size *= 0.95;
+      if (p.alpha <= 0) { sparkles.splice(i, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    requestAnimationFrame(render);
+  })();
+}
+
+function initThemeApp(win) {
+  const grid = win.querySelector('#thGrid');
+  grid.innerHTML = '';
+  const current = document.documentElement.getAttribute('data-theme') || 'sakura';
+
+  THEMES.forEach(t => {
+    const card = document.createElement('div');
+    card.className = `th-card ${t.k === current ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="th-preview" style="background: linear-gradient(135deg, ${t.c1}, ${t.c2})"></div>
+      <div class="th-info">
+        <div class="th-name">${t.n}</div>
+        <div class="th-desc">${t.d}</div>
+      </div>`;
+    card.addEventListener('click', () => {
+      grid.querySelectorAll('.th-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      setTheme(t.k, true);
+    });
+    grid.appendChild(card);
+  });
+
+  const wpBtn = win.querySelector('#thCycleWp');
+  if (wpBtn) wpBtn.addEventListener('click', () => cycleWallpaper());
+
+  const rainBtn = win.querySelector('#thHeartRain');
+  if (rainBtn) rainBtn.addEventListener('click', () => heartRain());
+}
+
+/* ═══════════ REET'S QUEST CHECKLIST & ONBOARDING ═══════════ */
+const QUEST_ITEMS = [
+  { id: 'letter',  t: 'Read your secret letter', e: '✉️', desc: 'Read letter.txt in full' },
+  { id: 'music',   t: 'Play a track on Reet Radio', e: '🎵', desc: 'Listen to Alka Yagnik & more' },
+  { id: 'quiz',    t: 'Take the Bestie Test', e: '🎀', desc: 'Score your bestie points in reet 101' },
+  { id: 'scratch', t: 'Scratch a daily surprise', e: '🎁', desc: 'Reveal your hidden surprise card' },
+  { id: 'match',   t: 'Play Photo Memory Match', e: '🃏', desc: 'Match your photo pairs' },
+  { id: 'mood',    t: 'Check in your daily vibe', e: '🌸', desc: 'Tell reetOS how you feel today' },
+  { id: 'slot',    t: 'Spin Compliment Machine', e: '🎰', desc: 'Spin for a random sweet fact' },
+  { id: 'snake',   t: 'Eat reels in Reel Snake', e: '📱', desc: 'Play a game of bestie snake' },
+  { id: 'sticky',  t: 'Read care notes & reminders', e: '📌', desc: 'Check your gentle daily notes' },
+  { id: 'reply',   t: 'Write back to him', e: '💌', desc: 'Send a note or WhatsApp reply' },
+];
+
+const QUEST_KEY = 'reetos-quest';
+function loadQuest() {
+  try { return JSON.parse(localStorage.getItem(QUEST_KEY) || '{}'); } catch (_) { return {}; }
+}
+function saveQuest(state) {
+  try { localStorage.setItem(QUEST_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+function markAppExplored(id) {
+  const questState = loadQuest();
+  if (!questState[id]) {
+    questState[id] = true;
+    saveQuest(questState);
+    const item = QUEST_ITEMS.find(q => q.id === id);
+    if (item) toast(`quest completed: ${item.t} ${item.e}`);
+    checkBadges();
+    const doneCount = Object.keys(questState).length;
+    if (doneCount === QUEST_ITEMS.length) {
+      setTimeout(() => {
+        heartRain();
+        toast('🎉 100% QUEST COMPLETED! You unlocked ultimate bestie status 🎀');
+      }, 600);
+    }
+  }
+}
+
+function checkBadges() {
+  const questState = loadQuest();
+  QUEST_ITEMS.forEach(q => {
+    const explored = !!questState[q.id];
+    document.querySelectorAll(`[data-app="${q.id}"]`).forEach(el => {
+      let badge = el.querySelector('.app-badge');
+      if (!explored) {
+        if (!badge) {
+          badge = document.createElement('div');
+          badge.className = 'app-badge';
+          badge.textContent = 'NEW';
+          el.appendChild(badge);
+        }
+      } else {
+        if (badge) badge.remove();
+      }
+    });
+  });
+}
+
+function checkWelcomeModal() {
+  try {
+    const welcomed = localStorage.getItem('reetos-welcomed');
+    if (!welcomed) showWelcomeModal();
+  } catch (_) {
+    showWelcomeModal();
+  }
+}
+
+function showWelcomeModal() {
+  const overlay = $('#welcomeOverlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    const startBtn = $('#wmStartBtn');
+    if (startBtn) {
+      startBtn.onclick = () => {
+        overlay.classList.add('hidden');
+        try { localStorage.setItem('reetos-welcomed', '1'); } catch (_) {}
+        openApp('quest');
+      };
+    }
+  }
+}
+
+function initQuestApp(win) {
+  const list = win.querySelector('#qList');
+  const bar = win.querySelector('#qBarFill');
+  const status = win.querySelector('#qStatus');
+  const reward = win.querySelector('#qReward');
+
+  function render() {
+    const questState = loadQuest();
+    list.innerHTML = '';
+    let done = 0;
+
+    QUEST_ITEMS.forEach(q => {
+      const isDone = !!questState[q.id];
+      if (isDone) done++;
+      const item = document.createElement('div');
+      item.className = `q-item ${isDone ? 'done' : ''}`;
+      item.innerHTML = `
+        <div class="q-ico">${q.e}</div>
+        <div class="q-info">
+          <div class="q-item-title">${q.t}</div>
+          <div class="q-item-desc">${q.desc}</div>
+        </div>
+        <div class="q-check">${isDone ? '✓' : ''}</div>`;
+      item.addEventListener('click', () => {
+        openApp(q.id);
+      });
+      list.appendChild(item);
+    });
+
+    const pct = (done / QUEST_ITEMS.length) * 100;
+    bar.style.width = pct + '%';
+    status.textContent = `${done} of ${QUEST_ITEMS.length} completed (${Math.round(pct)}%)`;
+
+    if (done === QUEST_ITEMS.length) {
+      reward.classList.remove('hidden');
+    } else {
+      reward.classList.add('hidden');
+    }
+  }
+
+  render();
+}
+
+
+

@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@200;300;400;500;600;700&family=Caveat:wght@600;700&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1a1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="reetOS">
 </head>
 <body>
 
@@ -16,21 +22,37 @@
   <div class="boot-inner">
     <div class="boot-logo" data-icon="ribbon"></div>
     <div class="boot-name"><span class="wordmark shine" style="--wm:2.7rem"><span class="wm-reet">reet</span><span class="wm-os">OS</span></span></div>
-    <div class="boot-ver">version 2.0 · friendship edition</div>
+    <div class="boot-ver">version 2.0 · reet edition</div>
     <div class="boot-log" id="bootLog"></div>
     <div class="boot-bar"><div class="boot-bar-fill" id="bootBarFill"></div></div>
     <div class="boot-pct" id="bootPct">0%</div>
+
+    <div class="boot-install hidden" id="bootInstall">
+      <button class="boot-install-btn" id="installBtn">
+        <span data-icon="download"></span> add reetOS to home screen
+      </button>
+      <button class="boot-continue" id="continueBtn">continue in browser</button>
+    </div>
   </div>
 </div>
 
 <!-- ══════════ LOCK SCREEN ══════════ -->
 <div id="lock" class="hidden">
-  <div class="lock-time" id="lockTime">00:00</div>
-  <div class="lock-date" id="lockDate">Sunday, August 2</div>
-  <div class="lock-avatar" data-icon="ribbon"></div>
-  <div class="lock-user">Reet</div>
-  <button class="lock-btn" id="lockBtn">tap to unlock</button>
-  <div class="lock-hint">no password needed — you're always welcome here</div>
+  <div class="lock-photo" id="lockPhotoA"></div>
+  <div class="lock-photo" id="lockPhotoB" style="opacity: 0;"></div>
+  <div class="lock-scrim"></div>
+  <div class="lock-content">
+    <div class="lock-clock">
+      <div class="lock-time" id="lockTime">00:00</div>
+      <div class="lock-date" id="lockDate">Sunday, August 2</div>
+    </div>
+    <div class="lock-bottom">
+      <div class="lock-avatar" data-icon="ribbon"></div>
+      <div class="lock-user">Reet</div>
+      <button class="lock-btn" id="lockBtn">tap to unlock</button>
+      <div class="lock-hint">no password needed — you're always welcome here</div>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════ DESKTOP ══════════ -->
@@ -50,25 +72,35 @@
     <div class="menubar-left">
       <span class="mb-logo" data-icon="ribbon"></span>
       <span class="mb-item bold" data-menu="system"><span class="wordmark" style="--wm:.95rem"><span class="wm-reet">reet</span><span class="wm-os">OS</span></span></span>
-      <span class="mb-item desktop-only" data-menu="file">File</span>
+      <span class="mb-item desktop-only" data-menu="file">Her Things</span>
       <span class="mb-item desktop-only" data-menu="feelings">Feelings</span>
-      <span class="mb-item desktop-only" data-menu="help">Help</span>
+      <span class="mb-item desktop-only" data-menu="help">Reet 101</span>
     </div>
     <div class="menubar-right">
+      <span class="mb-item mb-ico" id="themeBtn" title="Themes & Vibe"><span data-icon="sparkle"></span></span>
       <span class="mb-item mb-ico" id="battery"><span data-icon="battery"></span> ∞%</span>
       <span class="mb-item mb-ico" id="wifi"><span data-icon="wifi"></span></span>
       <span class="mb-item" id="menuClock">--:--</span>
     </div>
   </div>
 
-  <!-- Desktop icons -->
+  <!-- Desktop icons (mac) -->
   <div class="desktop-icons" id="desktopIcons"></div>
+
+  <!-- iPhone home screen (mobile only) -->
+  <div class="home" id="home">
+    <div class="home-grid" id="homeGrid"></div>
+    <div class="home-dots"><i class="on"></i></div>
+  </div>
 
   <!-- Windows container -->
   <div id="windows"></div>
 
   <!-- Dock -->
   <div class="dock" id="dock"></div>
+
+  <!-- iOS home indicator (mobile only) -->
+  <div class="home-bar" id="homeBar"></div>
 
 </div>
 
@@ -87,8 +119,8 @@
 <template id="tpl-photos">
   <div class="photos-app" id="photosApp">
     <div class="photos-bar">
-      <button class="ph-back" id="phBack"><span data-icon="chevL"></span> albums</button>
-      <span class="ph-label" id="phLabel">Albums</span>
+      <button class="ph-back" id="phBack"><span data-icon="chevL"></span> her albums</button>
+      <span class="ph-label" id="phLabel">Her Albums</span>
       <span class="ph-count" id="photoCount"></span>
     </div>
     <div class="photos-scroll" id="photosScroll">
@@ -109,8 +141,8 @@
 <template id="tpl-videos">
   <div class="videos-app" id="videosApp">
     <div class="photos-bar">
-      <button class="ph-back" id="vdBack"><span data-icon="chevL"></span> sets</button>
-      <span class="ph-label" id="vdLabel">Clips</span>
+      <button class="ph-back" id="vdBack"><span data-icon="chevL"></span> all sets</button>
+      <span class="ph-label" id="vdLabel">Reet In Motion</span>
       <span class="ph-count" id="vdCount"></span>
     </div>
     <div class="photos-scroll" id="vdScroll">
@@ -155,13 +187,62 @@
     </div>
     <div class="mu-list">
       <div class="mu-list-bar">
-        <button class="mu-station-btn" id="muStationBtn"><span data-icon="chevL"></span> <span id="muStationName">stations</span></button>
+        <button class="mu-station-btn" id="muStationBtn"><span data-icon="chevL"></span> <span id="muStationName">reet radio</span></button>
         <button class="mu-shuffle" id="muShuffle">shuffle</button>
       </div>
       <div id="muStations"></div>
       <div id="muTracks" class="hidden"></div>
     </div>
     <audio id="muAudio" preload="metadata"></audio>
+  </div>
+</template>
+
+<template id="tpl-story">
+  <div class="story-app">
+    <div class="st-hero">
+      <div class="st-hero-num" id="stTotal">—</div>
+      <div class="st-hero-label">days since I first saw you</div>
+      <div class="st-streak" id="stStreak"></div>
+    </div>
+    <div class="st-rail" id="stRail"></div>
+    <div class="st-foot">every date here is counted from today, and keeps counting</div>
+  </div>
+</template>
+
+<template id="tpl-quiz">
+  <div class="quiz-app">
+    <div class="qz-intro" id="qzIntro">
+      <div class="qz-glyph" data-icon="sparkle"></div>
+      <div class="qz-title">bestie test 🎀</div>
+      <div class="qz-sub">10 questions about us & our vibe. No dates, zero stress!</div>
+      <button class="sh-btn" id="qzStart">shuru karein?</button>
+    </div>
+    <div class="qz-play hidden" id="qzPlay">
+      <div class="qz-bar"><div class="qz-bar-fill" id="qzBarFill"></div></div>
+      <div class="qz-step" id="qzStep"></div>
+      <div class="qz-q" id="qzQ"></div>
+      <div class="qz-opts" id="qzOpts"></div>
+      <div class="qz-note" id="qzNote"></div>
+    </div>
+    <div class="qz-done hidden" id="qzDone">
+      <div class="qz-score" id="qzScore"></div>
+      <div class="qz-verdict" id="qzVerdict"></div>
+      <button class="sh-btn" id="qzAgain">phir se try karein? 🎀</button>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-reply">
+  <div class="reply-app">
+    <div class="rp-head">write back</div>
+    <div class="rp-sub">say anything. it saves as you type, so you can't lose it.</div>
+    <textarea id="rpText" class="rp-text" placeholder="type here…" maxlength="4000"></textarea>
+    <div class="rp-meta"><span id="rpCount">0 characters</span><span id="rpSaved"></span></div>
+    <div class="rp-actions">
+      <button class="sh-btn" id="rpSend">send it to him</button>
+      <button class="sh-ghost" id="rpCopy">copy</button>
+    </div>
+    <div class="rp-hint" id="rpHint"></div>
   </div>
 </template>
 
@@ -234,7 +315,186 @@
   </div>
 </template>
 
-<script src="music-data.js"></script>
+<!-- ══════════ MOOD CHECK-IN ══════════ -->
+<template id="tpl-mood">
+  <div class="mood-app">
+    <div class="mood-title">aaj ka mood kya hai? 🌸</div>
+    <div class="mood-sub">tap your vibe and I'll match it</div>
+    <div class="mood-grid" id="moodGrid"></div>
+    <div class="mood-result hidden" id="moodResult">
+      <div class="mood-res-emoji" id="moodResEmoji"></div>
+      <div class="mood-res-text" id="moodResText"></div>
+      <button class="sh-btn" id="moodAgain">change mood</button>
+    </div>
+  </div>
+</template>
+
+<!-- ══════════ SCRATCH CARD ══════════ -->
+<template id="tpl-scratch">
+  <div class="scratch-app">
+    <div class="scratch-label">scratch to reveal 🎁</div>
+    <div class="scratch-wrap" id="scratchWrap">
+      <div class="scratch-msg" id="scratchMsg"></div>
+      <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
+    </div>
+    <div class="scratch-hint" id="scratchHint">scratch anywhere on the card</div>
+    <button class="sh-btn scratch-new hidden" id="scratchNew">new card ✨</button>
+  </div>
+</template>
+
+<!-- ══════════ MAGIC 8-BALL ══════════ -->
+<template id="tpl-magic8">
+  <div class="m8-app">
+    <div class="m8-title">🔮 Reet's Magic Ball</div>
+    <div class="m8-sub">pucho kuch bhi — main jaanti hoon</div>
+    <div class="m8-ball" id="m8Ball">
+      <div class="m8-inner">
+        <div class="m8-num">8</div>
+        <div class="m8-answer hidden" id="m8Answer"></div>
+      </div>
+    </div>
+    <div class="m8-field">
+      <input class="m8-input" id="m8Input" type="text" placeholder="apna sawaal yahan likho…" autocomplete="off" />
+      <button class="sh-btn" id="m8Ask">ask</button>
+    </div>
+    <div class="m8-hint" id="m8Hint">type a yes/no question and tap ask ✨</div>
+  </div>
+</template>
+
+<!-- ══════════ PHOTO MEMORY MATCH ══════════ -->
+<template id="tpl-match">
+  <div class="match-app">
+    <div class="match-header">
+      <div class="match-title">memory match 🃏</div>
+      <div class="match-stats"><span id="mchMoves">0 moves</span> · <span id="mchTime">0s</span></div>
+    </div>
+    <div class="match-grid" id="matchGrid"></div>
+    <div class="match-done hidden" id="matchDone">
+      <div class="match-done-text" id="matchDoneText"></div>
+      <button class="sh-btn" id="matchAgain">play again 🎴</button>
+    </div>
+  </div>
+</template>
+
+<!-- ══════════ COMPLIMENT SLOT MACHINE ══════════ -->
+<template id="tpl-slot">
+  <div class="slot-app">
+    <div class="slot-title">compliment machine 🎰</div>
+    <div class="slot-sub">pull to generate a fact about you</div>
+    <div class="slot-machine">
+      <div class="slot-reels" id="slotReels">
+        <div class="slot-reel" id="slotR0"><div class="slot-strip" id="slotS0"></div></div>
+        <div class="slot-reel" id="slotR1"><div class="slot-strip" id="slotS1"></div></div>
+        <div class="slot-reel" id="slotR2"><div class="slot-strip" id="slotS2"></div></div>
+      </div>
+      <div class="slot-line"></div>
+    </div>
+    <button class="sh-btn slot-btn" id="slotSpin">✨ spin</button>
+    <div class="slot-result" id="slotResult"></div>
+  </div>
+</template>
+
+<!-- ══════════ GUESS THE VIBE ══════════ -->
+<template id="tpl-vibe">
+  <div class="vibe-app">
+    <div class="vibe-intro" id="vibeIntro">
+      <div class="vibe-glyph">✨</div>
+      <div class="vibe-title">guess the vibe</div>
+      <div class="vibe-sub">I'll describe a situation — you pick the bestie reaction</div>
+      <button class="sh-btn" id="vibeStart">let's go</button>
+    </div>
+    <div class="vibe-play hidden" id="vibePlay">
+      <div class="vibe-bar"><div class="vibe-bar-fill" id="vibeBarFill"></div></div>
+      <div class="vibe-step" id="vibeStep"></div>
+      <div class="vibe-scenario" id="vibeScenario"></div>
+      <div class="vibe-opts" id="vibeOpts"></div>
+    </div>
+    <div class="vibe-done hidden" id="vibeDone">
+      <div class="vibe-done-label">your vibe is</div>
+      <div class="vibe-done-result" id="vibeDoneResult"></div>
+      <div class="vibe-done-sub" id="vibeDoneSub"></div>
+      <button class="sh-btn" id="vibeAgain">phir se play karein? ✨</button>
+    </div>
+  </div>
+</template>
+
+<!-- ══════════ REEL SNAKE ══════════ -->
+<template id="tpl-snake">
+  <div class="snake-app">
+    <div class="snake-header">
+      <div class="snake-title">reel snake 📱</div>
+      <div class="snake-score">score: <span id="snakeScore">0</span></div>
+    </div>
+    <canvas class="snake-canvas" id="snakeCanvas"></canvas>
+    <div class="snake-msg" id="snakeMsg">tap to start 👆</div>
+    <div class="snake-controls">
+      <div class="snake-dpad">
+        <button class="sd-btn" data-dir="up">▲</button>
+        <button class="sd-btn" data-dir="left">◀</button>
+        <button class="sd-btn" data-dir="right">▶</button>
+        <button class="sd-btn" data-dir="down">▼</button>
+      </div>
+    </div>
+  </div>
+<!-- ══════════ STICKY NOTES ══════════ -->
+<template id="tpl-sticky">
+  <div class="sticky-app">
+    <div class="st-head">
+      <div class="st-title">gentle reminders 📌</div>
+      <div class="st-sub">little sticky notes for your day</div>
+    </div>
+    <div class="st-grid" id="stGrid"></div>
+  </div>
+<!-- ══════════ THEMES & VIBE ══════════ -->
+<template id="tpl-theme">
+  <div class="theme-app">
+    <div class="th-head">
+      <div class="th-title">choose your vibe 🎨</div>
+      <div class="th-sub">select a color theme & custom aura</div>
+    </div>
+    <div class="th-grid" id="thGrid"></div>
+    <div class="th-actions">
+      <button class="sh-btn" id="thCycleWp">cycle wallpaper 🖼️</button>
+      <button class="sh-btn" id="thHeartRain">heart rain 💕</button>
+    </div>
+  </div>
+<!-- ══════════ REET'S QUEST CHECKLIST ══════════ -->
+<template id="tpl-quest">
+  <div class="quest-app">
+    <div class="q-head">
+      <div class="q-title">reet's exploration quest 🏆</div>
+      <div class="q-sub">explore all apps to complete your friendship badge</div>
+    </div>
+    <div class="q-bar-wrap">
+      <div class="q-bar"><div class="q-bar-fill" id="qBarFill"></div></div>
+      <div class="q-status" id="qStatus">0 of 10 completed</div>
+    </div>
+    <div class="q-list" id="qList"></div>
+    <div class="q-reward hidden" id="qReward">
+      <div class="q-rw-glyph">🎉🎀</div>
+      <div class="q-rw-title">100% Quest Completed!</div>
+      <div class="q-rw-text">you explored every single corner of reetOS — officially certified bestie forever 🤍</div>
+    </div>
+  </div>
+</template>
+
+<!-- ══════════ WELCOME MODAL ══════════ -->
+<div class="welcome-overlay hidden" id="welcomeOverlay">
+  <div class="welcome-modal">
+    <div class="wm-sparkle">🌸✨</div>
+    <div class="wm-title">Welcome to reetOS, Reet!</div>
+    <div class="wm-body">
+      This whole site was built just for you 🎀<br/>
+      Inside, you'll find games, music, shayari, care notes, photos, and a secret letter.<br/><br/>
+      Use your <b>Exploration Quest</b> checklist to make sure you don't miss a single surprise!
+    </div>
+    <div class="wm-actions">
+      <button class="sh-btn" id="wmStartBtn">Start Exploring 🚀</button>
+    </div>
+  </div>
+</div>
+
+
 <script src="video-data.js"></script>
 <script src="script.js"></script>
 </body>
