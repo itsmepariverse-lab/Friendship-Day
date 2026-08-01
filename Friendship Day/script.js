@@ -162,12 +162,16 @@ const BOOT_LINES = [
   ['date: august 2 · friendship day', 'ready', 'hl'],
 ];
 
-const bootLog = $('#bootLog');
-const bootFill = $('#bootBarFill');
-const bootPct = $('#bootPct');
-
 let bootStep = 0;
 function runBoot() {
+  const bootLog = $('#bootLog');
+  const bootFill = $('#bootBarFill');
+  const bootPct = $('#bootPct');
+  if (!bootLog || !bootFill || !bootPct) {
+    setTimeout(runBoot, 150);
+    return;
+  }
+
   if (bootStep >= BOOT_LINES.length) {
     bootFill.style.width = '100%';
     bootPct.textContent = '100%';
@@ -187,7 +191,12 @@ function runBoot() {
   // uneven, slightly slow — a boot that flies past reads as a loading flicker
   setTimeout(runBoot, 430 + Math.random() * 320);
 }
-setTimeout(runBoot, 1100);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(runBoot, 600));
+} else {
+  setTimeout(runBoot, 600);
+}
 
 /* Offer the "add to home screen" panel — mobile only, and only if there's
    somewhere useful to add it (not already installed, not on desktop). */
@@ -277,6 +286,8 @@ function showLock() {
   }
   
   lock.classList.remove('hidden');
+  const lockBtn = $('#lockBtn');
+  if (lockBtn) lockBtn.onclick = unlock;
   updateLockClock();
   setInterval(updateLockClock, 1000);
   startLockSlideshow();
@@ -291,8 +302,6 @@ function updateLockClock() {
     ld.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 }
-
-$('#lockBtn').addEventListener('click', unlock);
 
 let unlocked = false;
 let desktopReady = false;
