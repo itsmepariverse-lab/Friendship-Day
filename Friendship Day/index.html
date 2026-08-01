@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>reetOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════ BOOT SCREEN ══════════ -->
+<div id="boot">
+  <div class="boot-inner">
+    <div class="boot-logo" data-icon="ribbon"></div>
+    <div class="boot-name">reetOS</div>
+    <div class="boot-ver">version 2.0 · friendship edition</div>
+    <div class="boot-log" id="bootLog"></div>
+    <div class="boot-bar"><div class="boot-bar-fill" id="bootBarFill"></div></div>
+    <div class="boot-pct" id="bootPct">0%</div>
+  </div>
+</div>
+
+<!-- ══════════ LOCK SCREEN ══════════ -->
+<div id="lock" class="hidden">
+  <div class="lock-time" id="lockTime">00:00</div>
+  <div class="lock-date" id="lockDate">Sunday, August 2</div>
+  <div class="lock-avatar" data-icon="ribbon"></div>
+  <div class="lock-user">Reet</div>
+  <button class="lock-btn" id="lockBtn">tap to unlock</button>
+  <div class="lock-hint">no password needed — you're always welcome here</div>
+</div>
+
+<!-- ══════════ DESKTOP ══════════ -->
+<div id="desktop" class="hidden">
+
+  <div class="wallpaper" id="wallpaper">
+    <div class="wp-photo" id="wpPhoto"></div>
+    <div class="wp-wash"></div>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <canvas id="starCanvas"></canvas>
+  </div>
+
+  <!-- Menu bar -->
+  <div class="menubar">
+    <div class="menubar-left">
+      <span class="mb-logo" data-icon="ribbon"></span>
+      <span class="mb-item bold" data-menu="system">reetOS</span>
+      <span class="mb-item desktop-only" data-menu="file">File</span>
+      <span class="mb-item desktop-only" data-menu="feelings">Feelings</span>
+      <span class="mb-item desktop-only" data-menu="help">Help</span>
+    </div>
+    <div class="menubar-right">
+      <span class="mb-item mb-ico" id="battery"><span data-icon="battery"></span> ∞%</span>
+      <span class="mb-item mb-ico" id="wifi"><span data-icon="wifi"></span></span>
+      <span class="mb-item" id="menuClock">--:--</span>
+    </div>
+  </div>
+
+  <!-- Desktop icons -->
+  <div class="desktop-icons" id="desktopIcons"></div>
+
+  <!-- Windows container -->
+  <div id="windows"></div>
+
+  <!-- Dock -->
+  <div class="dock" id="dock"></div>
+
+</div>
+
+<!-- ══════════ WINDOW TEMPLATES ══════════ -->
+<template id="tpl-terminal">
+  <div class="term">
+    <div class="term-out" id="termOut"></div>
+    <div class="term-chips" id="termChips"></div>
+    <div class="term-inputline">
+      <span class="term-prompt">reet@friendship <span class="tilde">~</span> $</span>
+      <input type="text" class="term-input" id="termInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">
+    </div>
+  </div>
+</template>
+
+<template id="tpl-photos">
+  <div class="photos-app" id="photosApp">
+    <div class="photos-bar">
+      <button class="ph-back" id="phBack"><span data-icon="chevL"></span> albums</button>
+      <span class="ph-label" id="phLabel">Albums</span>
+      <span class="ph-count" id="photoCount"></span>
+    </div>
+    <div class="photos-scroll" id="photosScroll">
+      <div class="albums-grid" id="albumsGrid"></div>
+      <div class="photos-grid hidden" id="photosGrid"></div>
+    </div>
+    <div class="lightbox" id="lightbox">
+      <div class="lb-idx" id="lbIdx"></div>
+      <button class="lb-close" id="lbClose" data-icon="close"></button>
+      <button class="lb-nav lb-prev" id="lbPrev" data-icon="chevL"></button>
+      <img id="lbImg" alt="memory">
+      <button class="lb-nav lb-next" id="lbNext" data-icon="chevR"></button>
+      <div class="lb-cap" id="lbCap"></div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-videos">
+  <div class="videos-app" id="videosApp">
+    <div class="photos-bar">
+      <button class="ph-back" id="vdBack"><span data-icon="chevL"></span> sets</button>
+      <span class="ph-label" id="vdLabel">Clips</span>
+      <span class="ph-count" id="vdCount"></span>
+    </div>
+    <div class="photos-scroll" id="vdScroll">
+      <div class="albums-grid" id="vdSets"></div>
+      <div class="vd-grid hidden" id="vdGrid"></div>
+    </div>
+    <div class="vd-player" id="vdPlayer">
+      <button class="lb-close" id="vdClose" data-icon="close"></button>
+      <video id="vdVideo" playsinline webkit-playsinline controls preload="metadata"></video>
+      <div class="vd-meta">
+        <div class="vd-title" id="vdTitle"></div>
+        <div class="vd-date" id="vdDate"></div>
+      </div>
+      <button class="lb-nav lb-prev" id="vdPrev" data-icon="chevL"></button>
+      <button class="lb-nav lb-next" id="vdNext" data-icon="chevR"></button>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-letter">
+  <div class="letter-app">
+    <div class="letter-meta">letter.txt — modified Aug 2, 2026</div>
+    <div class="letter-body" id="letterBody"></div>
+  </div>
+</template>
+
+<template id="tpl-music">
+  <div class="music-app">
+    <div class="mu-art">
+      <div class="mu-disc" id="muDisc"><span data-icon="vinyl"></span></div>
+    </div>
+    <div class="mu-title" id="muTitle">—</div>
+    <div class="mu-artist" id="muArtist">—</div>
+    <div class="mu-viz" id="muViz"></div>
+    <input type="range" class="mu-seek" id="muSeek" value="0" min="0" max="1000">
+    <div class="mu-time"><span id="muCur">0:00</span><span id="muDur">0:00</span></div>
+    <div class="mu-controls">
+      <button class="mu-btn" id="muBack" data-icon="prev"></button>
+      <button class="mu-btn mu-play" id="muPlay" data-icon="play"></button>
+      <button class="mu-btn" id="muFwd" data-icon="next"></button>
+    </div>
+    <div class="mu-list">
+      <div class="mu-list-bar">
+        <button class="mu-station-btn" id="muStationBtn"><span data-icon="chevL"></span> <span id="muStationName">stations</span></button>
+        <button class="mu-shuffle" id="muShuffle">shuffle</button>
+      </div>
+      <div id="muStations"></div>
+      <div id="muTracks" class="hidden"></div>
+    </div>
+    <audio id="muAudio" preload="metadata"></audio>
+  </div>
+</template>
+
+<template id="tpl-reasons">
+  <div class="reasons-app">
+    <div class="rs-label">reason generator</div>
+    <div class="rs-display" id="rsDisplay">
+      <div class="rs-glyph" data-icon="sparkle"></div>
+      <div class="rs-text">press the button and I'll tell you why</div>
+    </div>
+    <button class="rs-btn" id="rsBtn"><span data-icon="sparkle"></span> generate</button>
+    <div class="rs-counter" id="rsCounter">0 of 12 discovered</div>
+  </div>
+</template>
+
+<template id="tpl-notes">
+  <div class="notes-app">
+    <div class="nt-head">things_to_do_together.md</div>
+    <ul class="nt-list" id="ntList"></ul>
+    <div class="nt-foot" id="ntFoot">0 of 8 completed</div>
+  </div>
+</template>
+
+<template id="tpl-trash">
+  <div class="trash-app">
+    <div class="tr-icon" data-icon="trashBig"></div>
+    <div class="tr-title">Trash is empty</div>
+    <div class="tr-sub">tried to find a bad memory of us to delete.<br>turns out there aren't any.</div>
+  </div>
+</template>
+
+<template id="tpl-about">
+  <div class="about-app">
+    <div class="ab-logo" data-icon="ribbon"></div>
+    <div class="ab-name">reetOS</div>
+    <div class="ab-ver">Version 2.0 · Friendship Edition</div>
+    <div class="ab-specs">
+      <div><span>Owner</span><b>Reet</b></div>
+      <div><span>Role</span><b>Certified Best Friend</b></div>
+      <div><span>Memory</span><b>∞ GB — all of them</b></div>
+      <div><span>Uptime</span><b id="abUptime">calculating…</b></div>
+      <div><span>Storage</span><b>100% love · 0% free</b></div>
+      <div><span>License</span><b>Forever · non-revocable</b></div>
+    </div>
+    <div class="ab-foot">built by someone who thinks the world of you</div>
+  </div>
+</template>
+
+<script src="music-data.js"></script>
+<script src="video-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

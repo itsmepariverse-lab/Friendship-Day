@@ -5,3 +5,7 @@ backup_v1/
 *.jpg.jpg
 node_modules/
 .DS_Store
+
+# Radio station MP3s (~2GB of commercial music) — kept local, never committed.
+# The player reads them from disk; the generated manifest is committed instead.
+Friendship Day/assets/music/*/
