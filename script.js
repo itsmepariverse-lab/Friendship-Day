@@ -1,910 +1,2941 @@
-document.addEventListener('DOMContentLoaded', () => {
+/* ═══════════════════════════════════════════════════════
+   reetOS — Friendship Edition
+   ═══════════════════════════════════════════════════════ */
 
-  // --- 1. Audio Control ---
-  const bgMusic = document.getElementById('bgMusic');
-  const musicToggle = document.getElementById('musicToggle');
-  const musicIcon = musicToggle.querySelector('.icon');
-  const musicText = musicToggle.querySelector('.text');
-  let isPlaying = false;
+/* ─────────── CUSTOM ICON SET ─────────── */
+const sq = (id, c1, c2, inner) => `
+<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/>
+  </linearGradient></defs>
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#g${id})"/>
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="none" stroke="rgba(255,255,255,.45)"/>
+  ${inner}
+</svg>`;
 
-  bgMusic.volume = 0.4; // Soft background music
+const S = 'stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"';
 
-  musicToggle.addEventListener('click', () => {
-    if (isPlaying) {
-      bgMusic.pause();
-      musicIcon.textContent = '🎵';
-      musicText.textContent = 'Play Music';
-    } else {
-      if(bgMusic.currentTime > 0 && bgMusic.paused) {
-         // resume instantly without resetting if just paused, OR we can reset to 0:
-         bgMusic.currentTime = 0; // The user asked for "restarts", so we force restart!
-      }
-      bgMusic.play().catch(e => console.log('Audio play failed:', e));
-      musicIcon.textContent = '⏸️';
-      musicText.textContent = 'Pause Music';
+const ICONS = {
+  /* ── brand mark: a hand-drawn ribbon/bow ── */
+  ribbon: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 16c-2.6-3.6-5.4-5.6-8.2-5.2-2.4.4-3.6 2.6-2.8 4.8.9 2.4 4.4 3.4 11 .4z"
+      fill="#ff8fb8" stroke="#e85a92" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M16 16c2.6-3.6 5.4-5.6 8.2-5.2 2.4.4 3.6 2.6 2.8 4.8-.9 2.4-4.4 3.4-11 .4z"
+      fill="#ffa8c8" stroke="#e85a92" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M14.4 16.4L10 26M17.6 16.4L22 26" stroke="#e85a92" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <circle cx="16" cy="16" r="2.9" fill="#fff0f6" stroke="#e85a92" stroke-width="1.5"/>
+  </svg>`,
+
+  /* ── app icons ── */
+  appTerminal: sq('t', '#6d5d7a', '#3d2f45', `
+    <path d="M14 19l6 5-6 5" ${S}/><path d="M25 29h10" ${S}/>`),
+  appPhotos: sq('p', '#ffb3d1', '#ff8fb8', `
+    <rect x="11" y="14" width="26" height="20" rx="4" ${S}/>
+    <circle cx="18.5" cy="21" r="2.4" ${S}/>
+    <path d="M12.5 31l7-7 5.5 5.5 4-3.5 6.5 6" ${S}/>`),
+  appLetter: sq('l', '#ffc9a8', '#ff9d8f', `
+    <rect x="10" y="15" width="28" height="19" rx="3.5" ${S}/>
+    <path d="M10.5 17.5L24 26l13.5-8.5" ${S}/>`),
+  appMusic: sq('m', '#c9b3ff', '#9d8fff', `
+    <path d="M20 31V16l14-2.6V29" ${S}/>
+    <ellipse cx="17" cy="31.5" rx="3.4" ry="2.8" ${S}/>
+    <ellipse cx="31" cy="29" rx="3.4" ry="2.8" ${S}/>`),
+  appReasons: sq('r', '#ffdb8f', '#ffb35a', `
+    <path d="M24 12.5l3.4 7.3 7.6 1-5.6 5.4 1.4 7.8-6.8-3.8-6.8 3.8 1.4-7.8L13 20.8l7.6-1z" ${S}/>`),
+  appNotes: sq('n', '#a8e6c4', '#6dd6a8', `
+    <rect x="12" y="11" width="24" height="27" rx="4" ${S}/>
+    <path d="M17.5 19.5l2 2 3.5-3.8M17.5 27.5l2 2 3.5-3.8" ${S}/>
+    <path d="M27 20h5M27 28h5" ${S}/>`),
+  appTrash: sq('x', '#c4c9e0', '#9aa2c4', `
+    <path d="M13 17h22" ${S}/>
+    <path d="M16.5 17l1.4 18a2.5 2.5 0 002.5 2.3h7.2a2.5 2.5 0 002.5-2.3L31.5 17" ${S}/>
+    <path d="M20 17v-2.5a2 2 0 012-2h4a2 2 0 012 2V17" ${S}/>`),
+  appStory: sq('y', '#ffb8c8', '#e87a9e', `
+    <circle cx="24" cy="13" r="2.6" fill="#fff"/>
+    <circle cx="24" cy="24" r="2.6" fill="#fff"/>
+    <circle cx="24" cy="35" r="2.6" fill="#fff"/>
+    <path d="M24 15.6v5.8M24 26.6v5.8" ${S}/>
+    <path d="M29 13h7M29 24h5M29 35h8" ${S}/>`),
+  appQuiz: sq('q', '#a8dcff', '#6db4e8', `
+    <path d="M18.5 18.5a5.5 5.5 0 1111 .5c0 3.5-5.5 4-5.5 8" ${S}/>
+    <circle cx="24" cy="34.5" r="1.9" fill="#fff"/>`),
+  appReply: sq('w', '#ffe0a8', '#f5b85a', `
+    <path d="M12 33.5V27l14.5-14.5a3 3 0 014.2 0l2.8 2.8a3 3 0 010 4.2L19 34h-7z" ${S}/>
+    <path d="M25 15.5l7 7" ${S}/>`),
+  appShayari: sq('s', '#f2b8ff', '#c98fe8', `
+    <path d="M17 32c-3-8 1-16 9-19.5" ${S}/>
+    <path d="M26 12.5c1.6 5.4.6 11-3 14.2-2.3 2-5.2 2.4-7.4 1.2" ${S}/>
+    <path d="M13.5 35.5c1.6-2.2 3.4-4 5.5-5.5" ${S}/>
+    <path d="M30 30h6M30 35h4" ${S}/>`),
+  appVideos: sq('v', '#ffc4a8', '#ff9a7a', `
+    <rect x="8" y="14" width="21" height="20" rx="4" ${S}/>
+    <path d="M29 22.5l8-4.5v12l-8-4.5z" ${S}/>`),
+  appAbout: sq('a', '#ffa8d4', '#e87ab0', `
+    <circle cx="24" cy="24" r="12" ${S}/>
+    <path d="M24 22v8" ${S}/><circle cx="24" cy="17.6" r="1.5" fill="#fff"/>`),
+
+  /* ── UI glyphs ── */
+  battery: `<svg viewBox="0 0 26 14"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="16" height="8" rx="2" fill="#8fe0c4"/><path d="M23.2 5v4c1.2-.4 1.8-1.1 1.8-2s-.6-1.6-1.8-2z" fill="currentColor"/></svg>`,
+  wifi: `<svg viewBox="0 0 24 18"><path d="M2 6.2a15 15 0 0120 0M5.6 10a10 10 0 0112.8 0M9.2 13.7a5 5 0 015.6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.4" fill="currentColor"/></svg>`,
+  grid: `<svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1.6" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.6" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.6" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.6" fill="currentColor"/></svg>`,
+  close: `<svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`,
+  chevL: `<svg viewBox="0 0 16 16"><path d="M10.5 2.5L5 8l5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+  chevR: `<svg viewBox="0 0 16 16"><path d="M5.5 2.5L11 8l-5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+  play: `<svg viewBox="0 0 16 16"><path d="M4 2.5l9 5.5-9 5.5z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  pause: `<svg viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3.4" height="11" rx="1.5" fill="currentColor"/><rect x="9.1" y="2.5" width="3.4" height="11" rx="1.5" fill="currentColor"/></svg>`,
+  prev: `<svg viewBox="0 0 16 16"><path d="M12 3v10L5 8z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="2.6" y="3" width="1.9" height="10" rx="1" fill="currentColor"/></svg>`,
+  next: `<svg viewBox="0 0 16 16"><path d="M4 3v10l7-5z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="11.5" y="3" width="1.9" height="10" rx="1" fill="currentColor"/></svg>`,
+  vinyl: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/><circle cx="20" cy="20" r="14" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1"/><circle cx="20" cy="20" r="9.5" fill="#ff8fb8"/><circle cx="20" cy="20" r="2.6" fill="#fff6fa"/><path d="M20 10.5a9.5 9.5 0 018.6 5.5" stroke="rgba(255,255,255,.55)" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`,
+  check: `<svg viewBox="0 0 16 16"><path d="M3 8.4l3.4 3.4L13 4.8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+  download: `<svg viewBox="0 0 16 16"><path d="M8 2v8.5M4.6 7.6L8 11l3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M3 13.5h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  trashBig: `<svg viewBox="0 0 48 48"><path d="M11 16h26" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M15 16l1.7 21.5A3 3 0 0019.7 40h8.6a3 3 0 003-2.5L33 16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M19.5 16v-3a2.5 2.5 0 012.5-2.5h4a2.5 2.5 0 012.5 2.5v3" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+
+  /* ── reason glyphs ── */
+  sparkle: `<svg viewBox="0 0 32 32"><path d="M16 3.5l2.6 8.6 8.9 2.4-8.9 2.5-2.6 9-2.6-9-8.9-2.5 8.9-2.4z" fill="currentColor" opacity=".9"/><path d="M26 22l1 3.2 3.2 1-3.2 1-1 3.2-1-3.2-3.2-1 3.2-1z" fill="currentColor" opacity=".55"/></svg>`,
+  heart: `<svg viewBox="0 0 32 32"><path d="M16 27.5S4.5 20.4 4.5 12.9A6.4 6.4 0 0116 9.4a6.4 6.4 0 0111.5 3.5c0 7.5-11.5 14.6-11.5 14.6z" fill="currentColor"/></svg>`,
+  star: `<svg viewBox="0 0 32 32"><path d="M16 3.6l3.9 8.3 8.6 1.1-6.3 6.1 1.6 8.8L16 23.7 8.2 27.9l1.6-8.8-6.3-6.1 8.6-1.1z" fill="currentColor"/></svg>`,
+  sun: `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="6.6" fill="currentColor"/><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M16 2.5v3.6M16 25.9v3.6M2.5 16h3.6M25.9 16h3.6M6.4 6.4l2.6 2.6M23 23l2.6 2.6M25.6 6.4L23 9M9 23l-2.6 2.6"/></g></svg>`,
+  moon: `<svg viewBox="0 0 32 32"><path d="M26 20.4A11.4 11.4 0 0111.6 6 11.5 11.5 0 1026 20.4z" fill="currentColor"/></svg>`,
+  flower: `<svg viewBox="0 0 32 32"><g fill="currentColor"><ellipse cx="16" cy="8.4" rx="4.1" ry="5.6"/><ellipse cx="16" cy="23.6" rx="4.1" ry="5.6"/><ellipse cx="8.4" cy="16" rx="5.6" ry="4.1"/><ellipse cx="23.6" cy="16" rx="5.6" ry="4.1"/></g><circle cx="16" cy="16" r="3.6" fill="#fff7fa"/></svg>`,
+  cloud: `<svg viewBox="0 0 32 32"><path d="M9 24a5.6 5.6 0 01-.5-11.2 7.6 7.6 0 0114.6-1.6A5.4 5.4 0 0123.5 24z" fill="currentColor"/></svg>`,
+  gift: `<svg viewBox="0 0 32 32"><rect x="4.5" y="13" width="23" height="14.5" rx="2.4" fill="currentColor"/><rect x="3" y="8.5" width="26" height="5.6" rx="2" fill="currentColor" opacity=".78"/><path d="M16 8.5v19" stroke="#fff7fa" stroke-width="2.4"/><path d="M16 8.5c-3.6-5.6-8.4-2-4 0M16 8.5c3.6-5.6 8.4-2 4 0" fill="currentColor"/></svg>`,
+  chat: `<svg viewBox="0 0 32 32"><path d="M16 5.5c6.6 0 12 4 12 9s-5.4 9-12 9a15 15 0 01-3.4-.4L6 26l1.8-4.6C5.4 19.7 4 17.2 4 14.5c0-5 5.4-9 12-9z" fill="currentColor"/><g fill="#fff7fa"><circle cx="11" cy="14.5" r="1.7"/><circle cx="16" cy="14.5" r="1.7"/><circle cx="21" cy="14.5" r="1.7"/></g></svg>`,
+  infinity: `<svg viewBox="0 0 32 32"><path d="M16 16c-2.6-4-5-5.6-7.6-4.8-2.4.7-3.4 3.1-2.3 5.3 1.3 2.6 5.4 3 9.9-.5zM16 16c2.6 4 5 5.6 7.6 4.8 2.4-.7 3.4-3.1 2.3-5.3-1.3-2.6-5.4-3-9.9.5z" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/></svg>`,
+  smile: `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12.5" fill="currentColor"/><g fill="#fff7fa"><circle cx="11.6" cy="13.4" r="1.9"/><circle cx="20.4" cy="13.4" r="1.9"/></g><path d="M10.6 19.4a6.4 6.4 0 0010.8 0" stroke="#fff7fa" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>`,
+  hands: `<svg viewBox="0 0 32 32"><path d="M12 27V15.5a2 2 0 014 0V13a2 2 0 014 0v1.5a2 2 0 014 0V22a6 6 0 01-6 6z" fill="currentColor"/><path d="M12 27a6 6 0 01-6-6v-5.5a2 2 0 014 0" fill="currentColor" opacity=".7"/></svg>`,
+};
+
+function renderIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach(el => {
+    const key = el.getAttribute('data-icon');
+    if (ICONS[key] && !el.dataset.filled) {
+      el.innerHTML = ICONS[key];
+      el.dataset.filled = '1';
     }
-    isPlaying = !isPlaying;
+  });
+}
+renderIcons();
+
+/* ─────────── HELPERS ─────────── */
+const $ = (s, r = document) => r.querySelector(s);
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+const pad = n => String(n).padStart(2, '0');
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 400);
+  }, 2600);
+}
+
+/* ═══════════ PWA INSTALL ═══════════ */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+
+/* ═══════════ BOOT SEQUENCE ═══════════ */
+const BOOT_LINES = [
+  ['initializing reetOS kernel', 'ok'],
+  ['mounting /memories', 'ok'],
+  ['loading friendship drivers', 'ok'],
+  ['checking heart integrity', 'ok'],
+  ['scanning for flaws in Reet', 'none found', 'hl'],
+  ['calibrating serotonin levels', 'ok'],
+  ['establishing forever connection', 'ok'],
+  ['date: august 2 · friendship day', 'ready', 'hl'],
+];
+
+const bootLog = $('#bootLog');
+const bootFill = $('#bootBarFill');
+const bootPct = $('#bootPct');
+
+let bootStep = 0;
+function runBoot() {
+  if (bootStep >= BOOT_LINES.length) {
+    bootFill.style.width = '100%';
+    bootPct.textContent = '100%';
+    setTimeout(offerInstallOrLock, 1000);   // let 100% actually register before moving on
+    return;
+  }
+  const [label, status, cls] = BOOT_LINES[bootStep];
+  const line = document.createElement('div');
+  line.innerHTML = `<span class="dim">[${pad(bootStep + 1)}]</span> ${label} … <span class="${cls === 'hl' ? 'hl' : 'ok'}">${status}</span>`;
+  bootLog.appendChild(line);
+  bootLog.scrollTop = bootLog.scrollHeight;
+
+  bootStep++;
+  const pctVal = Math.round((bootStep / BOOT_LINES.length) * 100);
+  bootFill.style.width = pctVal + '%';
+  bootPct.textContent = pctVal + '%';
+  // uneven, slightly slow — a boot that flies past reads as a loading flicker
+  setTimeout(runBoot, 430 + Math.random() * 320);
+}
+setTimeout(runBoot, 1100);
+
+/* Offer the "add to home screen" panel — mobile only, and only if there's
+   somewhere useful to add it (not already installed, not on desktop). */
+function offerInstallOrLock() {
+  const panel = $('#bootInstall');
+  const canOffer = isMobile() && !isStandalone() && (deferredInstallPrompt || isIOS());
+
+  if (!canOffer) { showLock(); return; }
+
+  panel.classList.remove('hidden');
+  const installBtn = $('#installBtn');
+  const continueBtn = $('#continueBtn');
+  renderIcons(panel);
+
+  if (isIOS() && !deferredInstallPrompt) {
+    installBtn.querySelector('span:last-child').textContent = 'tap ⬆ share, then "Add to Home Screen"';
+  }
+
+  installBtn.addEventListener('click', async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice.catch(() => {});
+      deferredInstallPrompt = null;
+      showLock();
+    }
+    // iOS has no programmatic install — the label itself is the instruction,
+    // so a tap here just moves on once she's read it.
+    else showLock();
+  }, { once: true });
+
+  continueBtn.addEventListener('click', showLock, { once: true });
+}
+
+/* ═══════════ LOCK SCREEN ═══════════ */
+/* Dynamic lock screen slideshow cycling through all photos in her sheet (her01.jpg .. her22.jpg) */
+const LOCK_PHOTOS = Array.from({ length: 22 }, (_, i) => `photos/her/her${pad(i + 1)}.jpg`);
+let lockPhotoIdx = Math.floor(Math.random() * LOCK_PHOTOS.length);
+let activeLockPhotoEl = 'A';
+let lockSlideshowTimer = null;
+
+function changeLockPhoto() {
+  const nextIdx = (lockPhotoIdx + 1) % LOCK_PHOTOS.length;
+  lockPhotoIdx = nextIdx;
+  const src = LOCK_PHOTOS[nextIdx];
+  
+  const currentEl = $('#lockPhoto' + activeLockPhotoEl);
+  const nextElKey = activeLockPhotoEl === 'A' ? 'B' : 'A';
+  const nextEl = $('#lockPhoto' + nextElKey);
+  
+  if (!nextEl) return;
+  const img = new Image();
+  img.onload = () => {
+    nextEl.style.backgroundImage = `url("${src}")`;
+    nextEl.style.opacity = '1';
+    if (currentEl) currentEl.style.opacity = '0';
+    activeLockPhotoEl = nextElKey;
+  };
+  img.src = src;
+}
+
+function startLockSlideshow() {
+  if (!lockSlideshowTimer) {
+    lockSlideshowTimer = setInterval(changeLockPhoto, 5000);
+  }
+}
+
+function stopLockSlideshow() {
+  if (lockSlideshowTimer) {
+    clearInterval(lockSlideshowTimer);
+    lockSlideshowTimer = null;
+  }
+}
+
+function showLock() {
+  $('#boot').classList.add('out');
+  const lock = $('#lock');
+  
+  const initialSrc = LOCK_PHOTOS[lockPhotoIdx];
+  const photoA = $('#lockPhotoA');
+  if (photoA) {
+    const img = new Image();
+    img.onload = () => {
+      photoA.style.backgroundImage = `url("${initialSrc}")`;
+      photoA.style.opacity = '1';
+    };
+    img.src = initialSrc;
+  }
+  
+  lock.classList.remove('hidden');
+  updateLockClock();
+  setInterval(updateLockClock, 1000);
+  startLockSlideshow();
+}
+
+function updateLockClock() {
+  const d = new Date();
+  const lt = $('#lockTime');
+  if (lt) lt.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const ld = $('#lockDate');
+  if (ld) {
+    ld.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+}
+
+$('#lockBtn').addEventListener('click', unlock);
+
+let unlocked = false;
+let desktopReady = false;
+function unlock() {
+  if (unlocked) return;
+  unlocked = true;
+  stopLockSlideshow();
+  $('#lock').classList.add('out');
+  $('#desktop').classList.remove('hidden');
+
+  if (!desktopReady) {
+    desktopReady = true;
+    initDesktop();
+    setTimeout(() => {
+      toast('welcome to reetOS, Reet 🎀');
+      checkBadges();
+      checkWelcomeModal();
+    }, 1200);
+  } else {
+    setTimeout(() => toast('welcome back again 🎀'), 900);
+  }
+}
+
+/* ═══════════ APP REGISTRY ═══════════ */
+const APPS = {
+  terminal: { name: 'reet.sh',     icon: 'appTerminal', tpl: 'tpl-terminal', w: 520, h: 380, init: initTerminal, desktop: true },
+  photos:   { name: 'her albums',  icon: 'appPhotos',   tpl: 'tpl-photos',   w: 480, h: 420, init: initPhotos,   desktop: true },
+  videos:   { name: 'reet in motion', icon: 'appVideos',   tpl: 'tpl-videos',   w: 460, h: 460, init: initVideos,   desktop: true },
+  letter:   { name: 'letter.txt',  icon: 'appLetter',   tpl: 'tpl-letter',   w: 440, h: 430, init: initLetter,   desktop: true },
+  music:    { name: 'reet radio',  icon: 'appMusic',    tpl: 'tpl-music',    w: 320, h: 460, init: initMusic },
+  story:    { name: 'us, so far',  icon: 'appStory',    tpl: 'tpl-story',    w: 420, h: 500, init: initStory,   desktop: true },
+  shayari:  { name: 'shayari',     icon: 'appShayari',  tpl: 'tpl-shayari',  w: 380, h: 440, init: initShayari, desktop: true },
+  quiz:     { name: 'reet 101',    icon: 'appQuiz',     tpl: 'tpl-quiz',     w: 380, h: 460, init: initQuiz },
+  reply:    { name: 'reet replies',icon: 'appReply',    tpl: 'tpl-reply',    w: 380, h: 440, init: initReply },
+  reasons:  { name: 'why reet',    icon: 'appReasons',  tpl: 'tpl-reasons',  w: 360, h: 400, init: initReasons },
+  notes:    { name: 'our list',    icon: 'appNotes',    tpl: 'tpl-notes',    w: 380, h: 420, init: initNotes },
+  about:    { name: 'about this friendship', icon: 'appAbout', tpl: 'tpl-about', w: 380, h: 440, init: initAbout },
+  trash:    { name: 'regrets',     icon: 'appTrash',    tpl: 'tpl-trash',    w: 340, h: 280, init: null, desktop: true },
+  mood:     { name: 'mood check',  icon: 'appReply',    tpl: 'tpl-mood',     w: 360, h: 440, init: initMood },
+  scratch:  { name: 'scratch card',icon: 'appLetter',   tpl: 'tpl-scratch',  w: 340, h: 420, init: initScratch },
+  magic8:   { name: 'magic 8 reet',icon: 'appAbout',    tpl: 'tpl-magic8',   w: 340, h: 460, init: initMagic8 },
+  match:    { name: 'memory match',icon: 'appPhotos',   tpl: 'tpl-match',    w: 400, h: 500, init: initMatch },
+  slot:     { name: 'compliment 🎰',icon: 'appReasons', tpl: 'tpl-slot',     w: 340, h: 460, init: initSlot },
+  vibe:     { name: 'guess the vibe',icon: 'appQuiz',   tpl: 'tpl-vibe',     w: 360, h: 480, init: initVibe },
+  snake:    { name: 'reel snake',  icon: 'appVideos',   tpl: 'tpl-snake',    w: 360, h: 500, init: initSnake },
+  sticky:   { name: 'care notes 📌', icon: 'appNotes',   tpl: 'tpl-sticky',   w: 420, h: 480, init: initStickyNotes, desktop: true },
+  theme:    { name: 'themes 🎨',   icon: 'appReasons', tpl: 'tpl-theme',    w: 380, h: 440, init: initThemeApp, desktop: true },
+  quest:    { name: 'reet quest 🏆', icon: 'appStory',  tpl: 'tpl-quest',    w: 380, h: 480, init: initQuestApp, desktop: true },
+};
+
+/* ═══════════ WINDOW MANAGER ═══════════ */
+const openWindows = {};
+let zTop = 200;
+let cascade = 0;
+
+function openApp(id) {
+  const app = APPS[id];
+  if (!app) return;
+  markAppExplored(id);
+
+  if (openWindows[id]) {
+    const w = openWindows[id];
+    if (w.dataset.min) restoreWin(id); else focusWin(w);
+    return;
+  }
+
+  const win = document.createElement('div');
+  win.className = 'win win-enter';
+  win.dataset.app = id;
+  // setTimeout still fires when a tab is throttled, unlike animation events
+  setTimeout(() => win.classList.remove('win-enter'), 450);
+
+  if (!isMobile()) {
+    const offset = (cascade % 5) * 28;
+    const maxL = Math.max(20, window.innerWidth - app.w - 40);
+    const maxT = Math.max(44, window.innerHeight - app.h - 100);
+    win.style.width = app.w + 'px';
+    win.style.height = app.h + 'px';
+    win.style.left = Math.min(90 + offset, maxL) + 'px';
+    win.style.top = Math.min(70 + offset, maxT) + 'px';
+    cascade++;
+  }
+
+  win.innerHTML = `
+    <div class="win-grab"></div>
+    <div class="win-bar">
+      <div class="win-lights">
+        <button class="wl wl-close" title="close"></button>
+        <button class="wl wl-min" title="minimize"></button>
+        <button class="wl wl-max" title="zoom"></button>
+      </div>
+      <div class="win-title"><span data-icon="${app.icon}"></span>${app.name}</div>
+      <div class="win-spacer"></div>
+    </div>
+    <div class="win-body"></div>`;
+
+  const tpl = $('#' + app.tpl);
+  win.querySelector('.win-body').appendChild(tpl.content.cloneNode(true));
+
+  $('#windows').appendChild(win);
+  renderIcons(win);
+
+  win.querySelector('.wl-close').addEventListener('click', e => { e.stopPropagation(); closeWin(id); });
+  win.querySelector('.wl-min').addEventListener('click', e => { e.stopPropagation(); minimizeWin(id); });
+  win.querySelector('.wl-max').addEventListener('click', e => { e.stopPropagation(); toggleMax(win, app); });
+  win.addEventListener('pointerdown', () => focusWin(win));
+
+  if (!isMobile()) makeDraggable(win, win.querySelector('.win-bar'));
+  else makeDismissable(win, id);
+
+  openWindows[id] = win;
+  focusWin(win);
+  markDock(id, true);
+  syncHomeState();
+
+  if (app.init) app.init(win);
+}
+
+function closeWin(id) {
+  const win = openWindows[id];
+  if (!win) return;
+  win.dispatchEvent(new CustomEvent('win-closing'));
+  // never leave audio/video playing behind a closed window
+  win.querySelectorAll('audio, video').forEach(m => { try { m.pause(); } catch (_) {} });
+  win.classList.add('closing');
+  setTimeout(() => win.remove(), 240);
+  delete openWindows[id];
+  markDock(id, false);
+  syncHomeState();
+}
+
+function focusWin(win) {
+  zTop++;
+  win.style.zIndex = zTop;
+  document.querySelectorAll('.win.active-win').forEach(w => w.classList.remove('active-win'));
+  win.classList.add('active-win');
+}
+
+// Minimize keeps the app running (music keeps playing); the dock restores it.
+function minimizeWin(id) {
+  const win = openWindows[id];
+  if (!win) return;
+  win.dataset.min = '1';
+  win.style.display = 'none';
+  syncHomeState();
+  toast('minimized — tap it in the dock to bring it back');
+}
+
+function restoreWin(id) {
+  const win = openWindows[id];
+  if (!win) return;
+  delete win.dataset.min;
+  win.style.display = '';
+  focusWin(win);
+  syncHomeState();
+}
+
+function closeAllWindows() {
+  const n = Object.keys(openWindows).length;
+  Object.keys(openWindows).forEach(closeWin);
+  return n;
+}
+
+function toggleMax(win, app) {
+  if (win.dataset.maxed) {
+    win.style.width = app.w + 'px';
+    win.style.height = app.h + 'px';
+    win.style.left = win.dataset.prevL;
+    win.style.top = win.dataset.prevT;
+    delete win.dataset.maxed;
+  } else {
+    win.dataset.prevL = win.style.left;
+    win.dataset.prevT = win.style.top;
+    win.style.left = '16px';
+    win.style.top = '40px';
+    win.style.width = (window.innerWidth - 32) + 'px';
+    win.style.height = (window.innerHeight - 130) + 'px';
+    win.dataset.maxed = '1';
+  }
+}
+
+function makeDraggable(win, handle) {
+  let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+
+  handle.addEventListener('pointerdown', e => {
+    if (e.target.closest('.wl')) return;
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    ox = win.offsetLeft; oy = win.offsetTop;
+    handle.setPointerCapture(e.pointerId);
+    focusWin(win);
   });
 
-  // --- 2. Ethereal Canvas Background (replaces emoji particles) ---
-  const canvas = document.getElementById('etherealCanvas');
-  const ctx = canvas.getContext('2d');
-  let W, H;
-  let orbs = [];
-  let stars = [];
-  let mouseX = W / 2, mouseY = H / 2;
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const nx = ox + (e.clientX - sx);
+    const ny = oy + (e.clientY - sy);
+    win.style.left = Math.max(-win.offsetWidth + 90, Math.min(nx, window.innerWidth - 90)) + 'px';
+    win.style.top = Math.max(30, Math.min(ny, window.innerHeight - 60)) + 'px';
+  });
 
-  function resizeCanvas() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
+  const stop = e => {
+    dragging = false;
+    try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  handle.addEventListener('pointerup', stop);
+  handle.addEventListener('pointercancel', stop);
+}
 
-  function initOrbs() {
-    orbs = [];
-    const palette = [
-      [255, 182, 193],  // pink
-      [230, 230, 250],  // lavender
-      [255, 220, 180],  // warm gold
-      [180, 220, 255],  // soft blue
-      [255, 192, 203],  // rose
-    ];
-    for (let i = 0; i < 7; i++) {
-      const c = palette[i % palette.length];
-      orbs.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 220 + 120,
-        r0: c[0], r1: c[1], r2: c[2],
-        alpha: Math.random() * 0.25 + 0.10,
+/* iOS-style dismiss: drag down on the title bar to close the app. */
+function makeDismissable(win, id) {
+  const bar = win.querySelector('.win-bar');
+  if (!bar) return;
+  let y0 = 0, dy = 0, dragging = false;
+
+  bar.addEventListener('touchstart', e => {
+    if (e.target.closest('.wl')) return;
+    dragging = true; y0 = e.touches[0].clientY; dy = 0;
+    win.style.transition = 'none';
+  }, { passive: true });
+
+  bar.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    win.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    win.style.transition = 'transform .28s cubic-bezier(.2,.9,.3,1)';
+    if (dy > 110) { win.style.transform = 'translateY(100%)'; setTimeout(() => closeWin(id), 200); }
+    else win.style.transform = '';
+  };
+  bar.addEventListener('touchend', end);
+  bar.addEventListener('touchcancel', end);
+}
+
+/* The home indicator closes the frontmost app, like swiping up on iOS. */
+function initHomeIndicator() {
+  const bar = $('#homeBar');
+  const goHome = () => {
+    const open = Object.keys(openWindows);
+    if (!open.length) return;
+    open.forEach(closeWin);
+  };
+  bar.addEventListener('click', goHome);
+
+  let y0 = 0;
+  bar.addEventListener('touchstart', e => { y0 = e.changedTouches[0].clientY; }, { passive: true });
+  bar.addEventListener('touchend', e => {
+    if (y0 - e.changedTouches[0].clientY > 24) goHome();
+  }, { passive: true });
+}
+
+// Home screen recedes behind an open app, and returns when the last one closes.
+function syncHomeState() {
+  const anyOpen = Object.values(openWindows).some(w => !w.dataset.min);
+  $('#desktop').classList.toggle('app-open', anyOpen);
+  const home = $('#home');
+  if (home) home.classList.toggle('behind', anyOpen);
+}
+
+/* ═══════════ DESKTOP INIT ═══════════ */
+// On phones the dock behaves like iOS: only these four are pinned,
+// everything else lives on the home screen grid.
+const PINNED = ['letter', 'photos', 'music', 'terminal'];
+
+function initDesktop() {
+  const dock = $('#dock');
+  const dIcons = $('#desktopIcons');
+  const homeGrid = $('#homeGrid');
+
+  Object.entries(APPS).forEach(([id, app]) => {
+    const item = document.createElement('div');
+    item.className = 'dock-item' + (PINNED.includes(id) ? '' : ' not-pinned');
+    item.dataset.app = id;
+    item.innerHTML = `<div class="dock-img" data-icon="${app.icon}"></div>
+      <div class="dock-tip">${app.name}</div><div class="dock-dot"></div>`;
+    item.addEventListener('click', () => openApp(id));
+    dock.appendChild(item);
+
+    // iPhone home screen icon
+    const hi = document.createElement('div');
+    hi.className = 'hi-app';
+    hi.dataset.app = id;
+    hi.innerHTML = `<div class="hi-img" data-icon="${app.icon}"></div>
+      <div class="hi-label">${app.name}</div>`;
+    hi.addEventListener('click', () => openApp(id));
+    homeGrid.appendChild(hi);
+
+    if (app.desktop) {
+      const di = document.createElement('div');
+      di.className = 'dicon';
+      di.innerHTML = `<div class="dicon-img" data-icon="${app.icon}"></div>
+        <div class="dicon-label">${app.name}</div>`;
+      di.addEventListener('dblclick', () => openApp(id));
+      di.addEventListener('click', () => {
+        dIcons.querySelectorAll('.dicon').forEach(x => x.classList.remove('selected'));
+        di.classList.add('selected');
       });
+      dIcons.appendChild(di);
     }
-  }
+  });
 
-  function initStars() {
-    stars = [];
-    for (let i = 0; i < 120; i++) {
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: Math.random() * 1.5 + 0.3,
-        alpha: Math.random(),
-        phase: Math.random() * Math.PI * 2,
-        speed: Math.random() * 0.02 + 0.005,
-      });
-    }
-  }
+  renderIcons($('#desktop'));
+  initMenuBar();
+  restoreWallpaper();
+  restoreTheme();
+  initTimeVibe();
+  initSparkleTrail();
 
-  let rafId;
-  function animateCanvas() {
-    ctx.clearRect(0, 0, W, H);
+  const themeBtn = $('#themeBtn');
+  if (themeBtn) themeBtn.addEventListener('click', () => openApp('theme'));
 
-    // Draw gradient background
-    const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, '#ffe4ec');
-    bg.addColorStop(0.5, '#f3e8ff');
-    bg.addColorStop(1, '#ffe4ec');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+  if (!isMobile()) { initWidget(); initStickyWidget(); }   // desktop widgets
+  else initHomeIndicator();
+  startClock();
+  startStars();
 
-    // Draw floating glowing orbs
-    orbs.forEach(o => {
-      o.x += o.vx;
-      o.y += o.vy;
-      if (o.x < -o.r) o.x = W + o.r;
-      if (o.x > W + o.r) o.x = -o.r;
-      if (o.y < -o.r) o.y = H + o.r;
-      if (o.y > H + o.r) o.y = -o.r;
+  // double-tap/click empty desktop to change wallpaper
+  $('#wallpaper').addEventListener('dblclick', cycleWallpaper);
+}
 
-      const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-      g.addColorStop(0, `rgba(${o.r0},${o.r1},${o.r2},${o.alpha})`);
-      g.addColorStop(1, `rgba(${o.r0},${o.r1},${o.r2},0)`);
-      ctx.beginPath();
-      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
+function markDock(id, running) {
+  const item = document.querySelector(`.dock-item[data-app="${id}"]`);
+  if (item) item.classList.toggle('running', running);
+}
+
+/* ═══════════ WALLPAPER ═══════════ */
+const WALLPAPERS = [
+  { id: 'pastel',  name: 'Pastel Dream',  src: null },
+  { id: 'collage', name: 'Her Collage',   src: 'wallpapers/collage-soft.jpg' },
+  { id: 'sharp',   name: 'Collage, Sharp', src: 'wallpapers/collage.jpg', sharp: true },
+];
+
+function setWallpaper(id, announce) {
+  const wp = WALLPAPERS.find(w => w.id === id) || WALLPAPERS[0];
+  const el = $('#wallpaper');
+  const photo = $('#wpPhoto');
+  el.classList.toggle('photo', !!wp.src);
+  el.classList.toggle('sharp', !!wp.sharp);
+  if (wp.src) photo.style.backgroundImage = `url("${wp.src}")`;
+  try { localStorage.setItem('reetos-wallpaper', wp.id); } catch (_) {}
+  if (announce) toast('wallpaper: ' + wp.name);
+  return wp;
+}
+
+function cycleWallpaper() {
+  let cur = 'pastel';
+  try { cur = localStorage.getItem('reetos-wallpaper') || 'pastel'; } catch (_) {}
+  const i = WALLPAPERS.findIndex(w => w.id === cur);
+  setWallpaper(WALLPAPERS[(i + 1) % WALLPAPERS.length].id, true);
+}
+
+function restoreWallpaper() {
+  let saved = null;
+  try { saved = localStorage.getItem('reetos-wallpaper'); } catch (_) {}
+  setWallpaper(saved || 'collage', false);   // her collage is the default
+}
+
+/* ═══════════ MENU BAR ═══════════ */
+const MENUS = {
+  system: [
+    { l: 'About Reet', do: () => openApp('about') },
+    { l: 'Reet Radio',          do: () => openApp('music') },
+    { l: 'Change Wallpaper', k: '⌥W', do: cycleWallpaper },
+    { l: 'Change Theme',     k: '⌥T', do: () => openApp('theme') },
+    { sep: true },
+    { l: 'Send Love',   k: '♥', do: () => { heartRain(); } },
+    { l: 'Lock Screen', k: '⇧⌘Q', do: relock },
+    { l: 'Restart reetOS',        do: () => location.reload() },
+  ],
+  file: [
+    { l: 'The Letter',    do: () => openApp('letter') },
+    { l: 'Her Albums',    do: () => openApp('photos') },
+    { l: 'Reet Radio',  do: () => openApp('music') },
+    { l: 'reet.sh',  do: () => openApp('terminal') },
+    { sep: true },
+    { l: 'Close All Windows', k: '⌘W', do: () => {
+        const n = closeAllWindows();
+        toast(n ? `closed ${n} window${n > 1 ? 's' : ''}` : 'nothing was open');
+      } },
+  ],
+  feelings: [
+    { l: 'Our Story',         do: () => openApp('story') },
+    { l: 'Write Back To Him', do: () => openApp('reply') },
+    { l: 'Read Me a Shayari', do: () => openApp('shayari') },
+    { l: 'Tell Me a Reason', do: () => {
+        const r = REASONS[Math.floor(Math.random() * REASONS.length)];
+        toast(r.t);
+      } },
+    { l: 'Make It Rain Hearts', do: heartRain },
+    { l: 'Give Me a Compliment', do: () => {
+        const c = COMPLIMENTS[Math.floor(Math.random() * COMPLIMENTS.length)];
+        toast(c);
+      } },
+    { sep: true },
+    { l: 'Our List', do: () => openApp('notes') },
+    { l: 'Why Reet',           do: () => openApp('reasons') },
+  ],
+  help: [
+    { l: 'Reet\'s Exploration Quest 🏆', do: () => openApp('quest') },
+    { l: 'Start Welcome Tour ✨',        do: showWelcomeModal },
+    { sep: true },
+    { l: 'What Can reet.sh Do?', do: () => { openApp('terminal'); setTimeout(() => runTerminal('help'), 260); } },
+    { l: 'What Is reetOS?',     do: () => openApp('about') },
+    { sep: true },
+    { l: 'Who Made This?', do: () => toast('someone who thinks the world of you 🤍') },
+  ],
+};
+
+const COMPLIMENTS = [
+  "you're the friend everyone wishes they had",
+  'genuinely one of the good ones',
+  'the world is nicer because you\'re in it',
+  'you make people feel safe — that\'s rare',
+  'your laugh is the best sound in any room',
+  'you have never once been too much',
+];
+
+let openMenu = null;
+
+function closeMenu() {
+  document.querySelectorAll('.menu-pop').forEach(m => m.remove());
+  document.querySelectorAll('.mb-item.open').forEach(i => i.classList.remove('open'));
+  openMenu = null;
+}
+
+function buildMenu(trigger, key) {
+  if (openMenu === key) { closeMenu(); return; }
+  closeMenu();
+  const items = MENUS[key];
+  if (!items) return;
+
+  const pop = document.createElement('div');
+  pop.className = 'menu-pop';
+  items.forEach(it => {
+    if (it.sep) { pop.appendChild(Object.assign(document.createElement('div'), { className: 'menu-sep' })); return; }
+    const row = document.createElement('div');
+    row.className = 'menu-row';
+    row.innerHTML = `<span>${it.l}</span>${it.k ? `<span class="mk">${it.k}</span>` : ''}`;
+    row.addEventListener('click', e => { e.stopPropagation(); closeMenu(); it.do(); });
+    pop.appendChild(row);
+  });
+
+  $('#desktop').appendChild(pop);
+  const r = trigger.getBoundingClientRect();
+  pop.style.left = Math.min(r.left, window.innerWidth - pop.offsetWidth - 8) + 'px';
+  trigger.classList.add('open');
+  openMenu = key;
+}
+
+function initMenuBar() {
+  document.querySelectorAll('.mb-item[data-menu]').forEach(item => {
+    item.addEventListener('click', e => {
+      e.stopPropagation();
+      buildMenu(item, item.dataset.menu);
     });
+  });
 
-    // Draw twinkling stars
-    const now = Date.now() * 0.001;
+  $('#battery').addEventListener('click', e => {
+    e.stopPropagation(); closeMenu();
+    toast('battery: infinite. this friendship does not run out.');
+  });
+  $('#wifi').addEventListener('click', e => {
+    e.stopPropagation(); closeMenu();
+    toast('connected to: each other — signal strength excellent');
+  });
+  $('#menuClock').addEventListener('click', e => {
+    e.stopPropagation(); closeMenu();
+    toast(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' — a good day');
+  });
+
+  document.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+}
+
+function relock() {
+  closeAllWindows();
+  const lock = $('#lock');
+  lock.classList.remove('hidden', 'out');
+  $('#desktop').classList.add('hidden');
+  unlocked = false;
+  cascade = 0;
+  startLockSlideshow();
+}
+
+function startClock() {
+  const el = $('#menuClock');
+  const tick = () => {
+    const d = new Date();
+    el.textContent = `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const left = document.querySelector('.menubar-left');
+    if (left) left.dataset.time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* ═══════════ WALLPAPER STARS ═══════════ */
+function startStars() {
+  const cv = $('#starCanvas');
+  const ctx = cv.getContext('2d');
+  let stars = [];
+
+  const resize = () => {
+    cv.width = window.innerWidth;
+    cv.height = window.innerHeight;
+    stars = Array.from({ length: 46 }, () => ({
+      x: Math.random() * cv.width,
+      y: Math.random() * cv.height,
+      r: 0.6 + Math.random() * 1.6,
+      a: Math.random(),
+      sp: 0.004 + Math.random() * 0.012,
+      dy: 0.05 + Math.random() * 0.16,
+    }));
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  (function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
     stars.forEach(s => {
-      const a = (Math.sin(now * s.speed * 60 + s.phase) + 1) / 2 * 0.8 + 0.1;
+      s.a += s.sp;
+      s.y -= s.dy;
+      if (s.y < -4) { s.y = cv.height + 4; s.x = Math.random() * cv.width; }
+      ctx.globalAlpha = 0.25 + Math.abs(Math.sin(s.a)) * 0.5;
+      ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${a})`;
       ctx.fill();
     });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  })();
+}
 
-    // Mouse sparkle trail
-    const mx = mouseX, my = mouseY;
-    if (mx && my) {
-      const mg = ctx.createRadialGradient(mx, my, 0, mx, my, 60);
-      mg.addColorStop(0, 'rgba(255,210,240,0.18)');
-      mg.addColorStop(1, 'rgba(255,210,240,0)');
-      ctx.beginPath();
-      ctx.arc(mx, my, 60, 0, Math.PI * 2);
-      ctx.fillStyle = mg;
-      ctx.fill();
-    }
+/* ═══════════ APP: LETTER ═══════════ */
+const LETTER = [
+  { c: 'greet', t: 'Dear Reet,' },
+  { t: "Happy Friendship Day. I built you an entire operating system, because a card felt a little insufficient." },
+  { t: "Here's the thing about you — you make people feel like the version of themselves they were hoping to be. You listen properly, the way most people don't. You remember the small stuff nobody else bothered to keep. You show up without being asked, and you have never once made it feel like a favour." },
+  { t: "Thank you for the late night messages. For laughing at jokes that genuinely were not funny. For being the person I want to tell things to first — before I've worked out how I feel about them, before they're even a story worth telling." },
+  { t: "Friendship gets spoken about like it's the smaller thing. It isn't. Nobody signs anything. You just choose it, quietly, over and over, with nothing owed either way. That's the part that gets me." },
+  { t: "Every app on this desktop is something I think about when I think about you. The photos worth keeping. The songs that sound like specific evenings. A list of things we still haven't done — add to it, it saves." },
+  { t: "Poke around. There's more hidden in the terminal than it lets on." },
+  { c: 'sig', t: 'always your person ✦' },
+];
 
-    rafId = requestAnimationFrame(animateCanvas);
+function initLetter(win) {
+  const body = win.querySelector('#letterBody');
+  const hint = win.querySelector('#letterHint');
+  body.innerHTML = '';
+
+  let bi = 0;
+  let timer = null;
+  let finished = false;
+
+  function makeEl(block) {
+    const el = document.createElement(block.c ? 'span' : 'p');
+    if (block.c) el.className = block.c;
+    else el.style.marginBottom = '.9rem';
+    return el;
   }
 
-  window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-  window.addEventListener('touchmove', e => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; }, { passive: true });
-  window.addEventListener('resize', () => { resizeCanvas(); initOrbs(); initStars(); });
-  resizeCanvas();
-  initOrbs();
-  initStars();
-  animateCanvas();
-
-  // --- 3. Navigation & Section Reveal ---
-  const startBtn = document.getElementById('startJourneyBtn');
-  const openingSec = document.getElementById('opening');
-  const storySec = document.getElementById('story');
-  const qualitiesSec = document.getElementById('qualities');
-  const surprisesSec = document.getElementById('surprises');
-  const memoryStackSec = document.getElementById('memory-stack');
-  const filmReelSec = document.getElementById('film-reel');
-  const reasonsSec = document.getElementById('reasons');
-  const virtualCakeSec = document.getElementById('virtual-cake');
-  const letterSec = document.getElementById('letter');
-  const finaleSec = document.getElementById('finale');
-  const finaleBtn = document.getElementById('finaleBtn');
-
-  function smoothScrollTo(element) {
-    element.style.display = 'flex';
-    // Small delay to allow display flex to apply before opacity transition
-    setTimeout(() => {
-      element.classList.remove('hidden');
-      element.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
-  }
-
-  const welcomeModal = document.getElementById('welcomeModal');
-  const closeModalBtn = document.getElementById('closeModalBtn');
-
-  function startJourneySequence() {
-    welcomeModal.style.display = 'none';
-    // Reveal first story section
-    smoothScrollTo(storySec);
-    // Unhide qualities and surprises so they can be scrolled to naturally
-    setTimeout(() => {
-      qualitiesSec.style.display = 'flex';
-      qualitiesSec.classList.remove('hidden');
-      const memoriesSec = document.getElementById('memories');
-      if (memoriesSec) {
-          memoriesSec.style.display = 'flex';
-          memoriesSec.classList.remove('hidden');
-      }
-      surprisesSec.style.display = 'flex';
-      surprisesSec.classList.remove('hidden');
-      // New sections
-      memoryStackSec.style.display = 'flex';
-      memoryStackSec.classList.remove('hidden');
-      filmReelSec.style.display = 'flex';
-      filmReelSec.classList.remove('hidden');
-    }, 500);
-
-    // Try playing music automatically on first interaction
-    if (!isPlaying) {
-      bgMusic.play().then(() => {
-        isPlaying = true;
-        musicIcon.textContent = '⏸️';
-        musicText.textContent = 'Pause Music';
-      }).catch(e => console.log(e));
-    }
-  }
-
-  startBtn.addEventListener('click', () => {
-    // Show guided onboarding modal first instead of jumping
-    welcomeModal.style.display = 'flex';
-    welcomeModal.classList.remove('hidden');
-  });
-
-  if(closeModalBtn) {
-    closeModalBtn.addEventListener('click', startJourneySequence);
-  }
-
-  // --- 4. Intersection Observer for Scroll Animations ---
-  const observerOptions = {
-    threshold: 0.2,
-    rootMargin: "0px 0px -50px 0px"
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.animationPlayState = 'running';
-        
-        // Custom logic for traits delay
-        if (entry.target.classList.contains('traits-grid')) {
-          const children = entry.target.querySelectorAll('.trait-card');
-          children.forEach((child, idx) => {
-             child.style.opacity = '1';
-          });
-        }
-      }
+  // Render everything at once and stop typing — for anyone who'd rather just read.
+  function finish() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    body.innerHTML = '';
+    LETTER.forEach(block => {
+      const el = makeEl(block);
+      el.textContent = block.t;
+      body.appendChild(el);
     });
-  }, observerOptions);
+    if (hint) hint.remove();
+  }
 
-  document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+  function nextBlock() {
+    if (bi >= LETTER.length) { finished = true; if (hint) hint.remove(); return; }
+    const block = LETTER[bi];
+    const el = makeEl(block);
+    body.appendChild(el);
 
-  // --- 5. Surprises Logic ---
-  const surpriseBtns = document.querySelectorAll('.surprise-btn:not(.final)');
-  const finalSurpriseBtn = document.getElementById('finalSurpriseBtn');
-  const msgBox = document.getElementById('surpriseMsg');
-  let clickedCount = 0;
+    const caret = document.createElement('span');
+    caret.className = 'caret';
+    caret.innerHTML = '&nbsp;';
 
-  surpriseBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      // Disable this button
-      this.disabled = true;
-      this.style.opacity = '0.5';
-      this.style.transform = 'none';
-      this.style.boxShadow = 'none';
-
-      // Show msg
-      const msg = this.getAttribute('data-msg');
-      msgBox.textContent = msg;
-      msgBox.classList.remove('hidden');
-
-      // Pop animation
-      msgBox.style.transform = 'scale(1.1)';
-      setTimeout(() => msgBox.style.transform = 'scale(1)', 200);
-
-      clickedCount++;
-      if (clickedCount === surpriseBtns.length) {
-        // Show final button
-        setTimeout(() => {
-          finalSurpriseBtn.style.display = 'block';
-          finalSurpriseBtn.classList.add('fade-in');
-        }, 1000);
-      }
-    });
-  });
-
-  finalSurpriseBtn.addEventListener('click', () => {
-    msgBox.textContent = "Unlocking the reasons...";
-    setTimeout(() => {
-      smoothScrollTo(reasonsSec);
-      reasonsSec.style.display = 'flex';
-      setTimeout(() => {
-        letterSec.style.display = 'flex';
-        letterSec.classList.remove('hidden');
-      }, 500);
-    }, 800);
-  });
-
-  // --- 6. Reasons "Why You're Amazing" List ---
-  const reasonsList = document.getElementById('reasonsList');
-  const reasons = [
-    "You have the sweetest smile 😊",
-    "You make normal moments feel special ✨",
-    "You are genuinely kind 💗",
-    "You bring positivity everywhere 🌈",
-    "You are beautifully unique 🌸",
-    "Your laugh is contagious 😂",
-    "You have a heart of gold 💛",
-    "You care deeply about others 🥰",
-    "You light up every room you enter ⭐",
-    "You always know how to make people feel seen 👀",
-    "You have an amazing sense of humor 🤣",
-    "You are incredibly thoughtful 💌",
-    "You make the world a better place 🌍",
-    "Your energy is unmatched ⚡",
-    "You are so easy to talk to 💬",
-    "You have a beautiful soul 🦋",
-    "You support people unconditionally 🤝",
-    "You look stunning even when you're not trying 🥺",
-    "You give the best advice 💡",
-    "You radiate comfort and warmth ☀️",
-    "You're deeply empathetic 🫂",
-    "You inspire people effortlessly 💫",
-    "You have the best taste in almost everything 🎶",
-    "Your presence alone is calming 🍃",
-    "You're an amazing listener 🎧",
-    "You don't judge, you understand 🤍",
-    "You find joy in the little things 🌻",
-    "You are strong but soft at the same time 💪🌺",
-    "You make everyone around you feel special 👑",
-    "You’re just undeniably, completely amazing 💖",
-    "You're a true blessing to have around 🙏",
-    "You make memories unforgettable 📸",
-    "You are incredibly intelligent and bright 🧠",
-    "You have this magical charm about you ✨",
-    "You are just YOU, and that is your superpower 🦸‍♀️"
-  ];
-
-  // duplicate them to create continuous scroll
-  const allReasons = [...reasons, ...reasons];
-
-  allReasons.forEach(text => {
-    const item = document.createElement('div');
-    item.className = 'reason-item';
-    item.innerHTML = `<span class="cursive" style="font-size: 1.3rem;">${text}</span>`;
-    reasonsList.appendChild(item);
-  });
-
-  // --- 7. Grand Finale ---
-  const finaleCenterpieceVideo = document.getElementById('finaleCenterpieceVideo');
-  const lastVideoMessages = [
-    'assets/With%20Bindi%20trimmed.mp4',
-    'Last%20video%20message/2.mp4'
-  ];
-
-  finaleBtn.addEventListener('click', () => {
-    // Randomly pick one of the landscape videos
-    if (finaleCenterpieceVideo) {
-      const randomVid = lastVideoMessages[Math.floor(Math.random() * lastVideoMessages.length)];
-      finaleCenterpieceVideo.src = randomVid;
-      finaleCenterpieceVideo.load();
-    }
-    
-    smoothScrollTo(finaleSec);
-    
-    // Trigger confetti
-    setTimeout(() => {
-        const end = Date.now() + (5 * 1000); // 5 seconds of confetti
-        const colors = ['#ffb6c1', '#e6e6fa', '#ffffff', '#ff9a9e'];
-
-        (function frame() {
-            confetti({
-                particleCount: 5,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: colors
-            });
-            confetti({
-                particleCount: 5,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: colors
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
-        }());
-    }, 500); // Wait for scroll to largely complete
-  });
-
-  // --- 8. Interactive Peacock Trail & Golden Dust ---
-  const createPeacockTrail = (x, y) => {
-    const rand = Math.random();
-    const el = document.createElement('div');
-    
-    if (rand < 0.1) {
-      el.className = 'divine-flute';
-      el.textContent = '🪈';
-    } else if (rand < 0.25) {
-      el.className = 'peacock-feather';
-      el.textContent = '🪶';
-    } else {
-      el.className = 'golden-dust';
-    }
-    
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1200);
-  };
-  
-  let lastTrailTime = 0;
-  window.addEventListener('mousemove', (e) => {
-    const now = Date.now();
-    if (now - lastTrailTime > 50) { 
-      createPeacockTrail(e.clientX, e.clientY);
-      lastTrailTime = now;
-    }
-  });
-
-  window.addEventListener('touchmove', (e) => {
-    const now = Date.now();
-    if (now - lastTrailTime > 50 && e.touches.length > 0) {
-      createPeacockTrail(e.touches[0].clientX, e.touches[0].clientY);
-      lastTrailTime = now;
-    }
-  }, {passive: true});
-
-  // --- 9. Typewriter Letter Effect ---
-  const letterText = `You make life brighter just by being in it…\n\nYour smile, your energy, and your presence mean more than you know 🌸\n\nMay your life always be filled with happiness, peace, and love 🌈\n\nYou truly deserve the best things in the world 💫`;
-  const typeWriterElement = document.getElementById('typewriter-text');
-  let isTyping = false;
-
-  const typeLetter = () => {
-    if (isTyping || !typeWriterElement) return;
-    isTyping = true;
-    typeWriterElement.innerHTML = '';
-    typeWriterElement.classList.add('cursor-blink');
-    
-    let i = 0;
-    const typeNext = () => {
-      if (i < letterText.length) {
-        typeWriterElement.innerHTML += letterText.charAt(i) === '\\n' ? '<br>' : letterText.charAt(i);
-        i++;
-        setTimeout(typeNext, Math.random() * 40 + 30); // Random human-like delay
+    let ci = 0;
+    const speed = block.c ? 44 : 14;
+    (function typeChar() {
+      if (finished) return;
+      if (ci <= block.t.length) {
+        el.textContent = block.t.slice(0, ci);
+        el.appendChild(caret);
+        ci++;
+        body.parentElement.scrollTop = body.parentElement.scrollHeight;
+        timer = setTimeout(typeChar, speed);
       } else {
-        typeWriterElement.classList.remove('cursor-blink');
+        caret.remove();
+        bi++;
+        timer = setTimeout(nextBlock, 290);
       }
-    };
-    typeNext();
-  };
-
-  const letterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        typeLetter();
-        letterObserver.disconnect();
-      }
-    });
-  }, { threshold: 0.5 });
-  
-  if (letterSec) {
-    letterObserver.observe(letterSec);
+    })();
   }
 
-  // --- 10. Draggable Scattered Polaroids ---
-  const polaroids = document.querySelectorAll('.gallery-item');
-  let zIndexCounter = 100;
+  win.querySelector('.letter-app').addEventListener('click', finish);
+  nextBlock();
+}
 
-  polaroids.forEach(polaroid => {
-    let isDragging = false;
-    let startX, startY, initialX = 0, initialY = 0;
-    
-    // Add flip listener
-    polaroid.addEventListener('click', (e) => {
-      // Prevent flipping if dragging occurred
-      if (!isDragging) {
-        polaroid.classList.toggle('flipped');
-        polaroid.style.zIndex = zIndexCounter++;
-      }
-    });
+/* ═══════════ APP: PHOTOS ═══════════ */
+// Albums are named after her own Instagram highlight folders.
+// Files are pre-optimised: photos/<key>/<key>NN.jpg (full, max 1400px)
+//                          photos/<key>/t/<key>NN.jpg (thumb, max 420px)
+const ALBUMS_DATA = [
+  { key: 'us',         title: 'Us',         n: 23, caps: ['the whole crew', 'partners in crime', 'my people', 'chaos, organised', 'bestie era', 'no notes'] },
+  { key: 'holi',       title: 'Holi',       n: 17, caps: ['colours everywhere', 'happiest mess', 'rang barse', 'unfiltered joy', 'covered in it'] },
+  { key: 'her',        title: 'Her',        n: 22, caps: ['main character', 'that smile', 'glowing', 'effortless', 'radiant', 'timeless'] },
+  { key: 'art',        title: 'Her Art',    n: 4,  caps: ['made by her', 'steady hands', 'patience, drawn', 'her patterns'] },
+  { key: 'moments',    title: 'Moments',    n: 11, caps: ['worth keeping', 'a good day', 'celebration mode', 'all dressed up'] },
+  { key: 'favourites', title: 'Favourites', n: 33, caps: ['my favourite', 'pure joy', 'golden hour', 'caught laughing', 'sunshine', 'the best one'] },
+];
 
-    const onPointerDown = (e) => {
-      isDragging = false;
-      startX = e.clientX || e.touches[0].clientX;
-      startY = e.clientY || e.touches[0].clientY;
-      
-      polaroid.style.zIndex = zIndexCounter++;
-      polaroid.style.cursor = 'grabbing';
-      
-      document.addEventListener('mousemove', onPointerMove);
-      document.addEventListener('touchmove', onPointerMove, {passive: false});
-      document.addEventListener('mouseup', onPointerUp);
-      document.addEventListener('touchend', onPointerUp);
-    };
+const albThumb = (k, i) => `photos/${k}/t/${k}${pad(i + 1)}.jpg`;
+const albFull  = (k, i) => `photos/${k}/${k}${pad(i + 1)}.jpg`;
 
-    const onPointerMove = (e) => {
-      const currentX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-      const currentY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-      
-      const dx = currentX - startX;
-      const dy = currentY - startY;
-      
-      // On mobile, if we've moved enough horizontally/vertically, assume it's a drag
-      if (!isDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
-        isDragging = true;
-      }
+function initPhotos(win) {
+  const app = win.querySelector('#photosApp');
+  const albumsGrid = win.querySelector('#albumsGrid');
+  const grid = win.querySelector('#photosGrid');
+  const scroll = win.querySelector('#photosScroll');
+  const label = win.querySelector('#phLabel');
+  const countEl = win.querySelector('#photoCount');
+  const backBtn = win.querySelector('#phBack');
+  const lb = win.querySelector('#lightbox');
+  const lbImg = win.querySelector('#lbImg');
+  const lbCap = win.querySelector('#lbCap');
+  const lbIdx = win.querySelector('#lbIdx');
 
-      if (isDragging) {
-        if (e.cancelable) e.preventDefault(); // prevent scrolling while dragging
-        polaroid.style.transform = `translate(${dx + initialX}px, ${dy + initialY}px) rotate(0deg)`;
-      }
-    };
+  let album = null;   // current album object
+  let idx = 0;
 
-    const onPointerUp = (e) => {
-      polaroid.style.cursor = 'grab';
-      
-      const currentX = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : startX);
-      const currentY = e.clientY || (e.changedTouches ? e.changedTouches[0].clientY : startY);
-      
-      if (isDragging) {
-        initialX += (currentX - startX);
-        initialY += (currentY - startY);
-      }
-      
-      document.removeEventListener('mousemove', onPointerMove);
-      document.removeEventListener('touchmove', onPointerMove);
-      document.removeEventListener('mouseup', onPointerUp);
-      document.removeEventListener('touchend', onPointerUp);
-      
-      // Reset isDragging slightly after click event resolves
-      setTimeout(() => isDragging = false, 50);
-    };
-
-    polaroid.addEventListener('mousedown', onPointerDown);
-    polaroid.addEventListener('touchstart', onPointerDown, {passive: false});
+  /* ---- album chooser ---- */
+  ALBUMS_DATA.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'album-card';
+    card.innerHTML = `
+      <div class="album-cover"><img src="${albThumb(a.key, 0)}" alt="${a.title}" loading="lazy"></div>
+      <div class="album-meta">
+        <div class="album-title">${a.title}</div>
+        <div class="album-count">${a.n} photos</div>
+      </div>`;
+    card.addEventListener('click', () => openAlbum(a));
+    albumsGrid.appendChild(card);
   });
 
-  // --- 11. Pagination Logic ---
-  const prevPageBtn = document.getElementById('prevPage');
-  const nextPageBtn = document.getElementById('nextPage');
-  const pageIndicator = document.getElementById('pageIndicator');
-  const galleryPages = document.querySelectorAll('.gallery-page');
-  let currentPage = 1;
-  const totalPages = galleryPages.length;
+  function openAlbum(a) {
+    album = a;
+    grid.innerHTML = '';
+    for (let i = 0; i < a.n; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'ph-thumb';
+      const img = new Image();
+      img.src = albThumb(a.key, i);
+      img.alt = a.title;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      cell.appendChild(img);
+      cell.addEventListener('click', () => { idx = i; showPhoto(); });
+      grid.appendChild(cell);
+    }
+    albumsGrid.classList.add('hidden');
+    grid.classList.remove('hidden');
+    app.classList.add('in-album');
+    label.textContent = a.title;
+    countEl.textContent = a.n + ' photos';
+    scroll.scrollTop = 0;
+  }
 
-  if (prevPageBtn && nextPageBtn && galleryPages.length > 0) {
-    const updatePagination = () => {
-      galleryPages.forEach((page, index) => {
-        if (index + 1 === currentPage) {
-          page.style.display = 'flex';
-          setTimeout(() => page.classList.remove('hidden'), 50);
-        } else {
-          page.classList.add('hidden');
-          setTimeout(() => page.style.display = 'none', 500); // Wait for fade out
-        }
+  function backToAlbums() {
+    album = null;
+    grid.classList.add('hidden');
+    albumsGrid.classList.remove('hidden');
+    app.classList.remove('in-album');
+    label.textContent = 'Albums';
+    countEl.textContent = '';
+    scroll.scrollTop = 0;
+  }
+  backBtn.addEventListener('click', backToAlbums);
+
+  /* ---- lightbox ---- */
+  function showPhoto() {
+    if (!album) return;
+    lbImg.src = albFull(album.key, idx);
+    lbCap.textContent = album.caps[idx % album.caps.length];
+    lbIdx.textContent = `${idx + 1} / ${album.n}`;
+    lb.classList.add('open');
+  }
+  const step = d => { if (album) { idx = (idx + d + album.n) % album.n; showPhoto(); } };
+
+  win.querySelector('#lbClose').addEventListener('click', () => lb.classList.remove('open'));
+  win.querySelector('#lbPrev').addEventListener('click', () => step(-1));
+  win.querySelector('#lbNext').addEventListener('click', () => step(1));
+  lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('open'); });
+
+  // swipe left/right to move between photos (mobile has no arrow buttons)
+  let tx = 0, ty = 0;
+  lb.addEventListener('touchstart', e => {
+    tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY;
+  }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
+    else if (dy > 70 && Math.abs(dy) > Math.abs(dx)) lb.classList.remove('open');
+  }, { passive: true });
+}
+
+/* ═══════════ APP: VIDEOS ═══════════ */
+/* Collections come from video-data.js (generated by tools/build_videos.py).
+   Grid shows poster JPEGs only — video bytes load on tap, never upfront. */
+const VID_SETS = typeof VIDEOS !== 'undefined' ? VIDEOS : [];
+const vidPoster = (k, f) => `videos/${k}/p/${f}.jpg`;
+const vidFile   = (k, f) => `videos/${k}/${f}.mp4`;
+
+function initVideos(win) {
+  const app = win.querySelector('#videosApp');
+  const setsEl = win.querySelector('#vdSets');
+  const grid = win.querySelector('#vdGrid');
+  const scroll = win.querySelector('#vdScroll');
+  const label = win.querySelector('#vdLabel');
+  const countEl = win.querySelector('#vdCount');
+  const player = win.querySelector('#vdPlayer');
+  const video = win.querySelector('#vdVideo');
+  const titleEl = win.querySelector('#vdTitle');
+  const dateEl = win.querySelector('#vdDate');
+
+  let set = null, idx = 0;
+
+  VID_SETS.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'album-card';
+    card.innerHTML = `
+      <div class="album-cover"><img src="${vidPoster(c.key, c.items[0].f)}" alt="${c.title}" loading="lazy"></div>
+      <div class="album-meta">
+        <div class="album-title">${c.title}</div>
+        <div class="album-count">${c.items.length} clips</div>
+      </div>`;
+    card.addEventListener('click', () => openSet(c));
+    setsEl.appendChild(card);
+  });
+
+  function openSet(c) {
+    set = c;
+    grid.innerHTML = '';
+    c.items.forEach((it, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'vd-cell';
+      cell.innerHTML = `
+        <div class="vd-poster">
+          <img src="${vidPoster(c.key, it.f)}" alt="${it.t}" loading="lazy" decoding="async">
+          <div class="vd-play">${ICONS.play}</div>
+          <div class="vd-cap">${it.t}</div>
+        </div>`;
+      cell.addEventListener('click', () => { idx = i; playClip(); });
+      grid.appendChild(cell);
+    });
+    setsEl.classList.add('hidden');
+    grid.classList.remove('hidden');
+    app.classList.add('in-album');
+    label.textContent = c.title;
+    countEl.textContent = c.items.length + ' clips';
+    scroll.scrollTop = 0;
+  }
+
+  function backToSets() {
+    set = null;
+    grid.classList.add('hidden');
+    setsEl.classList.remove('hidden');
+    app.classList.remove('in-album');
+    label.textContent = 'Clips';
+    countEl.textContent = '';
+  }
+  win.querySelector('#vdBack').addEventListener('click', backToSets);
+
+  function playClip() {
+    if (!set) return;
+    const it = set.items[idx];
+    video.src = vidFile(set.key, it.f);
+    video.poster = vidPoster(set.key, it.f);
+    titleEl.textContent = it.t;
+    dateEl.textContent = it.d || '';
+    player.classList.add('open');
+    video.play().catch(() => {});   // autoplay may be blocked; controls remain
+  }
+
+  const stepClip = d => { if (set) { idx = (idx + d + set.items.length) % set.items.length; playClip(); } };
+
+  function closePlayer() {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    player.classList.remove('open');
+  }
+  win.querySelector('#vdClose').addEventListener('click', closePlayer);
+  win.querySelector('#vdPrev').addEventListener('click', () => stepClip(-1));
+  win.querySelector('#vdNext').addEventListener('click', () => stepClip(1));
+  video.addEventListener('ended', () => stepClip(1));
+
+  // swipe between clips / down to close
+  let tx = 0, ty = 0;
+  player.addEventListener('touchstart', e => {
+    tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY;
+  }, { passive: true });
+  player.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) stepClip(dx < 0 ? 1 : -1);
+    else if (dy > 80 && Math.abs(dy) > Math.abs(dx)) closePlayer();
+  }, { passive: true });
+
+  // stop audio if the window is closed while playing
+  win.addEventListener('win-closing', closePlayer);
+}
+
+/* ═══════════ APP: MUSIC ═══════════ */
+/* Stations come from music-data.js, generated from assets/music/.
+   "Ours" is prepended so their own song stays the default track. */
+// Path stays inside this folder so the site can be deployed with
+// "Friendship Day" as the project root (Vercel, Pages, anything static).
+const OURS = { name: 'Ours', key: null, tracks: [{ t: 'Falak Tak', f: null, src: 'assets/falak_tak.mp3' }] };
+const ALL_STATIONS = [OURS, ...(typeof STATIONS !== 'undefined' ? STATIONS : [])];
+
+const trackSrc = (station, tr) =>
+  tr.src ? tr.src : `assets/music/${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`;
+
+function initMusic(win) {
+  const audio = win.querySelector('#muAudio');
+  const playBtn = win.querySelector('#muPlay');
+  const disc = win.querySelector('#muDisc');
+  const seek = win.querySelector('#muSeek');
+  const cur = win.querySelector('#muCur');
+  const dur = win.querySelector('#muDur');
+  const viz = win.querySelector('#muViz');
+  const titleEl = win.querySelector('#muTitle');
+  const artistEl = win.querySelector('#muArtist');
+  const listEl = win.querySelector('#muTracks');
+  const stationsEl = win.querySelector('#muStations');
+  const listWrap = win.querySelector('.mu-list');
+  const stationBtn = win.querySelector('#muStationBtn');
+  const stationName = win.querySelector('#muStationName');
+  const shuffleBtn = win.querySelector('#muShuffle');
+
+  for (let i = 0; i < 26; i++) viz.appendChild(document.createElement('i'));
+  const bars = viz.querySelectorAll('i');
+
+  const fmt = s => (isFinite(s) && s > 0 ? `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}` : '0:00');
+  const setIcon = key => { playBtn.dataset.filled = ''; playBtn.setAttribute('data-icon', key); renderIcons(win); };
+
+  let station = ALL_STATIONS[0];
+  let current = 0;
+  let shuffle = false;
+  let rows = [];
+
+  /* ---- station picker ---- */
+  // The station MP3s are gitignored (2GB of commercial music), so a deployed
+  // copy won't have them. Probe one file per station rather than all 241, and
+  // label the ones whose audio isn't present wherever this is being served.
+  ALL_STATIONS.forEach(st => {
+    const row = document.createElement('div');
+    row.className = 'mu-station';
+    row.innerHTML = `<span>${st.name}</span><span class="n">${st.tracks.length}</span>`;
+    row.addEventListener('click', () => showStation(st));
+    stationsEl.appendChild(row);
+    st._row = row;
+
+    if (location.protocol !== 'file:') {
+      fetch(trackSrc(st, st.tracks[0]), { method: 'HEAD' })
+        .then(r => { if (!r.ok) flagStation(st); })
+        .catch(() => flagStation(st));
+    }
+  });
+
+  function flagStation(st) {
+    st.unavailable = true;
+    st._row.classList.add('unavailable');
+    st._row.querySelector('.n').textContent = 'no audio';
+  }
+
+  function showStation(st) {
+    station = st;
+    listEl.innerHTML = '';
+    rows = st.tracks.map((tr, i) => {
+      const row = document.createElement('div');
+      row.className = 'mu-track';
+      row.innerHTML = `<span class="mu-tnum">${pad(i + 1)}</span>
+        <span class="mu-tinfo"><div class="mu-tname">${tr.t}</div></span>`;
+      row.addEventListener('click', () => load(i, true));
+      listEl.appendChild(row);
+      return row;
+    });
+    stationsEl.classList.add('hidden');
+    listEl.classList.remove('hidden');
+    listWrap.classList.add('in-station');
+    stationName.textContent = st.name;
+    if (st.unavailable) {
+      const n = document.createElement('div');
+      n.className = 'mu-unavail';
+      n.textContent = 'these tracks aren\'t on this copy of the site — they play from the local build';
+      listEl.prepend(n);
+    }
+    markActive();
+  }
+
+  function showStations() {
+    stationsEl.classList.remove('hidden');
+    listEl.classList.add('hidden');
+    listWrap.classList.remove('in-station');
+    stationName.textContent = 'stations';
+  }
+  stationBtn.addEventListener('click', () => {
+    if (listWrap.classList.contains('in-station')) showStations();
+  });
+
+  shuffleBtn.addEventListener('click', () => {
+    shuffle = !shuffle;
+    shuffleBtn.classList.toggle('on', shuffle);
+    toast(shuffle ? 'shuffle on' : 'shuffle off');
+  });
+
+  const markActive = () => rows.forEach((r, n) => r.classList.toggle('active', n === current));
+
+  function load(i, autoplay) {
+    current = i;
+    const tr = station.tracks[i];
+    audio.src = trackSrc(station, tr);
+    titleEl.textContent = tr.t;
+    artistEl.textContent = station.name === 'Ours' ? 'the one that\'s always been ours' : station.name;
+    dur.textContent = '0:00'; cur.textContent = '0:00'; seek.value = 0;
+    markActive();
+    if (autoplay) play();
+  }
+
+  function play() {
+    audio.play().then(() => { setIcon('pause'); disc.classList.add('playing'); })
+      .catch(() => {
+        setIcon('play'); disc.classList.remove('playing');
+        toast('could not play that track');
       });
-      
-      pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
-      prevPageBtn.style.display = currentPage === 1 ? 'none' : 'inline-block';
-      nextPageBtn.style.display = currentPage === totalPages ? 'none' : 'inline-block';
-      
-      // Auto-scroll to top of gallery smoothly when changing page
-      const gallerySec = document.getElementById('memories');
-      if (gallerySec) {
-        gallerySec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    };
-
-    prevPageBtn.addEventListener('click', () => {
-      if (currentPage > 1) {
-        currentPage--;
-        updatePagination();
-      }
-    });
-
-    nextPageBtn.addEventListener('click', () => {
-      if (currentPage < totalPages) {
-        currentPage++;
-        updatePagination();
-      }
-    });
-
-    // Initialize display properly
-    updatePagination();
   }
 
-  // --- 12. Interactive Virtual Cake Logic ---
-  const finalCakeTrigger = document.getElementById('finalCakeTrigger');
-  const lightCandleBtn = document.getElementById('lightCandleBtn');
-  const blowCandleBtn = document.getElementById('blowCandleBtn');
-  const fallbackBlowBtn = document.getElementById('fallbackBlowBtn');
-  const cutCakeBtn = document.getElementById('cutCakeBtn');
-  const candleFlame = document.getElementById('candleFlame');
-  const cake = document.querySelector('.cake');
-  
-  const cakeMessage = document.getElementById('cakeMessage');
-  const reetAvatar = document.getElementById('reetAvatar');
-  const windBlow = document.getElementById('windBlow');
-  
-  // Trigger Cake display from Finale
-  if(finalCakeTrigger) {
-    finalCakeTrigger.addEventListener('click', () => {
-      virtualCakeSec.style.display = 'block';
-      setTimeout(() => {
-        virtualCakeSec.classList.remove('hidden');
-        virtualCakeSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
-    });
-  }
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) play();
+    else { audio.pause(); setIcon('play'); disc.classList.remove('playing'); }
+  });
 
-  let audioContext;
-  let microphone;
-  let analyser;
-  let blowDetected = false;
-  
-  if (lightCandleBtn) {
-    lightCandleBtn.addEventListener('click', () => {
-      // Light the candle
-      candleFlame.classList.add('burning');
-      document.body.classList.add('lights-dimmed');
-      // Surprise 4: Eternal Glow Focus
-      document.body.classList.add('cake-focus-mode');
-      
-      lightCandleBtn.classList.add('hidden');
-      blowCandleBtn.classList.remove('hidden');
-      blowCandleBtn.style.display = 'inline-block';
-      fallbackBlowBtn.classList.remove('hidden');
-      fallbackBlowBtn.style.display = 'inline-block';
-    });
-  }
-
-  const triggerBlowOutSequence = () => {
-    if (blowDetected) return;
-    blowDetected = true;
-    
-    // Remove focus mode on blow out
-    document.body.classList.remove('cake-focus-mode');
-    
-    // 1. Show Avatar Sliding In
-    reetAvatar.classList.remove('hidden');
-    setTimeout(() => {
-      reetAvatar.classList.add('slide-in');
-    }, 50);
-
-    // 2. Avatar blows wind after sliding in
-    setTimeout(() => {
-      windBlow.classList.remove('hidden');
-      windBlow.classList.add('blowing');
-      
-      // 3. Flame goes out as wind hits it
-      setTimeout(() => {
-        candleFlame.classList.remove('burning');
-        document.body.classList.remove('lights-dimmed');
-        
-        // 4. BIG Confetti Explosion!
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
-
-        const interval = setInterval(function() {
-          const timeLeft = animationEnd - Date.now();
-          if (timeLeft <= 0) return clearInterval(interval);
-          const particleCount = 50 * (timeLeft / duration);
-          if(window.confetti) {
-            confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
-          }
-        }, 250);
-
-        blowCandleBtn.classList.add('hidden');
-        fallbackBlowBtn.classList.add('hidden');
-        blowCandleBtn.style.display = 'none';
-        fallbackBlowBtn.style.display = 'none';
-        
-        cakeMessage.innerHTML = "Have the best day ever, Reet, and live beautifully!<br>You are a truly great soul, and I pray you always remain blessed.<br><br>Praying to Krishna and the Heavens to have all your wishes granted,<br>including the most beautiful wish of all—YOU.<br><br>May this upcoming year be as sweet and magical as you are! 🍰✨";
-        cakeMessage.classList.remove('hidden');
-        cakeMessage.style.display = 'inline-block';
-        setTimeout(() => cakeMessage.classList.add('show-msg'), 50);
-        
-        cutCakeBtn.classList.remove('hidden');
-        cutCakeBtn.style.display = 'inline-block';
-
-        // Clean up audio
-        if(microphone) microphone.disconnect();
-        if(audioContext) audioContext.close();
-
-      }, 800); // sync with wind journey
-    }, 1000); // wait for avatar to finish slide-in 
+  const skip = d => {
+    const n = station.tracks.length;
+    if (shuffle && n > 1) {
+      let r = current;
+      while (r === current) r = Math.floor(Math.random() * n);
+      load(r, !audio.paused);
+    } else {
+      load((current + d + n) % n, !audio.paused);
+    }
   };
+  win.querySelector('#muBack').addEventListener('click', () => skip(-1));
+  win.querySelector('#muFwd').addEventListener('click', () => skip(1));
 
-  if (fallbackBlowBtn) {
-    fallbackBlowBtn.addEventListener('click', () => {
-      triggerBlowOutSequence();
+  audio.addEventListener('loadedmetadata', () => { dur.textContent = fmt(audio.duration); });
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    seek.value = (audio.currentTime / audio.duration) * 1000;
+    cur.textContent = fmt(audio.currentTime);
+  });
+  audio.addEventListener('ended', () => skip(1));
+  audio.addEventListener('error', () => {
+    if (audio.src) { setIcon('play'); disc.classList.remove('playing'); }
+  });
+
+  seek.addEventListener('input', () => { if (audio.duration) audio.currentTime = (seek.value / 1000) * audio.duration; });
+
+  (function animViz() {
+    if (!win.isConnected) return;
+    const playing = !audio.paused;
+    bars.forEach((b, i) => {
+      b.style.height = (playing ? 20 + Math.abs(Math.sin(Date.now() / 190 + i * 0.7)) * 78 * Math.random() : 18) + '%';
+    });
+    setTimeout(animViz, 110);
+  })();
+
+  showStation(ALL_STATIONS[0]);
+  load(0, false);
+  showStations();
+}
+
+/* ═══════════ APP: OUR STORY ═══════════ */
+/* Counts run from today, so they stay true without anyone editing them. */
+const STORY = [
+  { d: [2011, 6],      approx: true,  what: 'The first time I ever saw you',
+    note: 'You had no idea. Neither did I, really.' },
+  { d: [2013, 4],      approx: true,  what: 'We ended up in the same class',
+    note: 'Two years later, the room finally got smaller.' },
+  { d: [2013, 11],     approx: true,  what: 'We spoke for the first time',
+    note: 'Late, considering.' },
+  { d: [2014, 5],      approx: true,  what: 'Properly friends now',
+    note: 'The kind you stop introducing and just bring along.' },
+  { d: [2015, 6],      approx: true,  what: 'The bond got real',
+    note: 'This is the year it stopped being casual.' },
+  { d: [2019, 6],      approx: true,  what: 'Reconnected',
+    note: 'Some things come back around on their own.' },
+  { d: [2020, 10, 24], break: true,   what: 'Everything fell apart',
+    note: 'No version of this one is easy to write.' },
+  { d: [2020, 11, 20], break: true,   what: 'The last message',
+    note: 'Neither of us knew it was the last one.' },
+  { gap: [[2020, 10, 24], [2024, 11, 18]], label: 'days of not speaking' },
+  { d: [2024, 11, 18], bloom: true,   what: 'A Haldi ceremony, four years later',
+    note: "Friend's sister's wedding. We saw each other again." },
+  { d: [2024, 11, 24], bloom: true,   what: 'The Baraat and the wedding day',
+    note: 'Six days later it already felt easier.' },
+  { d: [2025, 3, 3],   now: true,     what: 'Back — and better than it ever was',
+    note: 'Since this day: talking, sharing, laughing. Not one day missed.' },
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const dayDiff = (a, b) => Math.round((b - a) / 86400000);
+const fmtNum = n => n.toLocaleString('en-IN');
+
+function initStory(win) {
+  const rail = win.querySelector('#stRail');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  const toDate = d => new Date(d[0], d[1] - 1, d[2] || 1);
+
+  win.querySelector('#stTotal').textContent = fmtNum(dayDiff(toDate(STORY[0].d), today));
+  const streak = dayDiff(new Date(2025, 2, 3), today);
+  win.querySelector('#stStreak').textContent = `${fmtNum(streak)} days straight since we came back`;
+
+  STORY.forEach(item => {
+    if (item.gap) {
+      const [a, b] = item.gap;
+      const g = document.createElement('div');
+      g.className = 'st-gap';
+      g.innerHTML = `<div class="st-gap-num"></div><div class="st-gap-label"></div>`;
+      const n = dayDiff(toDate(a), toDate(b));
+      g.querySelector('.st-gap-num').textContent = fmtNum(n);
+      g.querySelector('.st-gap-label').textContent =
+        `${item.label} · about ${(n / 365.25).toFixed(1)} years`;
+      rail.appendChild(g);
+      return;
+    }
+
+    const date = toDate(item.d);
+    const when = item.approx
+      ? `${MONTHS[item.d[1] - 1]} ${item.d[0]}`
+      : `${item.d[2]} ${MONTHS[item.d[1] - 1]} ${item.d[0]}`;
+
+    const node = document.createElement('div');
+    node.className = 'st-node' +
+      (item.break ? ' break' : '') + (item.bloom ? ' bloom' : '') + (item.now ? ' now' : '');
+    node.innerHTML = `<div class="st-when"></div><div class="st-what"></div>
+      <div class="st-note"></div><div class="st-ago"></div>`;
+    node.querySelector('.st-when').textContent = when;
+    node.querySelector('.st-what').textContent = item.what;
+    node.querySelector('.st-note').textContent = item.note;
+    node.querySelector('.st-ago').textContent =
+      `${fmtNum(dayDiff(date, today))} days ago${item.approx ? ' (about)' : ''}`;
+    rail.appendChild(node);
+  });
+}
+
+/* ═══════════ APP: QUIZ ═══════════ */
+const QUIZ = [
+  { q: 'Jab mere paas koi super juicy gossip hoti hai, toh pehla step kya hota hai?', o: ['Formal email likhna', 'Bina kisi context ke direct aag lagana', '10 din baad batana', 'Secret rakh ke bhool jana'], a: 1,
+    n: 'No preamble, no hello. Seedha main point pe aao!' },
+  { q: 'Jab tum koi photo ya status share karti ho, toh mera pehla reaction kya hota hai?', o: ['Chupchap delete kar dena', 'Khushi se memory ki tarah save kar lena (because you look so gorgeous!)', 'Blackmail karne ki dhamki dena', 'Ignore kar dena'], a: 1,
+    n: 'Zero blackmailing — tumhaari har picture hamesha gorgeous hoti hai aur sweet memory ban jati hai! ✨' },
+  { q: 'Humari daily conversation aur connection ka sabse favourite medium kya hai?', o: ['Ghanto lambi formal calls', 'Texting and endless Instagram reels share karna', 'Formal letters', 'Walkie-talkie pe baat karna'], a: 1,
+    n: 'Calls tabhi jab super urgent ho, baki toh texts aur reels ki non-stop streaming!' },
+  { q: 'Agar tumhara din thoda kharab ja raha ho, toh kya karna allowed hai?', o: ['Akele chup chaap bethna', 'Mujhe poora rant sunana aur mood thik karwana', 'Faltu tension lena', 'Khana khana bhool jana'], a: 1,
+    n: 'Hamesha sunne ke liye taiyaar hoon, stress bilkul nahi lene ka!' },
+  { q: 'Kon tumhe bina kisi reason ke pareshan aur irritate karne ka haq rakhta hai?', o: ['Koi bhi nahi', 'Sirf tumhari best friend (yani main!)', 'Neighbors', 'Social media strangers'], a: 1,
+    n: 'Yeh VIP access sirf mere paas reserved hai!' },
+  { q: 'Hum kitne bhi busy ho jayein ya dino baad baat karein, kya change hota hai?', o: ['Hum strangers ban jaate hain', 'Kuch bhi nahi, wahi same pagalpan continue hota hai', 'Formal baatein hone lagti hain', 'Ek doosre ko bhool jaate hain'], a: 1,
+    n: 'Zero distance, zero gap. Wahi se shuru jahan chhoda tha!' },
+  { q: 'Instagram pe reels share karne ka humara unspoken bestie rule kya hai?', o: ['Relatable reels spam karna jo relatable lage without thinking hehe', 'Sirf educational videos bhejna', 'Mahine mein ek reel bhejna', 'Zero reels'], a: 0,
+    n: 'Reels feed is basically our unofficial chat room!' },
+  { q: 'Jab tum koi ajeeb decision lene lagti ho, toh mera duty kya hota hai?', o: ['Taali bajana', 'Sahi raasta dikhana aur hamesha tumhare saath khade rehna', 'Door se dekh ke hasna', 'Ignore karna'], a: 1,
+    n: 'Full support aur saath hamesha milega!' },
+  { q: 'Humari friendship ki expiry date kab tak ki hai?', o: ['Agley mahine tak', 'Exam khatam hone tak', 'Lifetime & beyond — non-negotiable!', 'Sirf 1 saal'], a: 2,
+    n: 'Koi exit door nahi hai, ab jhelna hi padega lifetime!' },
+  { q: 'Is poore quiz aur app ka sabse bada secret truth kya hai?', o: ['Yeh bas ek random test hai', 'You are extremely special, loved and appreciated, hamesha! 🎀', 'Yeh bas ek code project hai', 'Kuch nahi'], a: 1,
+    n: 'Hamesha yaad rakhna, you mean the absolute world! 🎀' },
+];
+
+function initQuiz(win) {
+  const intro = win.querySelector('#qzIntro');
+  const play = win.querySelector('#qzPlay');
+  const done = win.querySelector('#qzDone');
+  const qEl = win.querySelector('#qzQ');
+  const optsEl = win.querySelector('#qzOpts');
+  const noteEl = win.querySelector('#qzNote');
+  const stepEl = win.querySelector('#qzStep');
+  const fill = win.querySelector('#qzBarFill');
+
+  let i = 0, score = 0, locked = false;
+
+  function show() {
+    locked = false;
+    const item = QUIZ[i];
+    stepEl.textContent = `question ${i + 1} of ${QUIZ.length}`;
+    fill.style.width = ((i) / QUIZ.length * 100) + '%';
+    qEl.textContent = item.q;
+    noteEl.textContent = '';
+    optsEl.innerHTML = '';
+    item.o.forEach((opt, n) => {
+      const b = document.createElement('button');
+      b.className = 'qz-opt';
+      b.textContent = opt;
+      b.addEventListener('click', () => choose(n, b));
+      optsEl.appendChild(b);
     });
   }
 
-  if (blowCandleBtn) {
-    blowCandleBtn.addEventListener('click', async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        microphone = audioContext.createMediaStreamSource(stream);
-        microphone.connect(analyser);
-        
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        
-        blowCandleBtn.textContent = 'Listening (Blow closely!) 🌬️';
-        blowCandleBtn.classList.remove('pulse');
-
-        const checkVolume = () => {
-          if (blowDetected) return;
-          analyser.getByteFrequencyData(dataArray);
-          let sum = 0;
-          for(let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-          }
-          let average = sum / bufferLength;
-          
-          // If average volume crosses threshold, blow out candle
-          if (average > 80) { // Threshold for a loud sustained noise
-            triggerBlowOutSequence();
-          } else {
-            requestAnimationFrame(checkVolume);
-          }
-        };
-        checkVolume();
-        
-      } catch (err) {
-        console.error("Microphone access denied:", err);
-        alert("Microphone access was denied. You can tap the fallback button to blow it out!");
-        blowCandleBtn.classList.add('hidden');
-      }
+  function choose(n, btn) {
+    if (locked) return;
+    locked = true;
+    const item = QUIZ[i];
+    const buttons = [...optsEl.children];
+    buttons.forEach((b, k) => {
+      if (k === item.a) b.classList.add('right');
+      else if (k === n) b.classList.add('wrong');
+      else b.classList.add('dim');
     });
+    if (n === item.a) score++;
+    noteEl.textContent = item.n;
+    fill.style.width = ((i + 1) / QUIZ.length * 100) + '%';
+    setTimeout(() => {
+      i++;
+      if (i < QUIZ.length) show(); else finish();
+    }, 1900);
   }
 
-  if (cutCakeBtn) {
-    cutCakeBtn.addEventListener('click', () => {
-      cake.classList.add('sliced');
-      cutCakeBtn.classList.add('hidden');
-      setTimeout(() => cutCakeBtn.style.display = 'none', 500);
-
-      cakeMessage.innerHTML = "Have the best day ever, Reet, and live beautifully!<br>You are a truly great soul, and I pray you always remain blessed.<br><br>Praying to Krishna and the Heavens to have all your wishes granted,<br>including the most beautiful wish of all—YOU.<br><br>May this upcoming year be as sweet and magical as you are! 🍰✨";
-      cakeMessage.classList.remove('hidden');
-      cakeMessage.style.display = 'inline-block';
-      setTimeout(() => cakeMessage.classList.add('show-msg'), 50);
-
-      if(window.confetti) {
-        confetti({ particleCount: 200, spread: 160, origin: { y: 0.8 }, colors: ['#ffb6c1', '#ffc0cb', '#ffffff'] });
-      }
-
-      // Reveal final video message after 3.5s delay
-      const finalVideoSec = document.getElementById('final-video');
-      if (finalVideoSec) {
-        setTimeout(() => {
-          finalVideoSec.style.display = 'flex';
-          setTimeout(() => {
-            finalVideoSec.classList.remove('hidden');
-            finalVideoSec.scrollIntoView({ behavior: 'smooth' });
-            fadeMusicTo(0.15);
-          }, 100);
-        }, 3500);
-      }
-    });
+  function finish() {
+    play.classList.add('hidden');
+    done.classList.remove('hidden');
+    win.querySelector('#qzScore').textContent = `${score} / ${QUIZ.length}`;
+    const v = score === QUIZ.length ? '100% Certified Bestie! Tu toh bilkul topper nikli 🎀'
+      : score >= 8 ? 'Almost 100%! Officially certified bestie status approved 🎀'
+      : score >= 6 ? 'Solid score! Poore marks for being awesome.'
+      : 'Score jo bhi ho, 100% full marks for just being Reet! 🎀';
+    win.querySelector('#qzVerdict').textContent = v;
   }
 
-  // --- Memory Stack ---
-  const memoryStackEl = document.getElementById('memoryStack');
-  if (memoryStackEl) {
-    const picsFolder = 'Pics/';
-    const picFiles = [
-      '1059dc9d2b0c490e819e752ead0ced7e.jpg','20260331201335.jpg','20260331201341.jpg',
-      '20260331201345.jpg','20260331201347.jpg','20260331201349.jpg','20260331201350.jpg',
-      '20260331201353.jpg','20260331201354.jpg','20260331201356.jpg','20260331201358.jpg',
-      '20260331201401.jpg','20260331201403.jpg','20260331201412.jpg','20260331201421.jpg',
-      '20260331201426.jpg','20260331201429.jpg','20260331201441.jpg','20260331201449.jpg',
-      '20260331201456.jpg','20260331201504.jpg','20260331201513.jpg','20260331201517.jpg',
-      '20260331201536.jpg','20260331201540.jpg','2da3c70a7726427b937bf0df12f8c7d3.jpg',
-      '2f5a5cb6eb56476b8f249efb5a60bb5d.jpg','5d2fa35b96b840c282fa20d7aaf002e2.jpg',
-      '8811b389c9da4ec184bfda9600847542.jpg','9145c1b7121e4686afb1f65ca4b074cb.jpg',
-      'b4c0af68e7b140c394ef09996b79085c.jpg','d07d9d61d5fb48658d19e8e532f0be10.jpg',
-      'e2b08b6fe6dd419c905e527f50ed56cb.jpg'
-    ];
-    const captions = [
-      'Absolutely her 💖','This one right here 🌸','Pure happiness ✨','Cannot be tamed 🔥',
-      'A whole vibe 💫','Just look at her 😍','Effortlessly gorgeous 👑','She glows 🌟',
-      'My favorite human 💝','Iconic. Simply iconic 🎭','Born to shine ✨','Unmatched energy 💃',
-      'Cutest ever 🥺','This smile! 😊','Too beautiful 🌺','Timeless 🕊️','Heart eyes 💖',
-      'She just does it 🔮','Radiate & elevate 🌙','Main character energy 🎬','Soft & powerful 🌸',
-      'Joyful soul 🌈','One of a kind 💎','Precious vibes 🌟','Flor de vida 🌷',
-      'That laugh tho 😂💖','Shining through 🌤️','Queen behavior 👸','Magical person 🪄',
-      'Total it-girl 💅','Worth every word 📖','Dreamy & real ✨'
-    ];
+  win.querySelector('#qzStart').addEventListener('click', () => {
+    intro.classList.add('hidden'); play.classList.remove('hidden'); show();
+  });
+  win.querySelector('#qzAgain').addEventListener('click', () => {
+    i = 0; score = 0; done.classList.add('hidden'); play.classList.remove('hidden'); show();
+  });
+}
 
-    // Shuffle randomly
-    const shuffled = [...picFiles].sort(() => Math.random() - 0.5);
+/* ═══════════ APP: WRITE BACK ═══════════ */
+// Put your number here in full international form, digits only, e.g. '918986022102'.
+const REPLY_WHATSAPP = '918986022102';
+const REPLY_KEY = 'reetos-reply';
 
-    // Build only top 15 for performance
-    const toShow = shuffled.slice(0, 15);
-    toShow.forEach((file, i) => {
-      const card = document.createElement('div');
-      card.className = 'memory-card';
-      card.style.zIndex = toShow.length - i;
-      // Slight random initial tilt per card
-      const tiltInit = (Math.random() - 0.5) * 12;
-      card.style.transform = `rotate(${tiltInit}deg) translateY(${i * 2}px)`;
-      card.style.setProperty('--init-tilt', `${tiltInit}deg`);
-      card.innerHTML = `
-        <img src="${picsFolder}${file}" alt="Memory" loading="lazy" style="object-position: center 20%; ${file === '5d2fa35b96b840c282fa20d7aaf002e2.jpg' ? 'transform: rotate(180deg);' : ''}">
-        <div class="memory-card-caption cursive">${captions[i % captions.length]}</div>
-      `;
-      memoryStackEl.appendChild(card);
+function initReply(win) {
+  const ta = win.querySelector('#rpText');
+  const count = win.querySelector('#rpCount');
+  const saved = win.querySelector('#rpSaved');
+  const hint = win.querySelector('#rpHint');
 
-      // Drag-to-swipe
-      let startX, startY, isDragging = false;
-      card.addEventListener('mousedown', e => { startX = e.clientX; startY = e.clientY; isDragging = true; });
-      card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = true; }, { passive: true });
-      
-      const onMove = e => {
-        if (!isDragging) return;
-        const cx = e.clientX || e.touches[0].clientX;
-        const cy = e.clientY || e.touches[0].clientY;
-        const dx = cx - startX, dy = cy - startY;
-        
-        // Prevent default only if we are actually dragging enough
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-            if (e.cancelable) e.preventDefault();
-        }
-        
-        const tilt = dx * 0.08;
-        card.style.transform = `rotate(${tiltInit + tilt}deg) translate(${dx}px, ${dy}px)`;
-        card.style.opacity = Math.max(0.4, 1 - Math.abs(dx) / 300);
-      };
-      const onEnd = e => {
-        if (!isDragging) return;
-        isDragging = false;
-        const cx = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) || startX;
-        const dx = cx - startX;
-        if (Math.abs(dx) > 80) {
-          // Flick it off
-          const dir = dx > 0 ? 1 : -1;
-          card.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
-          card.style.transform = `rotate(${tiltInit + dir * 25}deg) translate(${dir * 600}px, 80px)`;
-          card.style.opacity = '0';
-          setTimeout(() => { card.style.display = 'none'; }, 500);
-        } else {
-          card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-          card.style.transform = `rotate(${tiltInit}deg)`;
-          card.style.opacity = '1';
-          setTimeout(() => card.style.transition = '', 400);
-        }
-      };
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('touchmove', onMove, { passive: true });
-      window.addEventListener('mouseup', onEnd);
-      window.addEventListener('touchend', onEnd);
-    });
+  try { ta.value = localStorage.getItem(REPLY_KEY) || ''; } catch (_) {}
+
+  const sync = () => {
+    count.textContent = `${ta.value.length} characters`;
+    try { localStorage.setItem(REPLY_KEY, ta.value); saved.textContent = 'saved'; } catch (_) {}
+    setTimeout(() => { saved.textContent = ''; }, 1200);
+  };
+  ta.addEventListener('input', sync);
+  count.textContent = `${ta.value.length} characters`;
+
+  hint.textContent = REPLY_WHATSAPP
+    ? 'opens WhatsApp with your message ready to send'
+    : 'opens your share sheet — or use copy and paste it anywhere';
+
+  win.querySelector('#rpSend').addEventListener('click', () => {
+    const text = ta.value.trim();
+    if (!text) { toast('write something first 🤍'); ta.focus(); return; }
+    const body = `From Reet, on Friendship Day:\n\n${text}`;
+
+    if (REPLY_WHATSAPP) {
+      window.open(`https://wa.me/${REPLY_WHATSAPP}?text=${encodeURIComponent(body)}`, '_blank');
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({ text: body }).catch(() => {});
+      return;
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(body)
+        .then(() => toast('copied — paste it wherever you like'))
+        .catch(() => toast('could not copy'));
+    } else toast('select the text and copy it manually');
+  });
+
+  win.querySelector('#rpCopy').addEventListener('click', () => {
+    if (!ta.value.trim()) { toast('nothing to copy yet'); return; }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(ta.value)
+        .then(() => toast('copied 🤍')).catch(() => toast('could not copy'));
+    } else toast('could not copy');
+  });
+}
+
+/* ═══════════ APP: SHAYARI ═══════════ */
+/* Written for this site — not quoted from anywhere. */
+const SHAYARI = {
+  hi: [
+    ['कुछ रिश्ते ख़ून से नहीं, वक़्त से बनते हैं —', 'और तुम उसी वक़्त का सबसे हसीन हिस्सा हो।'],
+    ['हर बात कहने को अल्फ़ाज़ नहीं चाहिए,', 'कुछ लोग ख़ामोशी भी पढ़ लेते हैं — तुम वही हो।'],
+    ['तुमसे मिलने के बाद ये समझ आया,', 'कि घर सिर्फ़ जगह नहीं, कोई इंसान भी होता है।'],
+    ['भीड़ में जब भी मुड़ के देखा,', 'एक चेहरा हमेशा वहीं मिला — तुम्हारा।'],
+    ['शिकायतें भी हैं, और शुक्रिया भी,', 'मगर जो भी है, तुम्हारे बिना अधूरा है।'],
+    ['दोस्ती वो नहीं जो हँसी में साथ हो,', 'दोस्ती वो है जो ख़ामोशी में भी पास हो।'],
+    ['हमने माँगा भी नहीं, फिर भी मिल गए तुम —', 'शायद कुछ दुआएँ नाम लिखवा कर आती हैं।'],
+    ['वक़्त बदला, शहर बदले, लोग भी बदले,', 'एक तुम हो जो हर बार वैसी ही निकलीं।'],
+    ['तारीफ़ में क्या लिखूँ तुम्हारे लिए,', 'जो भी लिखा, कम ही लगा — हर बार।'],
+    ['ज़िंदगी ने बहुत कुछ छीना है मुझसे,', 'पर तुम्हें देकर सारा हिसाब बराबर कर दिया।'],
+  ],
+  en: [
+    ['Some people are not chapters in your story.', 'They are the handwriting.'],
+    ['You never once asked me to be easier to love.', 'That is the whole gift.'],
+    ['I have a hundred people to laugh with,', 'and exactly one I can be quiet with.'],
+    ['If I ever have to explain you to someone,', "I will just say: she stayed."],
+    ['Friendship is the only love', 'that never asked me to prove it.'],
+    ['We are not the same person.', 'We are just never lost in the same room.'],
+    ['Everyone gets a few people who feel like home.', 'I got lucky on the first try.'],
+    ['You remember the version of me', 'I was too embarrassed to keep. Thank you for that.'],
+    ['Distance is a rumour', 'people like us never believed.'],
+    ['You are the only plot twist', 'I saw coming and still cried about.'],
+  ],
+};
+
+function initShayari(win) {
+  const card = win.querySelector('#shCard');
+  const count = win.querySelector('#shCount');
+  const nextBtn = win.querySelector('#shNext');
+  const copyBtn = win.querySelector('#shCopy');
+
+  let lang = 'hi';
+  let pool = [];
+  let cur = null;
+  const seen = { hi: new Set(), en: new Set() };
+
+  function render() {
+    if (!pool.length) pool = SHAYARI[lang].map((_, i) => i).sort(() => Math.random() - 0.5);
+    const i = pool.pop();
+    cur = SHAYARI[lang][i];
+    seen[lang].add(i);
+
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.className = 'sh-card ' + lang;
+    card.innerHTML = cur.map(l => '<span class="sh-line"></span>').join('') +
+      '<div class="sh-sig">— for you, always</div>';
+    card.querySelectorAll('.sh-line').forEach((el, n) => { el.textContent = cur[n]; });
+    card.classList.add('pop');
+
+    count.textContent = `${seen[lang].size} of ${SHAYARI[lang].length} ${lang === 'hi' ? 'शायरी' : 'read'}`;
   }
 
-  // --- Film Reel hover-to-play with audio crossfade ---
-  let activeFilmVid = null;
-  let musicFadeInterval = null;
-
-  function fadeMusicTo(targetVol, onComplete) {
-    clearInterval(musicFadeInterval);
-    const step = targetVol > bgMusic.volume ? 0.05 : -0.05;
-    musicFadeInterval = setInterval(() => {
-      const next = bgMusic.volume + step;
-      if ((step > 0 && next >= targetVol) || (step < 0 && next <= targetVol)) {
-        bgMusic.volume = Math.max(0, Math.min(1, targetVol));
-        clearInterval(musicFadeInterval);
-        if (onComplete) onComplete();
-      } else {
-        bgMusic.volume = Math.max(0, Math.min(1, next));
-      }
-    }, 40);
-  }
-
-  document.querySelectorAll('.film-frame').forEach(frame => {
-    const vid = frame.querySelector('.film-video');
-    if (!vid) return;
-
-    let blessingInterval = null;
-
-    frame.addEventListener('mouseenter', () => {
-      // Surprise 2: Floating Blessings
-      blessingInterval = setInterval(() => {
-        const blessing = document.createElement('div');
-        blessing.className = 'floating-blessing';
-        blessing.textContent = ['❤️','✨','🌸','🌟','💖'][Math.floor(Math.random()*5)];
-        blessing.style.left = `${Math.random() * 80 + 10}%`;
-        blessing.style.bottom = '20px';
-        frame.appendChild(blessing);
-        setTimeout(() => blessing.remove(), 1500);
-      }, 300);
-
-      // Pause any other playing film video first
-      if (activeFilmVid && activeFilmVid !== vid) {
-        activeFilmVid.pause();
-        activeFilmVid.currentTime = 0;
-      }
-      activeFilmVid = vid;
-      // Fade music down to 0, then play video with sound
-      fadeMusicTo(0, () => bgMusic.pause());
-      vid.volume = 0.9;
-      vid.play().catch(() => {});
-    });
-
-    frame.addEventListener('mouseleave', () => {
-      clearInterval(blessingInterval);
-      vid.pause();
-      vid.currentTime = 0;
-      activeFilmVid = null;
-      // Resume & fade music back in if it was playing
-      if (isPlaying) {
-        bgMusic.volume = 0;
-        bgMusic.play().catch(() => {});
-        fadeMusicTo(0.4);
-      }
+  win.querySelectorAll('.sh-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.lang === lang) return;
+      win.querySelectorAll('.sh-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      lang = tab.dataset.lang;
+      pool = [];
+      render();
     });
   });
 
+  nextBtn.addEventListener('click', render);
+  card.addEventListener('click', render);
 
+  copyBtn.addEventListener('click', () => {
+    const text = cur.join('\n');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => toast('copied — go send it to someone'))
+        .catch(() => toast('could not copy'));
+    } else toast('could not copy');
+  });
+
+  render();
+}
+
+/* ═══════════ DESKTOP WIDGET ═══════════ */
+function initWidget() {
+  const wg = document.createElement('div');
+  wg.className = 'widget';
+  wg.innerHTML = `
+    <div class="wg-head"><span>aaj ki baat</span><span data-icon="sparkle"></span></div>
+    <div class="wg-body" id="wgBody"></div>
+    <div class="wg-foot">tap for another</div>`;
+  $('#desktop').appendChild(wg);
+  renderIcons(wg);
+
+  const body = wg.querySelector('#wgBody');
+  let lang = 'hi';
+
+  function shuffleIn() {
+    const list = SHAYARI[lang];
+    const lines = list[Math.floor(Math.random() * list.length)];
+    body.className = 'wg-body' + (lang === 'en' ? ' en' : '');
+    body.innerHTML = '';
+    lines.forEach(l => {
+      const s = document.createElement('span');
+      s.className = 'sh-line';
+      s.textContent = l;
+      body.appendChild(s);
+    });
+    wg.classList.remove('flip');
+    void wg.offsetWidth;
+    wg.classList.add('flip');
+    lang = lang === 'hi' ? 'en' : 'hi';   // alternate languages
+  }
+
+  wg.addEventListener('click', shuffleIn);
+  shuffleIn();
+  return wg;
+}
+
+/* ═══════════ DESKTOP STICKY NOTE WIDGET ═══════════ */
+const STICKY_NOTES = [
+  { t: "Don't forget to take care of yourself today 🌸.", c: "st-pink" },
+  { t: "Be Hydrated and Eat food on time 🍲💧.", c: "st-yellow" },
+  { t: "Give hugs and kisses to Ashvik & Atharv 👶💕", c: "st-peach" },
+  { t: "Love and Treat Yourself More ✨", c: "st-lavender" },
+  { t: "Things will be alright , More Beautiful things on your way 🌈.", c: "st-blue" },
+  { t: "Take deep breaths — you're doing better than you think 🌿.", c: "st-mint" },
+  { t: "Remember how loved, valued & appreciated you are 🤍.", c: "st-pink" },
+  { t: "Smile! You look absolutely gorgeous today 🎀.", c: "st-yellow" },
+  { t: "Never shrink yourself to make others comfortable ✨.", c: "st-lavender" },
+  { t: "Chai break time? Take 5 mins just for yourself ☕.", c: "st-peach" },
+  { t: "Don't stress over what you can't control today 🌸.", c: "st-blue" },
+  { t: "You've survived 100% of your tough days — champion status 🌟.", c: "st-mint" },
+];
+
+function initStickyWidget() {
+  const st = document.createElement('div');
+  st.className = 'sticky-widget';
+  st.innerHTML = `
+    <div class="st-tape"></div>
+    <div class="st-w-head"><span>gentle reminder</span><span data-icon="sparkle"></span></div>
+    <div class="st-w-body" id="stWBody"></div>
+    <div class="st-w-foot">tap for next reminder 📌</div>`;
+  $('#desktop').appendChild(st);
+  renderIcons(st);
+
+  const body = st.querySelector('#stWBody');
+  let idx = 0;
+
+  function nextNote() {
+    const note = STICKY_NOTES[idx % STICKY_NOTES.length];
+    st.className = `sticky-widget ${note.c}`;
+    body.textContent = note.t;
+    st.classList.remove('pop');
+    void st.offsetWidth;
+    st.classList.add('pop');
+    idx++;
+  }
+
+  st.addEventListener('click', nextNote);
+  nextNote();
+  return st;
+}
+
+function initStickyNotes(win) {
+  const grid = win.querySelector('#stGrid');
+  grid.innerHTML = '';
+  STICKY_NOTES.forEach((note, i) => {
+    const card = document.createElement('div');
+    card.className = `st-card ${note.c}`;
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.innerHTML = `
+      <div class="st-pin">📌</div>
+      <div class="st-card-txt">${note.t}</div>`;
+    card.addEventListener('click', () => {
+      toast('reminder saved to heart 🤍');
+      card.classList.add('pulse');
+      setTimeout(() => card.classList.remove('pulse'), 400);
+    });
+    grid.appendChild(card);
+  });
+}
+
+
+/* ═══════════ APP: REASONS ═══════════ */
+const REASONS = [
+  { g: 'chat',     t: "you reply to my nonsense at 2am like it's urgent news" },
+  { g: 'heart',    t: "you notice when I'm off before I've said a single word" },
+  { g: 'smile',    t: "you laugh at my worst jokes — genuinely, not politely" },
+  { g: 'hands',    t: "you show up. every time. without being asked" },
+  { g: 'star',     t: "you celebrate my wins louder than I do" },
+  { g: 'sun',      t: "you turn an ordinary tuesday into something worth remembering" },
+  { g: 'moon',     t: "you sit with me in the quiet and never rush it" },
+  { g: 'flower',   t: "you're kind to people who can do nothing for you" },
+  { g: 'cloud',    t: "you make hard days feel survivable" },
+  { g: 'gift',     t: "you remember the small things nobody else bothers to" },
+  { g: 'infinity', t: "you've never once made me earn your friendship" },
+  { g: 'sparkle',  t: "you're just genuinely, absurdly good to be around" },
+];
+
+function initReasons(win) {
+  const display = win.querySelector('#rsDisplay');
+  const btn = win.querySelector('#rsBtn');
+  const counter = win.querySelector('#rsCounter');
+  let pool = [];
+  const seen = new Set();
+
+  btn.addEventListener('click', () => {
+    if (!pool.length) pool = [...REASONS].sort(() => Math.random() - 0.5);
+    const r = pool.pop();
+    seen.add(r.t);
+
+    display.classList.remove('pop');
+    void display.offsetWidth;
+    display.innerHTML = `<div class="rs-glyph" data-icon="${r.g}"></div><div class="rs-text">${r.t}</div>`;
+    renderIcons(display);
+    display.classList.add('pop');
+
+    counter.textContent = `${seen.size} of ${REASONS.length} discovered`;
+    if (seen.size === REASONS.length) {
+      setTimeout(() => toast("that's all 12 — and I could keep going 🎀"), 500);
+    }
+  });
+}
+
+/* ═══════════ APP: NOTES ═══════════ */
+const TODOS = [
+  'a road trip with genuinely terrible music',
+  'stay up all night talking about nothing',
+  'that café we keep saying we\'ll try',
+  'watch the sunrise instead of sleeping',
+  'plan a surprise for someone else together',
+  'a photo dump nobody else understands',
+  'grow old and still be this annoying',
+  'reread this list years from now',
+];
+
+/* Saved to localStorage so her ticks and her own additions survive a refresh.
+   Shape: { done: { "<text>": true }, custom: ["…"] } */
+const LIST_KEY = 'reetos-list';
+
+function loadList() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LIST_KEY) || '{}');
+    return { done: raw.done || {}, custom: Array.isArray(raw.custom) ? raw.custom : [] };
+  } catch (_) {
+    return { done: {}, custom: [] };
+  }
+}
+function saveList(state) {
+  try { localStorage.setItem(LIST_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+function initNotes(win) {
+  const list = win.querySelector('#ntList');
+  const foot = win.querySelector('#ntFoot');
+  const form = win.querySelector('#ntAdd');
+  const input = win.querySelector('#ntInput');
+
+  const state = loadList();
+
+  const update = () => {
+    const items = list.querySelectorAll('.nt-item');
+    const done = list.querySelectorAll('.nt-item.done').length;
+    foot.textContent = `${done} of ${items.length} completed`;
+    if (items.length && done === items.length) toast('a whole life planned out 🤍');
+  };
+
+  function addRow(text, mine) {
+    const li = document.createElement('li');
+    li.className = 'nt-item' + (mine ? ' mine' : '');
+    li.dataset.text = text;
+    li.innerHTML = `<span class="nt-box"><span data-icon="check"></span></span>
+      <span class="nt-txt"></span>
+      ${mine ? '<button class="nt-del" aria-label="remove">×</button>' : ''}`;
+    li.querySelector('.nt-txt').textContent = text;   // textContent: no HTML injection
+    if (state.done[text]) li.classList.add('done');
+
+    li.addEventListener('click', e => {
+      if (e.target.closest('.nt-del')) return;
+      li.classList.toggle('done');
+      if (li.classList.contains('done')) state.done[text] = true;
+      else delete state.done[text];
+      saveList(state); update();
+    });
+
+    const del = li.querySelector('.nt-del');
+    if (del) del.addEventListener('click', e => {
+      e.stopPropagation();
+      state.custom = state.custom.filter(x => x !== text);
+      delete state.done[text];
+      saveList(state); li.remove(); update();
+    });
+
+    list.appendChild(li);
+    renderIcons(li);
+    return li;
+  }
+
+  TODOS.forEach(t => addRow(t, false));
+  state.custom.forEach(t => addRow(t, true));
+  update();
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    if (state.custom.includes(text) || TODOS.includes(text)) {
+      toast('that one is already on the list');
+      input.value = '';
+      return;
+    }
+    state.custom.push(text);
+    saveList(state);
+    const li = addRow(text, true);
+    input.value = '';
+    update();
+    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    toast('added 🤍');
+  });
+}
+
+/* ═══════════ APP: ABOUT ═══════════ */
+const BOOT_TIME = Date.now();
+function initAbout(win) {
+  const el = win.querySelector('#abUptime');
+  const tick = () => {
+    if (!win.isConnected) return;
+    const s = Math.floor((Date.now() - BOOT_TIME) / 1000);
+    el.textContent = `${pad(Math.floor(s / 60))}m ${pad(s % 60)}s · (really, years)`;
+    setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+/* ═══════════ APP: TERMINAL ═══════════ */
+// Set by initTerminal so menus/other apps can drive the terminal.
+let runTerminal = () => {};
+
+function initTerminal(win) {
+  const out = win.querySelector('#termOut');
+  const input = win.querySelector('#termInput');
+  const history = [];
+  let hIdx = -1;
+
+  const print = (text, cls = '') => {
+    const d = document.createElement('div');
+    d.className = 'term-line ' + cls;
+    d.textContent = text;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+  };
+
+  const printAll = (arr, cls) => arr.forEach(l => print(l, cls));
+
+  const COMMANDS = {
+    help: () => printAll([
+      'available commands:',
+      '  whoami            who you are, officially',
+      '  reasons           why you matter (try: reasons --all)',
+      '  memories          open the photo albums',
+      '  clips             home videos & reels',
+      '  shayari [hi|en]   a couplet, written for you',
+      '  story             every date that mattered',
+      '  quiz              how well do you know us?',
+      '  reply             write something back',
+      '  cat letter.txt    read the letter',
+      '  play              open the playlist',
+      '  songs             list every track',
+      '  ls                list what\'s on this machine',
+      '  neofetch          system specs',
+      '  friendship -s     current status report',
+      '  hug               it does what you think',
+      '  sudo love         ⚠ elevated privileges',
+      '  clear             wipe the screen',
+    ], 'lav'),
+
+    whoami: () => printAll([
+      'reet',
+      'uid=1  gid=1  groups=best_friend,favourite_person,emergency_contact',
+      'status: irreplaceable',
+    ], 'pink'),
+
+    reasons: (args) => {
+      if (args[0] === '--all') {
+        print('listing all 12 reasons:', 'dim');
+        REASONS.forEach((r, i) => print(`  [${pad(i + 1)}] ${r.t}`, 'pink'));
+      } else {
+        const r = REASONS[Math.floor(Math.random() * REASONS.length)];
+        print('  ' + r.t, 'pink');
+        print('  (run "reasons --all" for the full list)', 'dim');
+      }
+    },
+
+    ls: () => printAll([
+      'letter.txt        memories/         our_list.md',
+      'reasons.app       music/            trash/  (empty)',
+      '.secrets/         ← nothing here. I tell you everything.',
+    ], 'lav'),
+
+    'cat': (args) => {
+      if (args[0] === 'letter.txt') { print('opening letter.txt …', 'dim'); openApp('letter'); }
+      else if (!args[0]) print('cat: missing file name', 'err');
+      else print(`cat: ${args[0]}: no such file`, 'err');
+    },
+
+    memories: () => { print('mounting /memories …', 'dim'); openApp('photos'); },
+    clips: () => {
+      const n = VID_SETS.reduce((a, c) => a + c.items.length, 0);
+      print(`${n} clips across ${VID_SETS.length} sets — rolling …`, 'dim');
+      VID_SETS.forEach(c => print(`  ${c.title.padEnd(10)} ${c.items.length}`, 'pink'));
+      openApp('videos');
+    },
+    play: () => { print('opening the playlist …', 'dim'); openApp('music'); },
+    songs: (args) => {
+      const total = ALL_STATIONS.reduce((n, s) => n + s.tracks.length, 0);
+      const q = args.join(' ').toLowerCase();
+      if (q) {
+        const hits = [];
+        ALL_STATIONS.forEach(s => s.tracks.forEach(t => {
+          if (t.t.toLowerCase().includes(q)) hits.push(`${t.t} — ${s.name}`);
+        }));
+        if (!hits.length) return print(`no track matching "${q}"`, 'err');
+        print(`${hits.length} match${hits.length > 1 ? 'es' : ''}:`, 'dim');
+        hits.slice(0, 25).forEach(h => print('  ' + h, 'pink'));
+        if (hits.length > 25) print(`  … and ${hits.length - 25} more`, 'dim');
+        return;
+      }
+      print(`${total} tracks across ${ALL_STATIONS.length} stations:`, 'dim');
+      ALL_STATIONS.forEach(s => print(`  ${s.name.padEnd(16)} ${s.tracks.length} tracks`, 'pink'));
+      print('  (try: songs <name> to search)', 'dim');
+    },
+    neofetch: () => printAll([
+      '     🎀      reet@friendship',
+      '    ╭──╮     ─────────────────',
+      '   ╱    ╲    OS       reetOS 2.0 (Friendship Edition)',
+      '  │  ♡♡  │   Host     Your Corner Of The Internet',
+      '   ╲    ╱    Uptime   as long as I can remember',
+      '    ╰──╯     Memory   ∞ GB used / ∞ GB (all good ones)',
+      '             Shell    unfiltered honesty',
+      '             Theme    pastel-forever',
+    ], 'lav'),
+
+    'friendship': (args) => {
+      if (args[0] === '-s' || args[0] === '--status') {
+        printAll([
+          'FRIENDSHIP STATUS REPORT',
+          '  connection ......... stable (no packet loss, ever)',
+          '  trust level ........ maximum',
+          '  inside jokes ....... 999+ (overflow error)',
+          '  expiry date ........ none found',
+          '  verdict ............ permanent',
+        ], 'pink');
+      } else print('usage: friendship -s', 'err');
+    },
+
+    hug: () => { printAll(['        ╭───────────╮', '        │  ⊂(  ˘ ³˘)⊃  │', '        ╰───────────╯', 'consider yourself hugged.'], 'pink'); },
+
+    sudo: (args) => {
+      if (args.join(' ') === 'love') {
+        print('[sudo] password for reet: ********', 'dim');
+        print('permission granted. you never needed to ask.', 'big');
+        heartRain();
+      } else if (!args.length) print('sudo: a command is required', 'err');
+      else print(`sudo: ${args[0]}: permission denied (nice try)`, 'err');
+    },
+
+    shayari: (args) => {
+      const l = args[0] === 'en' ? 'en' : 'hi';
+      const s = SHAYARI[l][Math.floor(Math.random() * SHAYARI[l].length)];
+      print('');
+      s.forEach(line => print('   ' + line, 'pink'));
+      print('   — for you, always', 'dim');
+      print('');
+      print('   (shayari en  ·  shayari hi  ·  or open the app)', 'dim');
+    },
+    story: () => {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const total = dayDiff(new Date(2011, 5, 1), today);
+      const streak = dayDiff(new Date(2025, 2, 3), today);
+      printAll([
+        `${fmtNum(total)} days since I first saw you.`,
+        `${fmtNum(1486)} of those we did not speak at all.`,
+        `${fmtNum(streak)} days straight since we came back — none missed.`,
+      ], 'pink');
+      print('opening the full timeline …', 'dim');
+      openApp('story');
+    },
+    quiz: () => { print('ten questions. good luck.', 'dim'); openApp('quiz'); },
+    reply: () => { print('the floor is yours …', 'dim'); openApp('reply'); },
+    wallpaper: () => { cycleWallpaper(); print('wallpaper changed.', 'pink'); },
+    date: () => print(new Date().toString(), 'lav'),
+    echo: (args) => print(args.join(' ')),
+    clear: () => { out.innerHTML = ''; },
+
+    shutdown: () => print('shutdown: refused. this one stays on forever.', 'err'),
+    exit: () => print('exit: you can close the window, but you\'re stuck with me.', 'err'),
+    rm: () => print('rm: operation not permitted on protected memories.', 'err'),
+    thanks: () => print('anytime. genuinely.', 'pink'),
+    sorry: () => print('nothing to apologise for. never has been.', 'pink'),
+  };
+
+  const ALIASES = { r: 'reasons', h: 'help', '?': 'help', cls: 'clear', photos: 'memories', music: 'play' };
+
+  function runCommand(raw) {
+    const line = raw.trim();
+    print(`reet@friendship ~ $ ${line}`, 'cmd');
+    if (!line) return;
+    history.unshift(line);
+    hIdx = -1;
+
+    const parts = line.split(/\s+/);
+    let cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+    if (ALIASES[cmd]) cmd = ALIASES[cmd];
+
+    if (COMMANDS[cmd]) COMMANDS[cmd](args);
+    else print(`${cmd}: command not found — type "help"`, 'err');
+  }
+
+  runTerminal = cmd => { if (win.isConnected) runCommand(cmd); };
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      runCommand(input.value);
+      input.value = '';
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (hIdx < history.length - 1) { hIdx++; input.value = history[hIdx]; }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (hIdx > 0) { hIdx--; input.value = history[hIdx]; }
+      else { hIdx = -1; input.value = ''; }
+    }
+  });
+
+  // Tapping a chip runs a command without needing the phone keyboard.
+  const CHIPS = ['help', 'whoami', 'reasons', 'friendship -s', 'hug', 'neofetch', 'memories', 'sudo love', 'clear'];
+  const chipBar = win.querySelector('#termChips');
+  CHIPS.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'term-chip';
+    b.textContent = c;
+    b.addEventListener('click', () => runCommand(c));
+    chipBar.appendChild(b);
+  });
+
+  // Focus the input on desktop only — on mobile this would pop the keyboard
+  // over the output the moment the app opens.
+  win.querySelector('.term').addEventListener('click', e => {
+    if (!isMobile() && !e.target.closest('.term-chip')) input.focus();
+  });
+
+  printAll([
+    'reetOS 2.0 · friendship edition',
+    'last login: today, and every day before that',
+  ], 'dim');
+  print('');
+  print('hey Reet 🎀  type "help" to see what this thing does.', 'big');
+  if (isMobile()) print('(or just tap one of the buttons below)', 'dim');
+  print('');
+  if (!isMobile()) setTimeout(() => input.focus(), 300);
+}
+
+/* ═══════════ EASTER EGG: HEART RAIN ═══════════ */
+function heartRain() {
+  let cv = $('#heartRain');
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.id = 'heartRain';
+    document.body.appendChild(cv);
+  }
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  const ctx = cv.getContext('2d');
+  const cols = ['#ff8fb8', '#e85a92', '#b79dff', '#ffb98f', '#8fc7ff'];
+
+  const hearts = Array.from({ length: 90 }, () => ({
+    x: Math.random() * cv.width,
+    y: -Math.random() * cv.height,
+    s: 8 + Math.random() * 14,
+    vy: 1.4 + Math.random() * 2.6,
+    vx: (Math.random() - 0.5) * 1.1,
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() - 0.5) * 0.06,
+    col: cols[Math.floor(Math.random() * cols.length)],
+  }));
+
+  const start = Date.now();
+  (function frame() {
+    const elapsed = Date.now() - start;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.globalAlpha = elapsed > 4200 ? Math.max(0, 1 - (elapsed - 4200) / 900) : 1;
+
+    hearts.forEach(h => {
+      h.y += h.vy; h.x += h.vx; h.rot += h.vr;
+      if (h.y > cv.height + 30) { h.y = -30; h.x = Math.random() * cv.width; }
+      ctx.save();
+      ctx.translate(h.x, h.y);
+      ctx.rotate(h.rot);
+      ctx.fillStyle = h.col;
+      ctx.beginPath();
+      const s = h.s;
+      ctx.moveTo(0, s * 0.35);
+      ctx.bezierCurveTo(-s, -s * 0.4, -s * 0.5, -s, 0, -s * 0.42);
+      ctx.bezierCurveTo(s * 0.5, -s, s, -s * 0.4, 0, s * 0.35);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    if (elapsed < 5200) requestAnimationFrame(frame);
+    else cv.remove();
+  })();
+
+  toast('sudo love: access granted 💗');
+}
+
+/* ═══════════ GLOBAL ═══════════ */
+window.addEventListener('resize', () => {
+  const hr = $('#heartRain');
+  if (hr) { hr.width = window.innerWidth; hr.height = window.innerHeight; }
 });
+
+/* ═══════════ APP: MOOD CHECK-IN ═══════════ */
+const MOODS = [
+  { e: '😊', l: 'Happy / Khush',
+    fn: () => { heartRain(); toast('yaar aaj toh sun shine aaya! acha chal raha hai 🎀'); } },
+  { e: '😔', l: 'Sad / Down',
+    fn: () => { heartRain(); toast('aw yaar 🥺 main hoon na. chalo shayari suno...'); setTimeout(() => openApp('shayari'), 1000); } },
+  { e: '😴', l: 'Tired / Neend',
+    fn: () => { toast('thoda rest kar le 🌙 music chhod deta hoon halka sa'); setTimeout(() => openApp('music'), 1000); } },
+  { e: '🤩', l: 'Excited / Hyped',
+    fn: () => { heartRain(); toast('YEH ENERGY!! Main bhi excited ho gaya 🎉🎉'); } },
+  { e: '😒', l: 'Bored / Faltu',
+    fn: () => { toast('boring? chalo photos dekhtey hain tumhari! 📸'); setTimeout(() => openApp('photos'), 800); } },
+  { e: '😤', l: 'Annoyed / Upset',
+    fn: () => { heartRain(); toast('jo bhi hua — sab theek ho jayega. I promise 🤍'); } },
+  { e: '🥳', l: 'Celebratory',
+    fn: () => { heartRain(); toast('CELEBRATE! Aaj ka din toh yaadgaar hai 🎊🎀'); } },
+  { e: '🤔', l: 'Confused / Soch mein',
+    fn: () => { toast('kya soch rahi ho? khol ke baat karo 🤍'); setTimeout(() => openApp('reply'), 1000); } },
+];
+
+function initMood(win) {
+  const grid = win.querySelector('#moodGrid');
+  const result = win.querySelector('#moodResult');
+  const resEmoji = win.querySelector('#moodResEmoji');
+  const resText = win.querySelector('#moodResText');
+  const again = win.querySelector('#moodAgain');
+
+  MOODS.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'mood-btn';
+    btn.innerHTML = `<span class="mood-emoji">${m.e}</span><span class="mood-label">${m.l}</span>`;
+    btn.addEventListener('click', () => {
+      grid.classList.add('hidden');
+      resEmoji.textContent = m.e;
+      resText.textContent = m.l;
+      result.classList.remove('hidden');
+      m.fn();
+    });
+    grid.appendChild(btn);
+  });
+
+  again.addEventListener('click', () => {
+    result.classList.add('hidden');
+    grid.classList.remove('hidden');
+  });
+}
+
+/* ═══════════ APP: SCRATCH CARD ═══════════ */
+const SCRATCH_MESSAGES = [
+  'you are genuinely one of the most beautiful people I know — inside and out 🌸',
+  'har din tumse baat karna meri favourite part of the day hai 🤍',
+  'you don\'t need to be anything other than exactly what you are 🎀',
+  'some people make life easier just by being in it. you are one of them ✨',
+  'I hope you know how much you are appreciated, seen, and loved 💕',
+  'aaj ka lucky charm: you. obviously. always. 🍀',
+  'tumhari smile genuinely makes the room better — documented fact 🌟',
+  'the world is lowkey a better place because you exist in it 🌸',
+];
+
+function initScratch(win) {
+  const canvas = win.querySelector('#scratchCanvas');
+  const msgEl = win.querySelector('#scratchMsg');
+  const hint = win.querySelector('#scratchHint');
+  const newBtn = win.querySelector('#scratchNew');
+  const ctx = canvas.getContext('2d');
+
+  let revealed = false;
+  let scratching = false;
+  let scratchedPx = 0;
+  const TOTAL_PX = 0;
+
+  function setup() {
+    revealed = false;
+    scratchedPx = 0;
+    newBtn.classList.add('hidden');
+    hint.classList.remove('hidden');
+
+    const msg = SCRATCH_MESSAGES[Math.floor(Math.random() * SCRATCH_MESSAGES.length)];
+    msgEl.textContent = msg;
+
+    const W = canvas.offsetWidth || 280;
+    const H = canvas.offsetHeight || 160;
+    canvas.width = W;
+    canvas.height = H;
+
+    // Fill with shiny gold scratch layer
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#d4a0c8');
+    grad.addColorStop(0.5, '#e8c0e0');
+    grad.addColorStop(1, '#c8a0d4');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw scratch text
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✦  scratch here  ✦', W / 2, H / 2 - 8);
+    ctx.fillText('koi surprise chhupa hai', W / 2, H / 2 + 14);
+  }
+
+  function scratch(x, y) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Check how much is scratched
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let cleared = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] === 0) cleared++;
+    const pct = cleared / (canvas.width * canvas.height);
+    if (pct > 0.55 && !revealed) {
+      revealed = true;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hint.classList.add('hidden');
+      newBtn.classList.remove('hidden');
+      toast('🎁 revealed!');
+    }
+  }
+
+  const getPos = (e, el) => {
+    const r = el.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  };
+
+  canvas.addEventListener('mousedown', e => { scratching = true; const p = getPos(e, canvas); scratch(p.x, p.y); });
+  canvas.addEventListener('mousemove', e => { if (!scratching) return; const p = getPos(e, canvas); scratch(p.x, p.y); });
+  canvas.addEventListener('mouseup', () => scratching = false);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); scratching = true; const p = getPos(e, canvas); scratch(p.x, p.y); }, { passive: false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!scratching) return; const p = getPos(e, canvas); scratch(p.x, p.y); }, { passive: false });
+  canvas.addEventListener('touchend', () => scratching = false);
+
+  newBtn.addEventListener('click', setup);
+  setTimeout(setup, 60);
+}
+
+/* ═══════════ APP: MAGIC 8-BALL ═══════════ */
+const M8_ANSWERS = [
+  'Bilkul haan! 🎀', 'Obviously yes, kya sawaal hai yeh', 'Main hoon na — toh hoga pakka ✨',
+  'Signs are looking very good 🌸', 'Ek dum confirm! No doubt at all',
+  'Haan yaar, trust karo', '100% yes, go for it 💕',
+  'Thoda wait karo, chai pee ke socho ☕', 'Abhi nahi bolunga — mystery rehne do',
+  'Dono sides pe soch lo phir decide karo', 'Kal poochho, aaj nahi bata rahi 😌',
+  'Pata nahi yaar, tumhe better pata hoga', 'Hmm... signs point to chai first',
+  'Nahi yaar, baar baar poochho mat 😂', 'Definitely nahi — aur yeh final hai',
+  'Itna obvious question kyun pooch rahi ho 😭', 'Sleep pe soch ke bata',
+];
+
+function initMagic8(win) {
+  const ball = win.querySelector('#m8Ball');
+  const num = win.querySelector('.m8-num');
+  const answer = win.querySelector('#m8Answer');
+  const input = win.querySelector('#m8Input');
+  const askBtn = win.querySelector('#m8Ask');
+  const hint = win.querySelector('#m8Hint');
+
+  let spinning = false;
+
+  function ask() {
+    if (spinning) return;
+    if (!input.value.trim()) { toast('pehle sawaal toh pucho 😄'); input.focus(); return; }
+    spinning = true;
+    hint.textContent = '';
+    num.classList.remove('hidden');
+    answer.classList.add('hidden');
+    ball.classList.add('m8-shake');
+
+    setTimeout(() => {
+      ball.classList.remove('m8-shake');
+      num.classList.add('hidden');
+      answer.textContent = M8_ANSWERS[Math.floor(Math.random() * M8_ANSWERS.length)];
+      answer.classList.remove('hidden');
+      spinning = false;
+      hint.textContent = 'tap ask for another question ✨';
+    }, 1200);
+  }
+
+  askBtn.addEventListener('click', ask);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+}
+
+/* ═══════════ APP: PHOTO MEMORY MATCH ═══════════ */
+function initMatch(win) {
+  const grid = win.querySelector('#matchGrid');
+  const movesEl = win.querySelector('#mchMoves');
+  const timeEl = win.querySelector('#mchTime');
+  const done = win.querySelector('#matchDone');
+  const doneText = win.querySelector('#matchDoneText');
+  const again = win.querySelector('#matchAgain');
+
+  const TOTAL_PAIRS = 6;
+  let flipped = [], matched = 0, moves = 0, timer = null, secs = 0, locked = false;
+
+  function startGame() {
+    flipped = []; matched = 0; moves = 0; secs = 0; locked = false;
+    movesEl.textContent = '0 moves';
+    timeEl.textContent = '0s';
+    done.classList.add('hidden');
+    grid.innerHTML = '';
+    clearInterval(timer);
+
+    // Pick TOTAL_PAIRS random photos from her album
+    const pool = Array.from({ length: 22 }, (_, i) => `photos/her/her${pad(i + 1)}.jpg`);
+    const chosen = pool.sort(() => Math.random() - 0.5).slice(0, TOTAL_PAIRS);
+    const deck = [...chosen, ...chosen].sort(() => Math.random() - 0.5);
+
+    deck.forEach((src, i) => {
+      const card = document.createElement('div');
+      card.className = 'mc-card';
+      card.dataset.src = src;
+      card.dataset.idx = i;
+      card.innerHTML = `
+        <div class="mc-face mc-back">🎀</div>
+        <div class="mc-face mc-front"><img src="${src}" loading="lazy"></div>`;
+      card.addEventListener('click', () => flip(card));
+      grid.appendChild(card);
+    });
+
+    timer = setInterval(() => { secs++; timeEl.textContent = secs + 's'; }, 1000);
+  }
+
+  function flip(card) {
+    if (locked || card.classList.contains('mc-open') || card.classList.contains('mc-match')) return;
+    card.classList.add('mc-open');
+    flipped.push(card);
+
+    if (flipped.length === 2) {
+      locked = true;
+      moves++;
+      movesEl.textContent = moves + ' moves';
+      const [a, b] = flipped;
+      if (a.dataset.src === b.dataset.src) {
+        a.classList.add('mc-match'); b.classList.add('mc-match');
+        matched++;
+        flipped = []; locked = false;
+        if (matched === TOTAL_PAIRS) {
+          clearInterval(timer);
+          setTimeout(() => {
+            doneText.textContent = `${moves} moves · ${secs}s — her photos are burned in your memory! 🎀`;
+            done.classList.remove('hidden');
+          }, 400);
+        }
+      } else {
+        setTimeout(() => {
+          a.classList.remove('mc-open'); b.classList.remove('mc-open');
+          flipped = []; locked = false;
+        }, 950);
+      }
+    }
+  }
+
+  again.addEventListener('click', startGame);
+  startGame();
+}
+
+/* ═══════════ APP: COMPLIMENT SLOT MACHINE ═══════════ */
+const SLOT_DATA = [
+  ['Absolutely', 'Genuinely', 'Completely', 'Effortlessly', 'Ridiculously', 'Undeniably', 'Clearly', 'So'],
+  ['gorgeous', 'radiant', 'brilliant', 'wonderful', 'stunning', 'lovable', 'iconic', 'glowing'],
+  ['always 🎀', 'no notes ✨', 'fr fr 💕', 'every day 🌸', 'facts only', 'ek dum sach', 'non-stop', 'verified 💯'],
+];
+
+function initSlot(win) {
+  const strips = [win.querySelector('#slotS0'), win.querySelector('#slotS1'), win.querySelector('#slotS2')];
+  const spinBtn = win.querySelector('#slotSpin');
+  const result = win.querySelector('#slotResult');
+  let spinning = false;
+
+  const ITEM_H = 52;
+
+  strips.forEach((strip, ri) => {
+    SLOT_DATA[ri].forEach(word => {
+      const el = document.createElement('div');
+      el.className = 'slot-item';
+      el.textContent = word;
+      strip.appendChild(el);
+    });
+    // Duplicate for seamless loop
+    SLOT_DATA[ri].forEach(word => {
+      const el = document.createElement('div');
+      el.className = 'slot-item';
+      el.textContent = word;
+      strip.appendChild(el);
+    });
+  });
+
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+    result.textContent = '';
+    spinBtn.disabled = true;
+
+    const picks = SLOT_DATA.map(col => Math.floor(Math.random() * col.length));
+
+    strips.forEach((strip, ri) => {
+      const targetIdx = picks[ri] + SLOT_DATA[ri].length;
+      const targetY = -(targetIdx * ITEM_H) + ITEM_H;
+      const duration = 700 + ri * 250;
+
+      strip.style.transition = `transform ${duration}ms cubic-bezier(.17,.67,.3,1.2)`;
+      strip.style.transform = `translateY(${targetY}px)`;
+
+      if (ri === strips.length - 1) {
+        setTimeout(() => {
+          spinning = false;
+          spinBtn.disabled = false;
+          const phrase = picks.map((p, i) => SLOT_DATA[i][p]).join(' ');
+          result.textContent = `"${phrase}"`;
+          toast(SLOT_DATA[0][picks[0]] + ' ' + SLOT_DATA[1][picks[1]] + ' — certified 🎀');
+        }, duration + 100);
+      }
+    });
+  }
+
+  spinBtn.addEventListener('click', spin);
+  // Auto-spin once on open
+  setTimeout(spin, 300);
+}
+
+/* ═══════════ APP: GUESS THE VIBE ═══════════ */
+const VIBES = [
+  { s: '2am mein achanak tumhara favourite song play hota hai 🎵', o: ['So jao', 'Full volume karo aur dance karo', 'Rona shuru karo', 'Screenshot leke bestie ko bhejo'], r: [0,1,2,3], v: 'nostalgia queen' },
+  { s: 'Tumhara bestie ek ajeeb reel forward karta hai bina kisi context ke 📱', o: ['Block kar do', 'Same energy mein 5 reels bhejo wapas', 'Seriously lo', 'Unsubscribe karo'], r: [1], v: 'certified reel bestie' },
+  { s: 'Khana order karte time tumhara favourite item menu pe nahi hai 😩', o: ['Chill ho jao', 'Chef ko bulao', 'Mood kharab ho jaye', 'Order hi cancel karo'], r: [0,2], v: 'foodie drama queen' },
+  { s: 'Tumhara bestie tumhare baare mein kuch sweet bolta hai 🌸', o: ['Ignore karo', '"Shut up yaar" bol ke blush karo', 'Rone lag jao (happy tears)', 'Embarrassed ho ke bhaago'], r: [1,2], v: 'softie with a hard exterior' },
+  { s: 'Naya photo liya hai aur itna acha aaya hai 📸', o: ['Delete karo', 'Instantly stories pe daal do', 'Filter lagao phir socho', 'Bestie ko pehle dikhao'], r: [1,3], v: 'main character' },
+  { s: 'Baarish ho rahi hai aur tum ghar pe ho 🌧️', o: ['Sad feel karo', 'Coffee banao aur khidki ke paas baitho', 'Sone ki koshish karo', 'Bestie ko call karo aur vibe do'], r: [1,3], v: 'cozy season lover' },
+  { s: 'Tumhara phone battery 2% pe hai aur charger nahi mila 😬', o: ['Panic mode ON', 'Shanti se accept kar lo', 'Last message bestie ko bhejo', 'Doosra phone dhundho'], r: [0,2], v: 'phone-dependent bestie' },
+];
+
+function initVibe(win) {
+  const intro = win.querySelector('#vibeIntro');
+  const play = win.querySelector('#vibePlay');
+  const doneSec = win.querySelector('#vibeDone');
+  const bar = win.querySelector('#vibeBarFill');
+  const step = win.querySelector('#vibeStep');
+  const scenario = win.querySelector('#vibeScenario');
+  const opts = win.querySelector('#vibeOpts');
+  const doneResult = win.querySelector('#vibeDoneResult');
+  const doneSub = win.querySelector('#vibeDoneSub');
+  const startBtn = win.querySelector('#vibeStart');
+  const againBtn = win.querySelector('#vibeAgain');
+
+  let qi = 0, vibeMap = {};
+
+  function show() {
+    const item = VIBES[qi];
+    step.textContent = `situation ${qi + 1} of ${VIBES.length}`;
+    bar.style.width = ((qi / VIBES.length) * 100) + '%';
+    scenario.textContent = item.s;
+    opts.innerHTML = '';
+    item.o.forEach((opt, n) => {
+      const b = document.createElement('button');
+      b.className = 'vibe-opt';
+      b.textContent = opt;
+      b.addEventListener('click', () => {
+        [...opts.children].forEach((btn, k) => {
+          if (item.r.includes(k)) btn.classList.add('right');
+          else if (k === n) btn.classList.add('wrong');
+          else btn.classList.add('dim');
+        });
+        vibeMap[item.v] = (vibeMap[item.v] || 0) + (item.r.includes(n) ? 1 : 0);
+        setTimeout(() => { qi++; if (qi < VIBES.length) show(); else finish(); }, 1100);
+      });
+      opts.appendChild(b);
+    });
+  }
+
+  function finish() {
+    play.classList.add('hidden');
+    doneSec.classList.remove('hidden');
+    bar.style.width = '100%';
+    const top = Object.entries(vibeMap).sort((a, b) => b[1] - a[1])[0];
+    const label = top ? top[0] : 'mystery vibe';
+    doneResult.textContent = `✨ ${label} ✨`;
+    doneSub.textContent = 'ekdum accurate! yeh toh sach mein tumhara vibe hai 🎀';
+  }
+
+  startBtn.addEventListener('click', () => { intro.classList.add('hidden'); play.classList.remove('hidden'); show(); });
+  againBtn.addEventListener('click', () => {
+    qi = 0; vibeMap = {};
+    doneSec.classList.add('hidden'); play.classList.remove('hidden'); show();
+  });
+}
+
+/* ═══════════ APP: REEL SNAKE ═══════════ */
+const SNAKE_TOASTS = [
+  'got one! 📱', 'reel unlocked 🎉', 'bestie sent this at 2am 💀',
+  'relatable! 😂', 'us literally 😭', 'this is exactly you btw',
+  'screenshot karo baad mein 📸', 'okay but why is this so us',
+];
+
+function initSnake(win) {
+  const canvas = win.querySelector('#snakeCanvas');
+  const scoreEl = win.querySelector('#snakeScore');
+  const msg = win.querySelector('#snakeMsg');
+  const ctx = canvas.getContext('2d');
+
+  const CELL = 20;
+  let W, H, cols, rows;
+  let snake, dir, nextDir, food, score, running, gameLoop;
+
+  function resize() {
+    const wrap = canvas.parentElement;
+    W = Math.floor((wrap.offsetWidth || 320) / CELL) * CELL;
+    H = Math.floor(Math.min(wrap.offsetHeight || 260, 260) / CELL) * CELL;
+    canvas.width = W; canvas.height = H;
+    cols = W / CELL; rows = H / CELL;
+  }
+
+  function placeFood() {
+    let pos;
+    do { pos = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) }; }
+    while (snake.some(s => s.x === pos.x && s.y === pos.y));
+    food = pos;
+  }
+
+  function startGame() {
+    resize();
+    snake = [{ x: Math.floor(cols / 2), y: Math.floor(rows / 2) }];
+    dir = { x: 1, y: 0 }; nextDir = { x: 1, y: 0 };
+    score = 0; scoreEl.textContent = '0';
+    running = true;
+    msg.classList.add('hidden');
+    placeFood();
+    clearInterval(gameLoop);
+    gameLoop = setInterval(tick, 130);
+  }
+
+  function tick() {
+    if (!running) return;
+    dir = nextDir;
+    const head = { x: (snake[0].x + dir.x + cols) % cols, y: (snake[0].y + dir.y + rows) % rows };
+    if (snake.some(s => s.x === head.x && s.y === head.y)) { endGame(); return; }
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score++; scoreEl.textContent = score;
+      toast(SNAKE_TOASTS[Math.floor(Math.random() * SNAKE_TOASTS.length)]);
+      placeFood();
+    } else snake.pop();
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // Grid
+    ctx.strokeStyle = 'rgba(180,130,200,0.08)';
+    for (let x = 0; x < W; x += CELL) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += CELL) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    // Food
+    ctx.font = `${CELL - 2}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('📱', food.x * CELL + CELL / 2, food.y * CELL + CELL / 2);
+    // Snake
+    snake.forEach((s, i) => {
+      const alpha = 1 - i / snake.length * 0.5;
+      ctx.fillStyle = `rgba(180,100,200,${alpha})`;
+      ctx.beginPath();
+      ctx.roundRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4, 4);
+      ctx.fill();
+    });
+    // Head face
+    ctx.font = `${CELL - 4}px serif`;
+    ctx.fillText('🐍', snake[0].x * CELL + CELL / 2, snake[0].y * CELL + CELL / 2);
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(gameLoop);
+    msg.textContent = `game over! score: ${score} 😭 tap to restart`;
+    msg.classList.remove('hidden');
+    toast(score >= 10 ? `${score} reels! bestie certified 🎀` : `${score} reels collected! ek baar aur try karo`);
+  }
+
+  // Controls
+  win.querySelectorAll('.sd-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!running) { startGame(); return; }
+      const d = btn.dataset.dir;
+      if (d === 'up'    && dir.y === 0) nextDir = { x: 0, y: -1 };
+      if (d === 'down'  && dir.y === 0) nextDir = { x: 0, y: 1 };
+      if (d === 'left'  && dir.x === 0) nextDir = { x: -1, y: 0 };
+      if (d === 'right' && dir.x === 0) nextDir = { x: 1, y: 0 };
+    });
+  });
+
+  canvas.addEventListener('click', () => { if (!running) startGame(); });
+
+  // Swipe support
+  let tx = 0, ty = 0;
+  canvas.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  canvas.addEventListener('touchend', e => {
+    if (!running) { startGame(); return; }
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 20 && dir.x === 0) nextDir = { x: 1, y: 0 };
+      if (dx < -20 && dir.x === 0) nextDir = { x: -1, y: 0 };
+    } else {
+      if (dy > 20 && dir.y === 0) nextDir = { x: 0, y: 1 };
+      if (dy < -20 && dir.y === 0) nextDir = { x: 0, y: -1 };
+    }
+  }, { passive: true });
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if (!running) return;
+    if (e.key === 'ArrowUp'    && dir.y === 0) { nextDir = { x:0, y:-1 }; e.preventDefault(); }
+    if (e.key === 'ArrowDown'  && dir.y === 0) { nextDir = { x:0, y:1  }; e.preventDefault(); }
+    if (e.key === 'ArrowLeft'  && dir.x === 0) { nextDir = { x:-1,y:0  }; e.preventDefault(); }
+    if (e.key === 'ArrowRight' && dir.x === 0) { nextDir = { x:1, y:0  }; e.preventDefault(); }
+  });
+
+  resize();
+  draw();
+}
+
+/* ═══════════ SHAKE FOR SURPRISE ═══════════ (mobile global) */
+(function initShake() {
+  let lastShake = 0;
+  let shakeCount = 0;
+  const SURPRISES = [
+    () => heartRain(),
+    () => toast('tum genuinely bahut acha insaan ho 🌸 yeh fact hai'),
+    () => { const s = SHAYARI.hi[Math.floor(Math.random() * SHAYARI.hi.length)]; toast(s[0] + ' ' + s[1]); },
+    () => toast('bestie scan complete: gorgeous, verified, irreplaceable ✨'),
+    () => { heartRain(); toast('ek hug from here 🤍'); },
+    () => toast('stop shaking me yaar 😭 main gir jaunga'),
+  ];
+
+  if (!window.DeviceMotionEvent) return;
+
+  window.addEventListener('devicemotion', e => {
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+    const mag = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+    if (mag > 25) {
+      const now = Date.now();
+      if (now - lastShake < 800) return;
+      lastShake = now;
+      const idx = Math.min(shakeCount, SURPRISES.length - 1);
+      SURPRISES[idx]();
+      shakeCount++;
+      if (shakeCount >= SURPRISES.length) shakeCount = 0;
+    }
+  });
+})();
+
+/* ═══════════ THEME MANAGER & VIBES ═══════════ */
+const THEMES = [
+  { k: 'sakura',   n: '🌸 Soft Sakura',   c1: '#ff8fb8', c2: '#b79dff', d: 'Pastel Pink & Lavender (Default)' },
+  { k: 'sunset',   n: '🌅 Sunset Glow',   c1: '#f26b38', c2: '#ffb98f', d: 'Warm Amber & Golden Coral' },
+  { k: 'midnight', n: '🌌 Midnight Star', c1: '#b070ff', c2: '#201235', d: 'Deep Velvet & Glowing Starlight' },
+  { k: 'sage',     n: '🌿 Sage & Mint',   c1: '#3b9b78', c2: '#8fe0c4', d: 'Cozy Mint & Soft Emerald' },
+  { k: 'ocean',    n: '💙 Ocean Breeze',  c1: '#3a82ee', c2: '#8fc7ff', d: 'Cool Periwinkle & Sky Blue' },
+];
+
+function setTheme(key, notify = true) {
+  document.documentElement.setAttribute('data-theme', key);
+  try { localStorage.setItem('reetos-theme', key); } catch (_) {}
+  if (notify) {
+    const t = THEMES.find(item => item.k === key);
+    toast(`vibe set: ${t ? t.n : key} ✨`);
+  }
+}
+
+function restoreTheme() {
+  try {
+    const saved = localStorage.getItem('reetos-theme') || 'sakura';
+    setTheme(saved, false);
+  } catch (_) {
+    setTheme('sakura', false);
+  }
+}
+
+function initTimeVibe() {
+  const hr = new Date().getHours();
+  let greeting = '';
+  document.body.classList.remove('vibe-morning', 'vibe-afternoon', 'vibe-night');
+
+  if (hr >= 5 && hr < 12) {
+    greeting = 'good morning Reet ☀️';
+    document.body.classList.add('vibe-morning');
+  } else if (hr >= 12 && hr < 18) {
+    greeting = 'good afternoon Reet ☕';
+    document.body.classList.add('vibe-afternoon');
+  } else {
+    greeting = 'late night? sleep well Reet 🌙';
+    document.body.classList.add('vibe-night');
+  }
+
+  const hint = document.querySelector('.lock-hint');
+  if (hint) hint.textContent = `${greeting} · welcome home`;
+}
+
+function initSparkleTrail() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.createElement('canvas');
+  canvas.id = 'sparkleTrail';
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+  const sparkles = [];
+
+  function addParticle(x, y) {
+    if (sparkles.length > 20) return;
+    sparkles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 0.9,
+      vy: (Math.random() - 0.5) * 0.9 - 0.3,
+      size: Math.random() * 3.5 + 2,
+      alpha: 1,
+      color: ['#ff8fb8', '#b79dff', '#ffb98f', '#ffffff'][Math.floor(Math.random() * 4)]
+    });
+  }
+
+  window.addEventListener('mousemove', e => addParticle(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    if (e.touches && e.touches[0]) addParticle(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+
+  (function render() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = sparkles.length - 1; i >= 0; i--) {
+      const p = sparkles[i];
+      p.x += p.vx; p.y += p.vy; p.alpha -= 0.035; p.size *= 0.95;
+      if (p.alpha <= 0) { sparkles.splice(i, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    requestAnimationFrame(render);
+  })();
+}
+
+function initThemeApp(win) {
+  const grid = win.querySelector('#thGrid');
+  grid.innerHTML = '';
+  const current = document.documentElement.getAttribute('data-theme') || 'sakura';
+
+  THEMES.forEach(t => {
+    const card = document.createElement('div');
+    card.className = `th-card ${t.k === current ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="th-preview" style="background: linear-gradient(135deg, ${t.c1}, ${t.c2})"></div>
+      <div class="th-info">
+        <div class="th-name">${t.n}</div>
+        <div class="th-desc">${t.d}</div>
+      </div>`;
+    card.addEventListener('click', () => {
+      grid.querySelectorAll('.th-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      setTheme(t.k, true);
+    });
+    grid.appendChild(card);
+  });
+
+  const wpBtn = win.querySelector('#thCycleWp');
+  if (wpBtn) wpBtn.addEventListener('click', () => cycleWallpaper());
+
+  const rainBtn = win.querySelector('#thHeartRain');
+  if (rainBtn) rainBtn.addEventListener('click', () => heartRain());
+}
+
+/* ═══════════ REET'S QUEST CHECKLIST & ONBOARDING ═══════════ */
+const QUEST_ITEMS = [
+  { id: 'letter',  t: 'Read your secret letter', e: '✉️', desc: 'Read letter.txt in full' },
+  { id: 'music',   t: 'Play a track on Reet Radio', e: '🎵', desc: 'Listen to Alka Yagnik & more' },
+  { id: 'quiz',    t: 'Take the Bestie Test', e: '🎀', desc: 'Score your bestie points in reet 101' },
+  { id: 'scratch', t: 'Scratch a daily surprise', e: '🎁', desc: 'Reveal your hidden surprise card' },
+  { id: 'match',   t: 'Play Photo Memory Match', e: '🃏', desc: 'Match your photo pairs' },
+  { id: 'mood',    t: 'Check in your daily vibe', e: '🌸', desc: 'Tell reetOS how you feel today' },
+  { id: 'slot',    t: 'Spin Compliment Machine', e: '🎰', desc: 'Spin for a random sweet fact' },
+  { id: 'snake',   t: 'Eat reels in Reel Snake', e: '📱', desc: 'Play a game of bestie snake' },
+  { id: 'sticky',  t: 'Read care notes & reminders', e: '📌', desc: 'Check your gentle daily notes' },
+  { id: 'reply',   t: 'Write back to him', e: '💌', desc: 'Send a note or WhatsApp reply' },
+];
+
+const QUEST_KEY = 'reetos-quest';
+function loadQuest() {
+  try { return JSON.parse(localStorage.getItem(QUEST_KEY) || '{}'); } catch (_) { return {}; }
+}
+function saveQuest(state) {
+  try { localStorage.setItem(QUEST_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+function markAppExplored(id) {
+  const questState = loadQuest();
+  if (!questState[id]) {
+    questState[id] = true;
+    saveQuest(questState);
+    const item = QUEST_ITEMS.find(q => q.id === id);
+    if (item) toast(`quest completed: ${item.t} ${item.e}`);
+    checkBadges();
+    const doneCount = Object.keys(questState).length;
+    if (doneCount === QUEST_ITEMS.length) {
+      setTimeout(() => {
+        heartRain();
+        toast('🎉 100% QUEST COMPLETED! You unlocked ultimate bestie status 🎀');
+      }, 600);
+    }
+  }
+}
+
+function checkBadges() {
+  const questState = loadQuest();
+  QUEST_ITEMS.forEach(q => {
+    const explored = !!questState[q.id];
+    document.querySelectorAll(`[data-app="${q.id}"]`).forEach(el => {
+      let badge = el.querySelector('.app-badge');
+      if (!explored) {
+        if (!badge) {
+          badge = document.createElement('div');
+          badge.className = 'app-badge';
+          badge.textContent = 'NEW';
+          el.appendChild(badge);
+        }
+      } else {
+        if (badge) badge.remove();
+      }
+    });
+  });
+}
+
+function checkWelcomeModal() {
+  try {
+    const welcomed = localStorage.getItem('reetos-welcomed');
+    if (!welcomed) showWelcomeModal();
+  } catch (_) {
+    showWelcomeModal();
+  }
+}
+
+function showWelcomeModal() {
+  const overlay = $('#welcomeOverlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    const startBtn = $('#wmStartBtn');
+    if (startBtn) {
+      startBtn.onclick = () => {
+        overlay.classList.add('hidden');
+        try { localStorage.setItem('reetos-welcomed', '1'); } catch (_) {}
+        openApp('quest');
+      };
+    }
+  }
+}
+
+function initQuestApp(win) {
+  const list = win.querySelector('#qList');
+  const bar = win.querySelector('#qBarFill');
+  const status = win.querySelector('#qStatus');
+  const reward = win.querySelector('#qReward');
+
+  function render() {
+    const questState = loadQuest();
+    list.innerHTML = '';
+    let done = 0;
+
+    QUEST_ITEMS.forEach(q => {
+      const isDone = !!questState[q.id];
+      if (isDone) done++;
+      const item = document.createElement('div');
+      item.className = `q-item ${isDone ? 'done' : ''}`;
+      item.innerHTML = `
+        <div class="q-ico">${q.e}</div>
+        <div class="q-info">
+          <div class="q-item-title">${q.t}</div>
+          <div class="q-item-desc">${q.desc}</div>
+        </div>
+        <div class="q-check">${isDone ? '✓' : ''}</div>`;
+      item.addEventListener('click', () => {
+        openApp(q.id);
+      });
+      list.appendChild(item);
+    });
+
+    const pct = (done / QUEST_ITEMS.length) * 100;
+    bar.style.width = pct + '%';
+    status.textContent = `${done} of ${QUEST_ITEMS.length} completed (${Math.round(pct)}%)`;
+
+    if (done === QUEST_ITEMS.length) {
+      reward.classList.remove('hidden');
+    } else {
+      reward.classList.add('hidden');
+    }
+  }
+
+  render();
+}
+
+
+

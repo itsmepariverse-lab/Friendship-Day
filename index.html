@@ -1,377 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Happy Birthday Reet 💖</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>reetOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@200;300;400;500;600;700&family=Caveat:wght@600;700&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1a1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="reetOS">
 </head>
 <body>
-  <!-- Music player -->
-  <audio id="bgMusic" loop preload="auto">
-      <!-- Soulful Hindi track (Falak Tak) -->
-      <source src="assets/falak_tak.mp3" type="audio/mpeg">
-  </audio>
-  <button id="musicToggle" class="music-btn glass">
-      <span class="icon">🎵</span>
-      <span class="text">Play Music</span>
-  </button>
 
-  
-  <!-- Guided Onboarding Modal -->
-  <div id="welcomeModal" class="modal-overlay hidden" style="display: none;">
-    <div class="modal-content glass-card text-center slide-up">
-      <h2 class="cursive text-pink mb-3" style="font-size: 2.5rem;">Welcome to your world, Reet 🌸</h2>
-      <p class="mb-4 text-purple" style="font-size: 1.2rem; line-height: 1.8;">
-        This entire experience was made just for you. ✨<br><br>
-        🎵 <strong>Music</strong> plays in the top right — sit back and let it set the mood.<br><br>
-        📸 <strong>Polaroids</strong> — find the gallery and <strong>flip them</strong> for a secret message!<br><br>
-        🃏 <strong>Memory Stack</strong> — drag and fling the photo cards to reveal more memories.<br><br>
-        🎬 <strong>Film Reel</strong> — hover over any video frame to watch it come alive.<br><br>
-        🎂 Keep scrolling all the way to the end for one last magical surprise...
-      </p>
-      <button id="closeModalBtn" class="primary-btn pulse">I'm Ready ❤️</button>
+<!-- ══════════ BOOT SCREEN ══════════ -->
+<div id="boot">
+  <div class="boot-inner">
+    <div class="boot-logo" data-icon="ribbon"></div>
+    <div class="boot-name"><span class="wordmark shine" style="--wm:2.7rem"><span class="wm-reet">reet</span><span class="wm-os">OS</span></span></div>
+    <div class="boot-ver">version 2.0 · reet edition</div>
+    <div class="boot-log" id="bootLog"></div>
+    <div class="boot-bar"><div class="boot-bar-fill" id="bootBarFill"></div></div>
+    <div class="boot-pct" id="bootPct">0%</div>
+
+    <div class="boot-install hidden" id="bootInstall">
+      <button class="boot-install-btn" id="installBtn">
+        <span data-icon="download"></span> add reetOS to home screen
+      </button>
+      <button class="boot-continue" id="continueBtn">continue in browser</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LOCK SCREEN ══════════ -->
+<div id="lock" class="hidden">
+  <div class="lock-photo" id="lockPhotoA"></div>
+  <div class="lock-photo" id="lockPhotoB" style="opacity: 0;"></div>
+  <div class="lock-scrim"></div>
+  <div class="lock-content">
+    <div class="lock-clock">
+      <div class="lock-time" id="lockTime">00:00</div>
+      <div class="lock-date" id="lockDate">Sunday, August 2</div>
+    </div>
+    <div class="lock-bottom">
+      <div class="lock-avatar" data-icon="ribbon"></div>
+      <div class="lock-user">Reet</div>
+      <button class="lock-btn" id="lockBtn">tap to unlock</button>
+      <div class="lock-hint">no password needed — you're always welcome here</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DESKTOP ══════════ -->
+<div id="desktop" class="hidden">
+
+  <div class="wallpaper" id="wallpaper">
+    <div class="wp-photo" id="wpPhoto"></div>
+    <div class="wp-wash"></div>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <canvas id="starCanvas"></canvas>
+  </div>
+
+  <!-- Menu bar -->
+  <div class="menubar">
+    <div class="menubar-left">
+      <span class="mb-logo" data-icon="ribbon"></span>
+      <span class="mb-item bold" data-menu="system"><span class="wordmark" style="--wm:.95rem"><span class="wm-reet">reet</span><span class="wm-os">OS</span></span></span>
+      <span class="mb-item desktop-only" data-menu="file">Her Things</span>
+      <span class="mb-item desktop-only" data-menu="feelings">Feelings</span>
+      <span class="mb-item desktop-only" data-menu="help">Reet 101</span>
+    </div>
+    <div class="menubar-right">
+      <span class="mb-item mb-ico" id="themeBtn" title="Themes & Vibe"><span data-icon="sparkle"></span></span>
+      <span class="mb-item mb-ico" id="battery"><span data-icon="battery"></span> ∞%</span>
+      <span class="mb-item mb-ico" id="wifi"><span data-icon="wifi"></span></span>
+      <span class="mb-item" id="menuClock">--:--</span>
     </div>
   </div>
 
-  <!-- Ethereal Mesh Canvas Background -->
-  <canvas id="etherealCanvas"></canvas>
+  <!-- Desktop icons (mac) -->
+  <div class="desktop-icons" id="desktopIcons"></div>
 
-  <!-- Opening -->
-  <section id="opening" class="section fullscreen">
-    <div class="content glass-card fade-in">
-      <h1 class="cursive title-pop">Hey Reet …<br><span class="subtext">I made something for you 💫</span></h1>
-      <!-- Added the missing opening video -->
-      <div class="opening-video-container mt-4">
-        <video src="Last%20video%20message/2.mp4" autoplay muted loop playsinline class="opening-video"></video>
-      </div>
-      <button id="startJourneyBtn" class="primary-btn mt-4 shadow-btn">Start the Journey ❤️</button>
+  <!-- iPhone home screen (mobile only) -->
+  <div class="home" id="home">
+    <div class="home-grid" id="homeGrid"></div>
+    <div class="home-dots"><i class="on"></i></div>
+  </div>
+
+  <!-- Windows container -->
+  <div id="windows"></div>
+
+  <!-- Dock -->
+  <div class="dock" id="dock"></div>
+
+  <!-- iOS home indicator (mobile only) -->
+  <div class="home-bar" id="homeBar"></div>
+
+</div>
+
+<!-- ══════════ WINDOW TEMPLATES ══════════ -->
+<template id="tpl-terminal">
+  <div class="term">
+    <div class="term-out" id="termOut"></div>
+    <div class="term-chips" id="termChips"></div>
+    <div class="term-inputline">
+      <span class="term-prompt">reet@friendship <span class="tilde">~</span> $</span>
+      <input type="text" class="term-input" id="termInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send">
     </div>
-  </section>
+  </div>
+</template>
 
-  <!-- Story -->
-  <section id="story" class="section hidden scroll-reveal">
-    <div class="content text-center glass-card">
-      <p class="story-text slide-up delay-1">Once upon a time… someone incredibly special was born 🌸</p>
-      <p class="story-text slide-up delay-2">She grew into someone kind, cute, and unforgettable ✨</p>
-      <p class="story-text slide-up delay-3">And today… it’s her special day 🎂</p>
+<template id="tpl-photos">
+  <div class="photos-app" id="photosApp">
+    <div class="photos-bar">
+      <button class="ph-back" id="phBack"><span data-icon="chevL"></span> her albums</button>
+      <span class="ph-label" id="phLabel">Her Albums</span>
+      <span class="ph-count" id="photoCount"></span>
     </div>
-  </section>
-
-  <!-- Qualities Section -->
-  <section id="qualities" class="section hidden scroll-reveal" style="display: none;">
-    <div class="content text-center">
-      <h2 class="cursive title-anim mb-4 text-pink">You are...</h2>
-      <div class="traits-grid">
-        <div class="trait-card glass-card hover-lift delay-1">
-          <div class="icon-wrap">
-            <svg class="custom-icon" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-pink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-            </svg>
-          </div>
-          <div class="trait-name">Radiant</div>
-        </div>
-        <div class="trait-card glass-card hover-lift delay-2">
-          <div class="icon-wrap">
-            <svg class="custom-icon" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.76z" />
-              <line x1="16" y1="8" x2="2" y2="22" />
-              <line x1="17.5" y1="15" x2="9" y2="15" />
-            </svg>
-          </div>
-          <div class="trait-name">Graceful</div>
-        </div>
-        <div class="trait-card glass-card hover-lift delay-3">
-          <div class="icon-wrap">
-            <svg class="custom-icon" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-pink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.7 0l-1.1 1-1.1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.9 7.9 7.9-7.9 1-1a5.5 5.5 0 0 0 0-7.8z" />
-            </svg>
-          </div>
-          <div class="trait-name">Charming</div>
-        </div>
-        <div class="trait-card glass-card hover-lift delay-4">
-          <div class="icon-wrap">
-             <svg class="custom-icon" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-          </div>
-          <div class="trait-name">Inspiring</div>
-        </div>
-        <div class="trait-card glass-card hover-lift delay-5">
-          <div class="icon-wrap">
-             <svg class="custom-icon" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-pink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="6 3 18 3 22 9 12 22 2 9" />
-              <line x1="6" y1="3" x2="12" y2="22" />
-              <line x1="18" y1="3" x2="12" y2="22" />
-              <line x1="2" y1="9" x2="22" y2="9" />
-            </svg>
-          </div>
-          <div class="trait-name">Elegant</div>
-        </div>
-      </div>
+    <div class="photos-scroll" id="photosScroll">
+      <div class="albums-grid" id="albumsGrid"></div>
+      <div class="photos-grid hidden" id="photosGrid"></div>
     </div>
-  </section>
-
-  <!-- Gallery Section -->
-  <section id="memories" class="section hidden scroll-reveal" style="display: none;">
-    <div class="content glass-card">
-      <h2 class="cursive text-purple text-center mb-4">A Glimpse of Her Magic 🌸</h2>
-      <div class="gallery-grid">
-      <div class="gallery-page active" id="page-1">
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="assets/beauty.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>You shine brighter than the stars ✨</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="assets/defaulte_as_awesome_1518351663_highlight17914952296063020.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Absolutely gorgeous 🌷</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="assets/defaulte_as_awesome_1518836798_highlight17914952296063020.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>That smile melts hearts! 💖</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="assets/defaulte_as_awesome_1574970559_2187334048938431123_6784736164.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>An unforgettable moment ✨</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="assets/defaulte_as_awesome_1686724776_3124796077811810264_6784736164.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Always glowing like the sun ☀️</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="assets/Falak%20tak%20-%20January%2031st%202025.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Beautiful inside and out 💫</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="assets/IMG_20250401_202059.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Pure joy in a single frame 🎶</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="assets/defaulte_as_awesome_1518351663_highlight17914952296063020.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>The best vibes only 🌸</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="assets/meet%20me.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Such a soft, beautiful aura 🤍</span></div></div></div>
-      </div>
-      <div class="gallery-page hidden" id="page-2" style="display:none;">
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="assets/Snapchat-1951483369.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Simply perfect. 🦋</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="assets/Status%20(29).jpg" alt="Memory" loading="lazy"></div><div class="back"><span>A beautiful memory worth keeping! 🥰</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="assets/With%20Bindi%20haayeee%20-%20January%2031st%202025.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Effortlessly charming 🌹</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/1059dc9d2b0c490e819e752ead0ced7e.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Your presence is a true gift 🎁</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/29688e7d94344f1fb00e2d79d56e9d7d.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Iconic as ever ✨</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/2ca6c648353649f8b68f66c95f6c229a.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>My favorite aesthetic 💖</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/2da3c70a7726427b937bf0df12f8c7d3.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Breathtaking, truly. 🌟</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/2f5a5cb6eb56476b8f249efb5a60bb5d.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Graceful like a swan 🦢</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/3fa626af5e9b4bdebb5add02c51c961b.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>A tiny glimpse of your magic ✨</span></div></div></div>
-      </div>
-      <div class="gallery-page hidden" id="page-3" style="display:none;">
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/419af537ce2f405e9bf8f6f6364a9628.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Absolutely radiant 🌺</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/49288b93055848b59c5a0dda1e83b3f1.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>You make everything better 🌈</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/51a7edf15c244d38bbc816722e7bf157.mp4" autoplay loop muted playsinline style="object-fit: contain; background: #000;"></video></div><div class="back"><span>This deserves to be framed 🖼️</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/563cc13722f34d32a89db0835bcce6a0.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>The most comforting smile 🌻</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/593a7fd9a1af4fcb8c8d5cb4d3d2efe1.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>So full of life! 💃</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/5d2fa35b96b840c282fa20d7aaf002e2.jpg" alt="Memory" loading="lazy" style="transform: rotate(180deg);"></div><div class="back"><span>A vibe completely unmatched ⚡</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/61afea2320db467b83dfe260ff51df0c.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Flawless. Just flawless. 👑</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/632e89ee537d429f84f5abde5e09547d.mp4" autoplay loop muted playsinline style="object-fit: contain; background: #000;"></video></div><div class="back"><span>Everything about this is perfect ❤️</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/6a1f5b619e1f43a4bb4b4b5f3fd64ad8.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Never lose that spark 🔥</span></div></div></div>
-      </div>
-      <div class="gallery-page hidden" id="page-4" style="display:none;">
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/6cdde3db85ff498a9f5c60085c3e38a8.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Cutest human alive 🥺</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/7302e5a8cb934d62830a256c9ecb1acb.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>You own the moment 📸</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/8811b389c9da4ec184bfda9600847542.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>A literal angel 👼</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/8e7ce487162b4262b897b448722aba82.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Elegance personified 👗</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/9145c1b7121e4686afb1f65ca4b074cb.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>You make me smile just looking at this 😊</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/9d6a95242b7f4542b1a8b23580ab4997.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Precious beyond words 💍</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/9d9c755d7cbb4a978dd8f5f15eea98d6.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>The world is better with you in it 🌍</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/aea3a88a7e9b40adb379e0970bfe5bfa.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>I could look at this all day 💫</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/b4c0af68e7b140c394ef09996b79085c.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>A true masterpiece 🎨</span></div></div></div>
-      </div>
-      <div class="gallery-page hidden" id="page-5" style="display:none;">
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/be6097241b8940b4850b421c6fd0c9dd.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>You light up the dark 🌙</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/d07d9d61d5fb48658d19e8e532f0be10.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>Radiating pure happiness! 😁</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/d97dda79ad15482382fb20512f0e71ab.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Can we pause time here? ⏳</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><img src="Birthday%20Bash/e2b08b6fe6dd419c905e527f50ed56cb.jpg" alt="Memory" loading="lazy"></div><div class="back"><span>You carry so much grace 🌸</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/e2bc5b0e9c47457e8b85477adc6fecb4.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>It’s the little moments that matter 💫</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/f7c2871374e440a2b859814da7ab79e3.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>A true blessing 🙏</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/fcd2dc159244480a99349ca2fd54d02a.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>Always the main character 🎭</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/fddb619cd9204228bb242d550afaa867.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>You are literally magic. 🪄</span></div></div></div>
-        <div class="gallery-item"><div class="flip-inner"><div class="front"><video src="Birthday%20Bash/VID-20260217-WA0008.mp4" autoplay loop muted playsinline></video></div><div class="back"><span>So deeply, wonderfully you. 💖</span></div></div></div>
-      </div>
-
-      <div class="gallery-pagination mt-4 text-center">
-        <button id="prevPage" class="primary-btn shadow-btn" style="display:none; margin-right: 10px;">← Prev</button>
-        <span id="pageIndicator" class="cursive text-purple fs-medium mx-3" style="display: inline-block; margin: 0 15px;">Page 1 of 5</span>
-        <button id="nextPage" class="primary-btn shadow-btn" style="margin-left: 10px;">Next →</button>
-      </div>
+    <div class="lightbox" id="lightbox">
+      <div class="lb-idx" id="lbIdx"></div>
+      <button class="lb-close" id="lbClose" data-icon="close"></button>
+      <button class="lb-nav lb-prev" id="lbPrev" data-icon="chevL"></button>
+      <img id="lbImg" alt="memory">
+      <button class="lb-nav lb-next" id="lbNext" data-icon="chevR"></button>
+      <div class="lb-cap" id="lbCap"></div>
     </div>
-  </section>
+  </div>
+</template>
 
-  <!-- Memory Stack Section -->
-  <section id="memory-stack" class="section hidden scroll-reveal" style="display: none;">
-    <div class="content text-center">
-      <h2 class="cursive text-pink mb-4" style="font-size: 3rem;">A Few of My Favourite Moments 📸</h2>
-      <p class="text-purple mb-5" style="font-size: 1.2rem;">Swipe or drag each photo to discover the next memory ✨</p>
-      <div id="memoryStack" class="memory-stack-container">
-        <!-- Cards injected by JS -->
-      </div>
-      <p class="text-purple mt-4" style="font-size: 1rem; opacity: 0.7;">Drag to swipe away 👆</p>
+<template id="tpl-videos">
+  <div class="videos-app" id="videosApp">
+    <div class="photos-bar">
+      <button class="ph-back" id="vdBack"><span data-icon="chevL"></span> all sets</button>
+      <span class="ph-label" id="vdLabel">Reet In Motion</span>
+      <span class="ph-count" id="vdCount"></span>
     </div>
-  </section>
+    <div class="photos-scroll" id="vdScroll">
+      <div class="albums-grid" id="vdSets"></div>
+      <div class="vd-grid hidden" id="vdGrid"></div>
+    </div>
+    <div class="vd-player" id="vdPlayer">
+      <button class="lb-close" id="vdClose" data-icon="close"></button>
+      <video id="vdVideo" playsinline webkit-playsinline controls preload="metadata"></video>
+      <div class="vd-meta">
+        <div class="vd-title" id="vdTitle"></div>
+        <div class="vd-date" id="vdDate"></div>
+      </div>
+      <button class="lb-nav lb-prev" id="vdPrev" data-icon="chevL"></button>
+      <button class="lb-nav lb-next" id="vdNext" data-icon="chevR"></button>
+    </div>
+  </div>
+</template>
 
-  <!-- Cinematic Film Reel -->
-  <section id="film-reel" class="section hidden scroll-reveal" style="display: none;">
-    <div class="content text-center">
-      <h2 class="cursive text-pink mb-4" style="font-size: 3rem;">Her Moments in Motion 🎬</h2>
-      <p class="text-purple mb-5" style="font-size: 1.2rem;">Some memories are too alive for photos ✨</p>
-      <div class="film-reel-grid">
-        <div class="film-frame">
-          <video src="assets/beauty.mp4" loop playsinline class="film-video"></video>
-          <div class="film-caption cursive">Natural Beauty ✨</div>
-        </div>
-        <div class="film-frame">
-          <video src="assets/meet%20me.mp4" loop playsinline class="film-video"></video>
-          <div class="film-caption cursive">She's Everything 💖</div>
-        </div>
-        <div class="film-frame">
-          <video src="assets/With%20Bindi%20haayeee%20-%20January%2031st%202025.mp4" loop playsinline class="film-video"></video>
-          <div class="film-caption cursive">That Bindi Glow 🌸</div>
-        </div>
-        <div class="film-frame">
-          <video src="assets/S3.mp4" loop playsinline class="film-video"></video>
-          <div class="film-caption cursive">Unstoppable 🔥</div>
-        </div>
-        <div class="film-frame">
-          <video src="assets/defaulte_as_awesome_1677129353_3044302817321032979_6784736164.mp4" loop playsinline class="film-video"></video>
-          <div class="film-caption cursive">That Look 😍</div>
-        </div>
-        <div class="film-frame">
-          <video src="assets/defaulte_as_awesome_1686724776_3124796077811810264_6784736164.mp4" loop playsinline class="film-video"></video>
-          <div class="film-caption cursive">Pure Charisma 👑</div>
-        </div>
+<template id="tpl-letter">
+  <div class="letter-app">
+    <div class="letter-meta">letter.txt — modified Aug 2, 2026</div>
+    <div class="letter-body" id="letterBody"></div>
+    <div class="letter-hint" id="letterHint">tap anywhere to show the whole letter</div>
+  </div>
+</template>
+
+<template id="tpl-music">
+  <div class="music-app">
+    <div class="mu-art">
+      <div class="mu-disc" id="muDisc"><span data-icon="vinyl"></span></div>
+    </div>
+    <div class="mu-title" id="muTitle">—</div>
+    <div class="mu-artist" id="muArtist">—</div>
+    <div class="mu-viz" id="muViz"></div>
+    <input type="range" class="mu-seek" id="muSeek" value="0" min="0" max="1000">
+    <div class="mu-time"><span id="muCur">0:00</span><span id="muDur">0:00</span></div>
+    <div class="mu-controls">
+      <button class="mu-btn" id="muBack" data-icon="prev"></button>
+      <button class="mu-btn mu-play" id="muPlay" data-icon="play"></button>
+      <button class="mu-btn" id="muFwd" data-icon="next"></button>
+    </div>
+    <div class="mu-list">
+      <div class="mu-list-bar">
+        <button class="mu-station-btn" id="muStationBtn"><span data-icon="chevL"></span> <span id="muStationName">reet radio</span></button>
+        <button class="mu-shuffle" id="muShuffle">shuffle</button>
+      </div>
+      <div id="muStations"></div>
+      <div id="muTracks" class="hidden"></div>
+    </div>
+    <audio id="muAudio" preload="metadata"></audio>
+  </div>
+</template>
+
+<template id="tpl-story">
+  <div class="story-app">
+    <div class="st-hero">
+      <div class="st-hero-num" id="stTotal">—</div>
+      <div class="st-hero-label">days since I first saw you</div>
+      <div class="st-streak" id="stStreak"></div>
+    </div>
+    <div class="st-rail" id="stRail"></div>
+    <div class="st-foot">every date here is counted from today, and keeps counting</div>
+  </div>
+</template>
+
+<template id="tpl-quiz">
+  <div class="quiz-app">
+    <div class="qz-intro" id="qzIntro">
+      <div class="qz-glyph" data-icon="sparkle"></div>
+      <div class="qz-title">bestie test 🎀</div>
+      <div class="qz-sub">10 questions about us & our vibe. No dates, zero stress!</div>
+      <button class="sh-btn" id="qzStart">shuru karein?</button>
+    </div>
+    <div class="qz-play hidden" id="qzPlay">
+      <div class="qz-bar"><div class="qz-bar-fill" id="qzBarFill"></div></div>
+      <div class="qz-step" id="qzStep"></div>
+      <div class="qz-q" id="qzQ"></div>
+      <div class="qz-opts" id="qzOpts"></div>
+      <div class="qz-note" id="qzNote"></div>
+    </div>
+    <div class="qz-done hidden" id="qzDone">
+      <div class="qz-score" id="qzScore"></div>
+      <div class="qz-verdict" id="qzVerdict"></div>
+      <button class="sh-btn" id="qzAgain">phir se try karein? 🎀</button>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-reply">
+  <div class="reply-app">
+    <div class="rp-head">write back</div>
+    <div class="rp-sub">say anything. it saves as you type, so you can't lose it.</div>
+    <textarea id="rpText" class="rp-text" placeholder="type here…" maxlength="4000"></textarea>
+    <div class="rp-meta"><span id="rpCount">0 characters</span><span id="rpSaved"></span></div>
+    <div class="rp-actions">
+      <button class="sh-btn" id="rpSend">send it to him</button>
+      <button class="sh-ghost" id="rpCopy">copy</button>
+    </div>
+    <div class="rp-hint" id="rpHint"></div>
+  </div>
+</template>
+
+<template id="tpl-shayari">
+  <div class="shayari-app">
+    <div class="sh-top">
+      <div class="sh-lang" id="shLang">
+        <button class="sh-tab active" data-lang="hi">हिंदी</button>
+        <button class="sh-tab" data-lang="en">English</button>
       </div>
     </div>
-  </section>
-
-  <!-- Interactive Surprise Section -->
-  <section id="surprises" class="section hidden scroll-reveal">
-    <div class="content text-center glass-card">
-      <h2 class="cursive text-purple mb-4">Click for a surprise...</h2>
-      <div class="surprise-container">
-        <button class="surprise-btn primary-btn shadow-btn" data-msg="You make people smile without trying 😊">Open Gift 🎁</button>
-        <button class="surprise-btn primary-btn shadow-btn" data-msg="You’re secretly the cutest human alive 😌">Another One 👀</button>
-        <button class="surprise-btn primary-btn shadow-btn" data-msg="Talking to you makes everything better 💖">One More 💫</button>
-        <button class="surprise-btn final primary-btn shadow-btn" id="finalSurpriseBtn" data-msg="A special message awaits you...">Final Surprise 💝</button>
-      </div>
-      <div id="surpriseMsg" class="msg-box hidden"></div>
+    <div class="sh-stage" id="shStage">
+      <div class="sh-card" id="shCard"></div>
     </div>
-  </section>
-
-  <!-- Reasons Why You're Amazing -->
-  <section id="reasons" class="section hidden scroll-reveal" style="display: none;">
-    <div class="content glass-card">
-      <h2 class="cursive text-pink text-center mb-3">Reasons Why You're Amazing</h2>
-      <div class="reasons-scroller">
-        <div id="reasonsList" class="reasons-track">
-          <!-- populated via JS -->
-        </div>
-      </div>
+    <div class="sh-actions">
+      <button class="sh-btn" id="shNext"><span data-icon="sparkle"></span> aur sunao</button>
+      <button class="sh-ghost" id="shCopy">copy</button>
     </div>
-  </section>
+    <div class="sh-count" id="shCount"></div>
+  </div>
+</template>
 
-  <!-- Emotional Letter Section -->
-  <section id="letter" class="section hidden scroll-reveal" style="display: none;">
-    <div class="content letter-card glass">
-      <p class="cursive fs-large text-pink pb-2">Hey Reet 💖</p>
-      <div class="letter-body">
-        <div id="typewriter-text" class="typewriter-text cursive"></div>
-      </div>
-      <p class="cursive fs-medium mt-4 text-purple text-right">Happy Birthday 🎂💖</p>
+<template id="tpl-reasons">
+  <div class="reasons-app">
+    <div class="rs-label">reason generator</div>
+    <div class="rs-display" id="rsDisplay">
+      <div class="rs-glyph" data-icon="sparkle"></div>
+      <div class="rs-text">press the button and I'll tell you why</div>
     </div>
-    <div class="text-center mt-5">
-      <button id="finaleBtn" class="primary-btn shadow-btn pulse">See the magic ✨</button>
+    <button class="rs-btn" id="rsBtn"><span data-icon="sparkle"></span> generate</button>
+    <div class="rs-counter" id="rsCounter">0 of 12 discovered</div>
+  </div>
+</template>
+
+<template id="tpl-notes">
+  <div class="notes-app">
+    <div class="nt-head">things_to_do_together.md</div>
+    <ul class="nt-list" id="ntList"></ul>
+    <form class="nt-add" id="ntAdd">
+      <input type="text" id="ntInput" placeholder="add something of your own…" maxlength="120"
+             autocomplete="off" enterkeyhint="done">
+      <button type="submit" class="nt-add-btn" id="ntAddBtn" aria-label="add">+</button>
+    </form>
+    <div class="nt-foot" id="ntFoot">0 of 8 completed</div>
+  </div>
+</template>
+
+<template id="tpl-trash">
+  <div class="trash-app">
+    <div class="tr-icon" data-icon="trashBig"></div>
+    <div class="tr-title">Trash is empty</div>
+    <div class="tr-sub">tried to find a bad memory of us to delete.<br>turns out there aren't any.</div>
+  </div>
+</template>
+
+<template id="tpl-about">
+  <div class="about-app">
+    <div class="ab-logo" data-icon="ribbon"></div>
+    <div class="ab-name"><span class="wordmark shine" style="--wm:2rem"><span class="wm-reet">reet</span><span class="wm-os">OS</span></span></div>
+    <div class="ab-ver">Version 2.0 · Friendship Edition</div>
+    <div class="ab-specs">
+      <div><span>Owner</span><b>Reet</b></div>
+      <div><span>Role</span><b>Certified Best Friend</b></div>
+      <div><span>Memory</span><b>∞ GB — all of them</b></div>
+      <div><span>Uptime</span><b id="abUptime">calculating…</b></div>
+      <div><span>Storage</span><b>100% love · 0% free</b></div>
+      <div><span>License</span><b>Forever · non-revocable</b></div>
     </div>
-  </section>
+    <div class="ab-foot">built by someone who thinks the world of you</div>
+  </div>
+</template>
 
-  <!-- Grand Finale -->
-  <section id="finale" class="section hidden" style="display: none;">
-    <div class="content glass-card text-center finale-card">
-      <div class="finale-header">
-        <!-- SVG Crown / Sparkle -->
-        <svg class="finale-icon drop-shadow" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; margin-bottom: 20px;">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="var(--color-text-pink)" stroke="var(--color-text-pink)" opacity="0.8"/>
-        </svg>
-        <h1 class="cursive text-white drop-shadow">Happy Birthday,<br>Reet</h1>
-      </div>
-      
-      <!-- Special Centerpiece Video — trimmed best portion -->
-      <div class="finale-media-frame" style="position: relative; border-radius: 24px; overflow: hidden; max-width: 650px; width: 95%; margin: 1.5rem auto; box-shadow: 0 30px 80px rgba(255,105,180,0.4);">
-        <video
-          id="finaleCenterpieceVideo"
-          src="assets/With%20Bindi%20trimmed.mp4"
-          autoplay loop muted playsinline
-          class="centerpiece-video"
-          style="width: 100%; height: auto; display: block;"
-        ></video>
-        <!-- Soft vignette overlay -->
-        <div style="position:absolute; inset:0; border-radius:24px; background: radial-gradient(ellipse at center, transparent 50%, rgba(255,182,210,0.15) 100%); pointer-events:none;"></div>
-      </div>
-      
-      
-      <p class="mt-4 cursive" style="font-size: 1.5rem; color: var(--color-text-purple);">Here's to a year as incredibly beautiful as you are. ✨</p>
-      <div class="text-center mt-5">
-        <button id="finalCakeTrigger" class="primary-btn shadow-btn pulse">One Last Thing... 🎂</button>
-      </div>
-
+<!-- ══════════ MOOD CHECK-IN ══════════ -->
+<template id="tpl-mood">
+  <div class="mood-app">
+    <div class="mood-title">aaj ka mood kya hai? 🌸</div>
+    <div class="mood-sub">tap your vibe and I'll match it</div>
+    <div class="mood-grid" id="moodGrid"></div>
+    <div class="mood-result hidden" id="moodResult">
+      <div class="mood-res-emoji" id="moodResEmoji"></div>
+      <div class="mood-res-text" id="moodResText"></div>
+      <button class="sh-btn" id="moodAgain">change mood</button>
     </div>
-  </section>
+  </div>
+</template>
 
-  
-  <!-- Virtual Interactive Cake Section (Moved to true end) -->
-  <section id="virtual-cake" class="section hidden" style="display: none;">
-    <div class="content text-center glass-card" style="padding: 4rem 2rem; position: relative;">
-      <h2 class="cursive text-pink mb-4" style="font-size: 3.5rem;">Make a Wish 🎂</h2>
-      <p class="text-purple mb-5" style="font-size: 1.3rem;">Light the candle, close your eyes, make a wish, and blow it out! ✨</p>
-      
-      <div class="cake-container" style="margin-top: 1rem;">
-        
-        <!-- Reet's Avatar (Hidden initially, slides in to blow) -->
-        <div id="reetAvatar" class="ghibli-avatar-container hidden">
-          <img src="assets/girl blowing candle.png" alt="Reet blowing candle" class="ghibli-avatar-img">
-          <div id="windBlow" class="wind-blow hidden">💨</div>
-        </div>
+<!-- ══════════ SCRATCH CARD ══════════ -->
+<template id="tpl-scratch">
+  <div class="scratch-app">
+    <div class="scratch-label">scratch to reveal 🎁</div>
+    <div class="scratch-wrap" id="scratchWrap">
+      <div class="scratch-msg" id="scratchMsg"></div>
+      <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
+    </div>
+    <div class="scratch-hint" id="scratchHint">scratch anywhere on the card</div>
+    <button class="sh-btn scratch-new hidden" id="scratchNew">new card ✨</button>
+  </div>
+</template>
 
-        <!-- The Restored Simple CSS Cake -->
-        <div class="cake">
-          <div class="candle" id="birthdayCandle">
-            <div class="ghibli-flame" id="candleFlame"></div>
-          </div>
-          <div class="tier top-tier"></div>
-          <div class="tier bottom-tier">
-            <!-- The slice that cuts out -->
-            <div class="cake-slice" id="cakeSlice">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="cake-controls mt-5" style="position: relative; z-index: 50;">
-        <button id="lightCandleBtn" class="primary-btn shadow-btn pulse">Light the Candle 🕯️</button>
-        <button id="blowCandleBtn" class="primary-btn shadow-btn hidden pulse">Blow into Mic 🌬️</button>
-        <br>
-        <button id="fallbackBlowBtn" class="outline-btn text-purple mt-3 hidden" style="font-size: 1rem; border: none; background: transparent; text-decoration: underline; cursor: pointer;">Can't use microphone? Tap here instead!</button>
-        <br>
-        <button id="cutCakeBtn" class="primary-btn shadow-btn hidden pulse mt-4">Cut a Slice 🍰</button>
-      </div>
-
-      <div class="message-wrapper" style="text-align: center; margin-top: -20px; position: relative; z-index: 60;">
-        <div id="cakeMessage" class="finale-cake-msg cursive hidden">🎉 Happy Birthday, Reet! 🎉</div>
+<!-- ══════════ MAGIC 8-BALL ══════════ -->
+<template id="tpl-magic8">
+  <div class="m8-app">
+    <div class="m8-title">🔮 Reet's Magic Ball</div>
+    <div class="m8-sub">pucho kuch bhi — main jaanti hoon</div>
+    <div class="m8-ball" id="m8Ball">
+      <div class="m8-inner">
+        <div class="m8-num">8</div>
+        <div class="m8-answer hidden" id="m8Answer"></div>
       </div>
     </div>
-  </section>
-
-
-  <!-- Final Video Message -->
-  <section id="final-video" class="section hidden" style="display: none;">
-    <div class="content text-center" style="max-width: 700px; margin: 0 auto;">
-      <h2 class="cursive text-pink mb-4" style="font-size: 3rem;">One More Thing... 💌</h2>
-      <p class="text-purple mb-5" style="font-size: 1.2rem;">Because some feelings are best seen, not just read.</p>
-      <div class="final-video-frame">
-        <video
-          id="finalMessageVideo"
-          src="assets/With Bindi haayeee - January 31st 2025.mp4"
-          playsinline
-          controls
-          class="final-message-video"
-          style="width:100%; border-radius: 20px; box-shadow: 0 20px 60px rgba(255,105,180,0.3);"
-        ></video>
-      </div>
-      <p class="cursive text-purple mt-5" style="font-size: 1.6rem;">This is you. This will always be you. 💖</p>
+    <div class="m8-field">
+      <input class="m8-input" id="m8Input" type="text" placeholder="apna sawaal yahan likho…" autocomplete="off" />
+      <button class="sh-btn" id="m8Ask">ask</button>
     </div>
-  </section>
+    <div class="m8-hint" id="m8Hint">type a yes/no question and tap ask ✨</div>
+  </div>
+</template>
 
-  <!-- Candle Focus Overlay for Surprise 4 -->
-  <div class="candle-focus-overlay"></div>
+<!-- ══════════ PHOTO MEMORY MATCH ══════════ -->
+<template id="tpl-match">
+  <div class="match-app">
+    <div class="match-header">
+      <div class="match-title">memory match 🃏</div>
+      <div class="match-stats"><span id="mchMoves">0 moves</span> · <span id="mchTime">0s</span></div>
+    </div>
+    <div class="match-grid" id="matchGrid"></div>
+    <div class="match-done hidden" id="matchDone">
+      <div class="match-done-text" id="matchDoneText"></div>
+      <button class="sh-btn" id="matchAgain">play again 🎴</button>
+    </div>
+  </div>
+</template>
 
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="script.js"></script>
+<!-- ══════════ COMPLIMENT SLOT MACHINE ══════════ -->
+<template id="tpl-slot">
+  <div class="slot-app">
+    <div class="slot-title">compliment machine 🎰</div>
+    <div class="slot-sub">pull to generate a fact about you</div>
+    <div class="slot-machine">
+      <div class="slot-reels" id="slotReels">
+        <div class="slot-reel" id="slotR0"><div class="slot-strip" id="slotS0"></div></div>
+        <div class="slot-reel" id="slotR1"><div class="slot-strip" id="slotS1"></div></div>
+        <div class="slot-reel" id="slotR2"><div class="slot-strip" id="slotS2"></div></div>
+      </div>
+      <div class="slot-line"></div>
+    </div>
+    <button class="sh-btn slot-btn" id="slotSpin">✨ spin</button>
+    <div class="slot-result" id="slotResult"></div>
+  </div>
+</template>
+
+<!-- ══════════ GUESS THE VIBE ══════════ -->
+<template id="tpl-vibe">
+  <div class="vibe-app">
+    <div class="vibe-intro" id="vibeIntro">
+      <div class="vibe-glyph">✨</div>
+      <div class="vibe-title">guess the vibe</div>
+      <div class="vibe-sub">I'll describe a situation — you pick the bestie reaction</div>
+      <button class="sh-btn" id="vibeStart">let's go</button>
+    </div>
+    <div class="vibe-play hidden" id="vibePlay">
+      <div class="vibe-bar"><div class="vibe-bar-fill" id="vibeBarFill"></div></div>
+      <div class="vibe-step" id="vibeStep"></div>
+      <div class="vibe-scenario" id="vibeScenario"></div>
+      <div class="vibe-opts" id="vibeOpts"></div>
+    </div>
+    <div class="vibe-done hidden" id="vibeDone">
+      <div class="vibe-done-label">your vibe is</div>
+      <div class="vibe-done-result" id="vibeDoneResult"></div>
+      <div class="vibe-done-sub" id="vibeDoneSub"></div>
+      <button class="sh-btn" id="vibeAgain">phir se play karein? ✨</button>
+    </div>
+  </div>
+</template>
+
+<!-- ══════════ REEL SNAKE ══════════ -->
+<template id="tpl-snake">
+  <div class="snake-app">
+    <div class="snake-header">
+      <div class="snake-title">reel snake 📱</div>
+      <div class="snake-score">score: <span id="snakeScore">0</span></div>
+    </div>
+    <canvas class="snake-canvas" id="snakeCanvas"></canvas>
+    <div class="snake-msg" id="snakeMsg">tap to start 👆</div>
+    <div class="snake-controls">
+      <div class="snake-dpad">
+        <button class="sd-btn" data-dir="up">▲</button>
+        <button class="sd-btn" data-dir="left">◀</button>
+        <button class="sd-btn" data-dir="right">▶</button>
+        <button class="sd-btn" data-dir="down">▼</button>
+      </div>
+    </div>
+  </div>
+<!-- ══════════ STICKY NOTES ══════════ -->
+<template id="tpl-sticky">
+  <div class="sticky-app">
+    <div class="st-head">
+      <div class="st-title">gentle reminders 📌</div>
+      <div class="st-sub">little sticky notes for your day</div>
+    </div>
+    <div class="st-grid" id="stGrid"></div>
+  </div>
+<!-- ══════════ THEMES & VIBE ══════════ -->
+<template id="tpl-theme">
+  <div class="theme-app">
+    <div class="th-head">
+      <div class="th-title">choose your vibe 🎨</div>
+      <div class="th-sub">select a color theme & custom aura</div>
+    </div>
+    <div class="th-grid" id="thGrid"></div>
+    <div class="th-actions">
+      <button class="sh-btn" id="thCycleWp">cycle wallpaper 🖼️</button>
+      <button class="sh-btn" id="thHeartRain">heart rain 💕</button>
+    </div>
+  </div>
+<!-- ══════════ REET'S QUEST CHECKLIST ══════════ -->
+<template id="tpl-quest">
+  <div class="quest-app">
+    <div class="q-head">
+      <div class="q-title">reet's exploration quest 🏆</div>
+      <div class="q-sub">explore all apps to complete your friendship badge</div>
+    </div>
+    <div class="q-bar-wrap">
+      <div class="q-bar"><div class="q-bar-fill" id="qBarFill"></div></div>
+      <div class="q-status" id="qStatus">0 of 10 completed</div>
+    </div>
+    <div class="q-list" id="qList"></div>
+    <div class="q-reward hidden" id="qReward">
+      <div class="q-rw-glyph">🎉🎀</div>
+      <div class="q-rw-title">100% Quest Completed!</div>
+      <div class="q-rw-text">you explored every single corner of reetOS — officially certified bestie forever 🤍</div>
+    </div>
+  </div>
+</template>
+
+<!-- ══════════ WELCOME MODAL ══════════ -->
+<div class="welcome-overlay hidden" id="welcomeOverlay">
+  <div class="welcome-modal">
+    <div class="wm-sparkle">🌸✨</div>
+    <div class="wm-title">Welcome to reetOS, Reet!</div>
+    <div class="wm-body">
+      This whole site was built just for you 🎀<br/>
+      Inside, you'll find games, music, shayari, care notes, photos, and a secret letter.<br/><br/>
+      Use your <b>Exploration Quest</b> checklist to make sure you don't miss a single surprise!
+    </div>
+    <div class="wm-actions">
+      <button class="sh-btn" id="wmStartBtn">Start Exploring 🚀</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="video-data.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
