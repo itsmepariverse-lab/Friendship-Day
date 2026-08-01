@@ -50,6 +50,11 @@ const ICONS = {
     <path d="M13 17h22" ${S}/>
     <path d="M16.5 17l1.4 18a2.5 2.5 0 002.5 2.3h7.2a2.5 2.5 0 002.5-2.3L31.5 17" ${S}/>
     <path d="M20 17v-2.5a2 2 0 012-2h4a2 2 0 012 2V17" ${S}/>`),
+  appShayari: sq('s', '#f2b8ff', '#c98fe8', `
+    <path d="M17 32c-3-8 1-16 9-19.5" ${S}/>
+    <path d="M26 12.5c1.6 5.4.6 11-3 14.2-2.3 2-5.2 2.4-7.4 1.2" ${S}/>
+    <path d="M13.5 35.5c1.6-2.2 3.4-4 5.5-5.5" ${S}/>
+    <path d="M30 30h6M30 35h4" ${S}/>`),
   appVideos: sq('v', '#ffc4a8', '#ff9a7a', `
     <rect x="8" y="14" width="21" height="20" rx="4" ${S}/>
     <path d="M29 22.5l8-4.5v12l-8-4.5z" ${S}/>`),
@@ -201,6 +206,7 @@ const APPS = {
   videos:   { name: 'clips',       icon: 'appVideos',   tpl: 'tpl-videos',   w: 460, h: 460, init: initVideos,   desktop: true },
   letter:   { name: 'letter.txt',  icon: 'appLetter',   tpl: 'tpl-letter',   w: 440, h: 430, init: initLetter,   desktop: true },
   music:    { name: 'music',       icon: 'appMusic',    tpl: 'tpl-music',    w: 320, h: 460, init: initMusic },
+  shayari:  { name: 'shayari',     icon: 'appShayari',  tpl: 'tpl-shayari',  w: 380, h: 440, init: initShayari, desktop: true },
   reasons:  { name: 'reasons',     icon: 'appReasons',  tpl: 'tpl-reasons',  w: 360, h: 400, init: initReasons },
   notes:    { name: 'our list',    icon: 'appNotes',    tpl: 'tpl-notes',    w: 380, h: 420, init: initNotes },
   about:    { name: 'about this friendship', icon: 'appAbout', tpl: 'tpl-about', w: 380, h: 440, init: initAbout },
@@ -388,6 +394,7 @@ function initDesktop() {
   renderIcons($('#desktop'));
   initMenuBar();
   restoreWallpaper();
+  if (!isMobile()) initWidget();   // desktop has the room; phones don't
   startClock();
   startStars();
 
@@ -455,6 +462,7 @@ const MENUS = {
       } },
   ],
   feelings: [
+    { l: 'Read Me a Shayari', do: () => openApp('shayari') },
     { l: 'Tell Me a Reason', do: () => {
         const r = REASONS[Math.floor(Math.random() * REASONS.length)];
         toast(r.t);
@@ -1034,6 +1042,125 @@ function initMusic(win) {
   showStations();
 }
 
+/* ═══════════ APP: SHAYARI ═══════════ */
+/* Written for this site — not quoted from anywhere. */
+const SHAYARI = {
+  hi: [
+    ['कुछ रिश्ते ख़ून से नहीं, वक़्त से बनते हैं —', 'और तुम उसी वक़्त का सबसे हसीन हिस्सा हो।'],
+    ['हर बात कहने को अल्फ़ाज़ नहीं चाहिए,', 'कुछ लोग ख़ामोशी भी पढ़ लेते हैं — तुम वही हो।'],
+    ['तुमसे मिलने के बाद ये समझ आया,', 'कि घर सिर्फ़ जगह नहीं, कोई इंसान भी होता है।'],
+    ['भीड़ में जब भी मुड़ के देखा,', 'एक चेहरा हमेशा वहीं मिला — तुम्हारा।'],
+    ['शिकायतें भी हैं, और शुक्रिया भी,', 'मगर जो भी है, तुम्हारे बिना अधूरा है।'],
+    ['दोस्ती वो नहीं जो हँसी में साथ हो,', 'दोस्ती वो है जो ख़ामोशी में भी पास हो।'],
+    ['हमने माँगा भी नहीं, फिर भी मिल गए तुम —', 'शायद कुछ दुआएँ नाम लिखवा कर आती हैं।'],
+    ['वक़्त बदला, शहर बदले, लोग भी बदले,', 'एक तुम हो जो हर बार वैसी ही निकलीं।'],
+    ['तारीफ़ में क्या लिखूँ तुम्हारे लिए,', 'जो भी लिखा, कम ही लगा — हर बार।'],
+    ['ज़िंदगी ने बहुत कुछ छीना है मुझसे,', 'पर तुम्हें देकर सारा हिसाब बराबर कर दिया।'],
+  ],
+  en: [
+    ['Some people are not chapters in your story.', 'They are the handwriting.'],
+    ['You never once asked me to be easier to love.', 'That is the whole gift.'],
+    ['I have a hundred people to laugh with,', 'and exactly one I can be quiet with.'],
+    ['If I ever have to explain you to someone,', "I will just say: she stayed."],
+    ['Friendship is the only love', 'that never asked me to prove it.'],
+    ['We are not the same person.', 'We are just never lost in the same room.'],
+    ['Everyone gets a few people who feel like home.', 'I got lucky on the first try.'],
+    ['You remember the version of me', 'I was too embarrassed to keep. Thank you for that.'],
+    ['Distance is a rumour', 'people like us never believed.'],
+    ['You are the only plot twist', 'I saw coming and still cried about.'],
+  ],
+};
+
+function initShayari(win) {
+  const card = win.querySelector('#shCard');
+  const count = win.querySelector('#shCount');
+  const nextBtn = win.querySelector('#shNext');
+  const copyBtn = win.querySelector('#shCopy');
+
+  let lang = 'hi';
+  let pool = [];
+  let cur = null;
+  const seen = { hi: new Set(), en: new Set() };
+
+  function render() {
+    if (!pool.length) pool = SHAYARI[lang].map((_, i) => i).sort(() => Math.random() - 0.5);
+    const i = pool.pop();
+    cur = SHAYARI[lang][i];
+    seen[lang].add(i);
+
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.className = 'sh-card ' + lang;
+    card.innerHTML = cur.map(l => '<span class="sh-line"></span>').join('') +
+      '<div class="sh-sig">— for you, always</div>';
+    card.querySelectorAll('.sh-line').forEach((el, n) => { el.textContent = cur[n]; });
+    card.classList.add('pop');
+
+    count.textContent = `${seen[lang].size} of ${SHAYARI[lang].length} ${lang === 'hi' ? 'शायरी' : 'read'}`;
+  }
+
+  win.querySelectorAll('.sh-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.lang === lang) return;
+      win.querySelectorAll('.sh-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      lang = tab.dataset.lang;
+      pool = [];
+      render();
+    });
+  });
+
+  nextBtn.addEventListener('click', render);
+  card.addEventListener('click', render);
+
+  copyBtn.addEventListener('click', () => {
+    const text = cur.join('\n');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => toast('copied — go send it to someone'))
+        .catch(() => toast('could not copy'));
+    } else toast('could not copy');
+  });
+
+  render();
+}
+
+/* ═══════════ DESKTOP WIDGET ═══════════ */
+function initWidget() {
+  const wg = document.createElement('div');
+  wg.className = 'widget';
+  wg.innerHTML = `
+    <div class="wg-head"><span>aaj ki baat</span><span data-icon="sparkle"></span></div>
+    <div class="wg-body" id="wgBody"></div>
+    <div class="wg-foot">tap for another</div>`;
+  $('#desktop').appendChild(wg);
+  renderIcons(wg);
+
+  const body = wg.querySelector('#wgBody');
+  let lang = 'hi';
+
+  function shuffleIn() {
+    const list = SHAYARI[lang];
+    const lines = list[Math.floor(Math.random() * list.length)];
+    body.className = 'wg-body' + (lang === 'en' ? ' en' : '');
+    body.innerHTML = '';
+    lines.forEach(l => {
+      const s = document.createElement('span');
+      s.className = 'sh-line';
+      s.textContent = l;
+      body.appendChild(s);
+    });
+    wg.classList.remove('flip');
+    void wg.offsetWidth;
+    wg.classList.add('flip');
+    lang = lang === 'hi' ? 'en' : 'hi';   // alternate languages
+  }
+
+  wg.addEventListener('click', shuffleIn);
+  shuffleIn();
+  return wg;
+}
+
 /* ═══════════ APP: REASONS ═══════════ */
 const REASONS = [
   { g: 'chat',     t: "you reply to my nonsense at 2am like it's urgent news" },
@@ -1212,6 +1339,7 @@ function initTerminal(win) {
       '  reasons           why you matter (try: reasons --all)',
       '  memories          open the photo albums',
       '  clips             home videos & reels',
+      '  shayari [hi|en]   a couplet, written for you',
       '  cat letter.txt    read the letter',
       '  play              open the playlist',
       '  songs             list every track',
@@ -1313,6 +1441,15 @@ function initTerminal(win) {
       else print(`sudo: ${args[0]}: permission denied (nice try)`, 'err');
     },
 
+    shayari: (args) => {
+      const l = args[0] === 'en' ? 'en' : 'hi';
+      const s = SHAYARI[l][Math.floor(Math.random() * SHAYARI[l].length)];
+      print('');
+      s.forEach(line => print('   ' + line, 'pink'));
+      print('   — for you, always', 'dim');
+      print('');
+      print('   (shayari en  ·  shayari hi  ·  or open the app)', 'dim');
+    },
     wallpaper: () => { cycleWallpaper(); print('wallpaper changed.', 'pink'); },
     date: () => print(new Date().toString(), 'lav'),
     echo: (args) => print(args.join(' ')),
