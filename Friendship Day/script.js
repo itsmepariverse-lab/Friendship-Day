@@ -1059,24 +1059,89 @@ const TODOS = [
   'reread this list years from now',
 ];
 
+/* Saved to localStorage so her ticks and her own additions survive a refresh.
+   Shape: { done: { "<text>": true }, custom: ["…"] } */
+const LIST_KEY = 'reetos-list';
+
+function loadList() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LIST_KEY) || '{}');
+    return { done: raw.done || {}, custom: Array.isArray(raw.custom) ? raw.custom : [] };
+  } catch (_) {
+    return { done: {}, custom: [] };
+  }
+}
+function saveList(state) {
+  try { localStorage.setItem(LIST_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
 function initNotes(win) {
   const list = win.querySelector('#ntList');
   const foot = win.querySelector('#ntFoot');
+  const form = win.querySelector('#ntAdd');
+  const input = win.querySelector('#ntInput');
+
+  const state = loadList();
 
   const update = () => {
+    const items = list.querySelectorAll('.nt-item');
     const done = list.querySelectorAll('.nt-item.done').length;
-    foot.textContent = `${done} of ${TODOS.length} completed`;
-    if (done === TODOS.length) toast('a whole life planned out 🤍');
+    foot.textContent = `${done} of ${items.length} completed`;
+    if (items.length && done === items.length) toast('a whole life planned out 🤍');
   };
 
-  TODOS.forEach(t => {
+  function addRow(text, mine) {
     const li = document.createElement('li');
-    li.className = 'nt-item';
-    li.innerHTML = `<span class="nt-box"><span data-icon="check"></span></span><span class="nt-txt">${t}</span>`;
-    li.addEventListener('click', () => { li.classList.toggle('done'); update(); });
+    li.className = 'nt-item' + (mine ? ' mine' : '');
+    li.dataset.text = text;
+    li.innerHTML = `<span class="nt-box"><span data-icon="check"></span></span>
+      <span class="nt-txt"></span>
+      ${mine ? '<button class="nt-del" aria-label="remove">×</button>' : ''}`;
+    li.querySelector('.nt-txt').textContent = text;   // textContent: no HTML injection
+    if (state.done[text]) li.classList.add('done');
+
+    li.addEventListener('click', e => {
+      if (e.target.closest('.nt-del')) return;
+      li.classList.toggle('done');
+      if (li.classList.contains('done')) state.done[text] = true;
+      else delete state.done[text];
+      saveList(state); update();
+    });
+
+    const del = li.querySelector('.nt-del');
+    if (del) del.addEventListener('click', e => {
+      e.stopPropagation();
+      state.custom = state.custom.filter(x => x !== text);
+      delete state.done[text];
+      saveList(state); li.remove(); update();
+    });
+
     list.appendChild(li);
+    renderIcons(li);
+    return li;
+  }
+
+  TODOS.forEach(t => addRow(t, false));
+  state.custom.forEach(t => addRow(t, true));
+  update();
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    if (state.custom.includes(text) || TODOS.includes(text)) {
+      toast('that one is already on the list');
+      input.value = '';
+      return;
+    }
+    state.custom.push(text);
+    saveList(state);
+    const li = addRow(text, true);
+    input.value = '';
+    update();
+    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    toast('added 🤍');
   });
-  renderIcons(list);
 }
 
 /* ═══════════ APP: ABOUT ═══════════ */

@@ -180,6 +180,11 @@
   <div class="notes-app">
     <div class="nt-head">things_to_do_together.md</div>
     <ul class="nt-list" id="ntList"></ul>
+    <form class="nt-add" id="ntAdd">
+      <input type="text" id="ntInput" placeholder="add something of your own…" maxlength="120"
+             autocomplete="off" enterkeyhint="done">
+      <button type="submit" class="nt-add-btn" id="ntAddBtn" aria-label="add">+</button>
+    </form>
     <div class="nt-foot" id="ntFoot">0 of 8 completed</div>
   </div>
 </template>
