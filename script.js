@@ -349,15 +349,45 @@ function offerInstallOrLock() {
 /* ═══════════ LOCK SCREEN ═══════════ */
 /* Dynamic lock screen slideshow cycling through all photos in her sheet (her01.jpg .. her22.jpg) */
 const LOCK_PHOTOS = Array.from({ length: 22 }, (_, i) => `photos/her/her${pad(i + 1)}.jpg`);
-let lockPhotoIdx = Math.floor(Math.random() * LOCK_PHOTOS.length);
+const LOCK_PIN_KEY = 'reetos-lock-pin';
+function getLockPin() {
+  try {
+    const v = localStorage.getItem(LOCK_PIN_KEY);
+    return v === null ? null : parseInt(v, 10);
+  } catch (_) { return null; }
+}
+function setLockPin(idx) {
+  try {
+    if (idx === null) localStorage.removeItem(LOCK_PIN_KEY);
+    else localStorage.setItem(LOCK_PIN_KEY, String(idx));
+  } catch (_) {}
+}
+let lockPhotoIdx = getLockPin() ?? Math.floor(Math.random() * LOCK_PHOTOS.length);
 let activeLockPhotoEl = 'A';
 let lockSlideshowTimer = null;
+
+function showLockPhotoNow(idx) {
+  lockPhotoIdx = idx;
+  const src = LOCK_PHOTOS[idx];
+  const currentEl = $('#lockPhoto' + activeLockPhotoEl);
+  const nextElKey = activeLockPhotoEl === 'A' ? 'B' : 'A';
+  const nextEl = $('#lockPhoto' + nextElKey);
+  if (!nextEl) return;
+  const img = new Image();
+  img.onload = () => {
+    nextEl.style.backgroundImage = `url("${src}")`;
+    nextEl.style.opacity = '1';
+    if (currentEl) currentEl.style.opacity = '0';
+    activeLockPhotoEl = nextElKey;
+  };
+  img.src = src;
+}
 
 function changeLockPhoto() {
   const nextIdx = (lockPhotoIdx + 1) % LOCK_PHOTOS.length;
   lockPhotoIdx = nextIdx;
   const src = LOCK_PHOTOS[nextIdx];
-  
+
   const currentEl = $('#lockPhoto' + activeLockPhotoEl);
   const nextElKey = activeLockPhotoEl === 'A' ? 'B' : 'A';
   const nextEl = $('#lockPhoto' + nextElKey);
@@ -374,6 +404,7 @@ function changeLockPhoto() {
 }
 
 function startLockSlideshow() {
+  if (getLockPin() !== null) return;   // pinned photo — no auto-cycling
   if (!lockSlideshowTimer) {
     lockSlideshowTimer = setInterval(changeLockPhoto, 5000);
   }
@@ -834,7 +865,7 @@ function initDesktop() {
   const themeBtn = $('#themeBtn');
   if (themeBtn) themeBtn.addEventListener('click', () => openApp('theme'));
 
-  if (!isMobile()) { initWidget(); initStickyWidget(); }   // desktop widgets
+  if (!isMobile()) { initWidget(); initStickyWidget(); initTodayWidget(); initMoodWidget(); }   // desktop widgets
   else initHomeIndicator();
   startClock();
   startStars();
@@ -1002,15 +1033,45 @@ function initMenuBar() {
 // Up Up Down Down Left Right Left Right B A — the classic. Works anywhere on the desktop.
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiProgress = 0;
+function triggerKonami() {
+  konamiProgress = 0;
+  heartRain();
+  toast('🎮 secret code found — this friendship has cheat codes enabled 💕');
+  markEggFound();
+}
 document.addEventListener('keydown', e => {
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   konamiProgress = (key === KONAMI[konamiProgress]) ? konamiProgress + 1 : (key === KONAMI[0] ? 1 : 0);
-  if (konamiProgress === KONAMI.length) {
-    konamiProgress = 0;
-    heartRain();
-    toast('🎮 secret code found — this friendship has cheat codes enabled 💕');
-    markEggFound();
+  if (konamiProgress === KONAMI.length) triggerKonami();
+});
+
+/* Mobile equivalent: no arrow keys or B/A on a touchscreen, so swipe the same
+   up-up-down-down-left-right-left-right pattern, then finish with two quick taps. */
+const KONAMI_TOUCH = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'tap', 'tap'];
+let konamiTouchProgress = 0;
+let touchStart = null;
+document.addEventListener('touchstart', e => {
+  const t = e.changedTouches[0];
+  touchStart = { x: t.clientX, y: t.clientY, time: Date.now() };
+});
+document.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  const dist = Math.hypot(dx, dy);
+  let gesture;
+  if (dist < 24) {
+    gesture = 'tap';
+  } else if (Math.abs(dx) > Math.abs(dy)) {
+    gesture = dx > 0 ? 'right' : 'left';
+  } else {
+    gesture = dy > 0 ? 'down' : 'up';
   }
+  konamiTouchProgress = (gesture === KONAMI_TOUCH[konamiTouchProgress]) ? konamiTouchProgress + 1
+    : (gesture === KONAMI_TOUCH[0] ? 1 : 0);
+  if (konamiTouchProgress === KONAMI_TOUCH.length) triggerKonami();
+  touchStart = null;
 });
 
 function relock() {
@@ -1913,6 +1974,69 @@ function initStickyWidget() {
   st.addEventListener('click', nextNote);
   nextNote();
   return st;
+}
+
+/* ═══════════ DESKTOP "TODAY IN US" WIDGET ═══════════ */
+function initTodayWidget() {
+  const wg = document.createElement('div');
+  wg.className = 'today-widget';
+  $('#desktop').appendChild(wg);
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const anniversary = STORY.find(s => s.d && s.d.length === 3 && s.d[1] === today.getMonth() + 1 && s.d[2] === today.getDate());
+
+  if (anniversary) {
+    const yearsAgo = today.getFullYear() - anniversary.d[0];
+    wg.innerHTML = `
+      <div class="tw-label">on this day</div>
+      <div class="tw-big">${yearsAgo > 0 ? yearsAgo + ' year' + (yearsAgo > 1 ? 's' : '') + ' ago' : 'today'}</div>
+      <div class="tw-sub">${anniversary.what}</div>`;
+  } else {
+    const streak = dayDiff(new Date(2025, 2, 3), today);
+    wg.innerHTML = `
+      <div class="tw-label">today in us</div>
+      <div class="tw-big">${fmtNum(streak)}</div>
+      <div class="tw-sub">days of talking every single day, none missed</div>`;
+  }
+  wg.addEventListener('click', () => openApp('story'));
+  return wg;
+}
+
+/* ═══════════ DESKTOP QUICK MOOD WIDGET ═══════════ */
+const MOODWG_KEY = 'reetos-moodwg';
+function initMoodWidget() {
+  const wg = document.createElement('div');
+  wg.className = 'moodwg-widget';
+  const today = new Date().toDateString();
+  let saved = null;
+  try {
+    const raw = JSON.parse(localStorage.getItem(MOODWG_KEY) || 'null');
+    if (raw && raw.day === today) saved = raw.emoji;
+  } catch (_) {}
+
+  const picks = ['😊', '😔', '😴', '🤩', '😒', '🥳'];
+  wg.innerHTML = `
+    <div class="mw-label">${saved ? "today's mood" : 'quick vibe check'}</div>
+    <div class="mw-row" id="mwRow"></div>`;
+  const row = wg.querySelector('#mwRow');
+  picks.forEach(e => {
+    const b = document.createElement('button');
+    b.className = 'mw-emoji' + (e === saved ? ' picked' : '');
+    b.textContent = e;
+    b.addEventListener('click', ev => {
+      ev.stopPropagation();
+      row.querySelectorAll('.mw-emoji').forEach(x => x.classList.remove('picked'));
+      b.classList.add('picked');
+      try { localStorage.setItem(MOODWG_KEY, JSON.stringify({ day: today, emoji: e })); } catch (_) {}
+      wg.querySelector('.mw-label').textContent = "today's mood";
+      const m = MOODS.find(m => m.e === e);
+      if (m) toast(m.l + ' noted — go check the full mood app if you want more 🌸');
+    });
+    row.appendChild(b);
+  });
+
+  $('#desktop').appendChild(wg);
+  return wg;
 }
 
 function initStickyNotes(win) {
@@ -3138,6 +3262,38 @@ function initThemeApp(win) {
     saveQuest({});
     checkBadges();
     toast('quest progress reset — go explore again 🎀');
+  });
+
+  const lockGrid = win.querySelector('#thLockGrid');
+  const shuffleBtn = win.querySelector('#thLockShuffle');
+  const currentPin = getLockPin();
+
+  function renderLockGrid() {
+    lockGrid.innerHTML = '';
+    LOCK_PHOTOS.forEach((src, i) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'th-lock-thumb' + (getLockPin() === i ? ' active' : '');
+      thumb.style.backgroundImage = `url("${src}")`;
+      thumb.addEventListener('click', () => {
+        setLockPin(i);
+        showLockPhotoNow(i);
+        stopLockSlideshow();
+        renderLockGrid();
+        shuffleBtn.classList.remove('active');
+        toast('lock screen pinned 🔒');
+        playTone('click');
+      });
+      lockGrid.appendChild(thumb);
+    });
+  }
+  renderLockGrid();
+  shuffleBtn.classList.toggle('active', currentPin === null);
+  shuffleBtn.addEventListener('click', () => {
+    setLockPin(null);
+    shuffleBtn.classList.add('active');
+    renderLockGrid();
+    startLockSlideshow();
+    toast('lock screen back to random slideshow 🖼️');
   });
 }
 
