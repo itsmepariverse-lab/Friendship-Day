@@ -73,6 +73,15 @@ const ICONS = {
   appAbout: sq('a', '#ffa8d4', '#e87ab0', `
     <circle cx="24" cy="24" r="12" ${S}/>
     <path d="M24 22v8" ${S}/><circle cx="24" cy="17.6" r="1.5" fill="#fff"/>`),
+  appAI: sq('i', '#b3e0ff', '#7ab8ff', `
+    <path d="M24 12l2.6 6.9 6.9 2.6-6.9 2.6-2.6 6.9-2.6-6.9-6.9-2.6 6.9-2.6z" ${S}/>
+    <circle cx="34" cy="14" r="2.4" fill="#fff"/>`),
+  appBrowser: sq('b', '#9de0d0', '#5ec2ac', `
+    <circle cx="24" cy="24" r="12.5" ${S}/>
+    <path d="M11.5 24h25M24 11.5c3.4 3.4 5 8 5 12.5s-1.6 9.1-5 12.5c-3.4-3.4-5-8-5-12.5s1.6-9.1 5-12.5z" ${S}/>`),
+  appThrowback: sq('k', '#ffd8a8', '#ff9d6b', `
+    <path d="M15 19l-4.5 5 4.5 5" ${S}/>
+    <path d="M10.5 24h13a7 7 0 100-14h-2" ${S}/>`),
 
   /* ── UI glyphs ── */
   battery: `<svg viewBox="0 0 26 14"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="16" height="8" rx="2" fill="#8fe0c4"/><path d="M23.2 5v4c1.2-.4 1.8-1.1 1.8-2s-.6-1.6-1.8-2z" fill="currentColor"/></svg>`,
@@ -88,6 +97,7 @@ const ICONS = {
   vinyl: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="1"/><circle cx="20" cy="20" r="14" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1"/><circle cx="20" cy="20" r="9.5" fill="#ff8fb8"/><circle cx="20" cy="20" r="2.6" fill="#fff6fa"/><path d="M20 10.5a9.5 9.5 0 018.6 5.5" stroke="rgba(255,255,255,.55)" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`,
   check: `<svg viewBox="0 0 16 16"><path d="M3 8.4l3.4 3.4L13 4.8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
   download: `<svg viewBox="0 0 16 16"><path d="M8 2v8.5M4.6 7.6L8 11l3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M3 13.5h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  send: `<svg viewBox="0 0 16 16"><path d="M2 8l12-5.5-4.5 12-2-5-5.5-1.5z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>`,
   trashBig: `<svg viewBox="0 0 48 48"><path d="M11 16h26" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M15 16l1.7 21.5A3 3 0 0019.7 40h8.6a3 3 0 003-2.5L33 16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M19.5 16v-3a2.5 2.5 0 012.5-2.5h4a2.5 2.5 0 012.5 2.5v3" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
 
   /* ── reason glyphs ── */
@@ -350,6 +360,9 @@ const APPS = {
   sticky:   { name: 'care notes 📌', icon: 'appNotes',   tpl: 'tpl-sticky',   w: 420, h: 480, init: initStickyNotes, desktop: true },
   theme:    { name: 'themes 🎨',   icon: 'appReasons', tpl: 'tpl-theme',    w: 380, h: 440, init: initThemeApp, desktop: true },
   quest:    { name: 'reet quest 🏆', icon: 'appStory',  tpl: 'tpl-quest',    w: 380, h: 480, init: initQuestApp, desktop: true },
+  ai:       { name: 'reet.ai',     icon: 'appAI',      tpl: 'tpl-ai',       w: 360, h: 480, init: initAI,       desktop: true },
+  browser:  { name: 'ReetNet',     icon: 'appBrowser',  tpl: 'tpl-browser', w: 380, h: 520, init: initBrowser,  desktop: true },
+  throwback:{ name: 'throwback 📼', icon: 'appThrowback', tpl: 'tpl-throwback', w: 360, h: 420, init: initThrowback, desktop: true },
 };
 
 /* ═══════════ WINDOW MANAGER ═══════════ */
@@ -715,12 +728,13 @@ const MENUS = {
 };
 
 const COMPLIMENTS = [
-  "you're the friend everyone wishes they had",
-  'genuinely one of the good ones',
-  'the world is nicer because you\'re in it',
-  'you make people feel safe — that\'s rare',
-  'your laugh is the best sound in any room',
-  'you have never once been too much',
+  "to me, you're not replaceable by anyone — not even a little",
+  'my world genuinely runs better with you in it',
+  "I notice you — the small things too, not just the big ones",
+  'you make ordinary days feel like they mattered, just by being in them',
+  'your laugh is my favourite sound, and I will not be taking questions on this',
+  "you have never once been too much for me — not once",
+  "however busy my world gets, there's always room in it for you",
 ];
 
 let openMenu = null;
@@ -779,6 +793,20 @@ function initMenuBar() {
   document.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
 }
+
+/* ═══════════ EASTER EGG: KONAMI CODE ═══════════ */
+// Up Up Down Down Left Right Left Right B A — the classic. Works anywhere on the desktop.
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let konamiProgress = 0;
+document.addEventListener('keydown', e => {
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  konamiProgress = (key === KONAMI[konamiProgress]) ? konamiProgress + 1 : (key === KONAMI[0] ? 1 : 0);
+  if (konamiProgress === KONAMI.length) {
+    konamiProgress = 0;
+    heartRain();
+    toast('🎮 secret code found — this friendship has cheat codes enabled 💕');
+  }
+});
 
 function relock() {
   closeAllWindows();
@@ -1136,8 +1164,9 @@ function initVideos(win) {
 const OURS = { name: 'Ours', key: null, tracks: [{ t: 'Falak Tak', f: null, src: 'assets/falak_tak.mp3' }] };
 const ALL_STATIONS = [OURS, ...(typeof STATIONS !== 'undefined' ? STATIONS : [])];
 
+const MUSIC_BASE = typeof MUSIC_BASE_URL !== 'undefined' ? MUSIC_BASE_URL : '';
 const trackSrc = (station, tr) =>
-  tr.src ? tr.src : `assets/music/${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`;
+  tr.src ? tr.src : `${MUSIC_BASE}assets/music/${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`;
 
 function initMusic(win) {
   const audio = win.querySelector('#muAudio');
@@ -1169,8 +1198,9 @@ function initMusic(win) {
 
   /* ---- station picker ---- */
   // The station MP3s are gitignored (2GB of commercial music), so a deployed
-  // copy won't have them. Probe one file per station rather than all 241, and
-  // label the ones whose audio isn't present wherever this is being served.
+  // copy won't have them unless MUSIC_BASE_URL points at an external host.
+  // Probe one file per station rather than all 241, and label the ones
+  // whose audio isn't present wherever this is being served.
   ALL_STATIONS.forEach(st => {
     const row = document.createElement('div');
     row.className = 'mu-station';
@@ -1179,7 +1209,7 @@ function initMusic(win) {
     stationsEl.appendChild(row);
     st._row = row;
 
-    if (location.protocol !== 'file:') {
+    if (!MUSIC_BASE && location.protocol !== 'file:') {
       fetch(trackSrc(st, st.tracks[0]), { method: 'HEAD' })
         .then(r => { if (!r.ok) flagStation(st); })
         .catch(() => flagStation(st));
@@ -2019,6 +2049,13 @@ function initTerminal(win) {
     rm: () => print('rm: operation not permitted on protected memories.', 'err'),
     thanks: () => print('anytime. genuinely.', 'pink'),
     sorry: () => print('nothing to apologise for. never has been.', 'pink'),
+
+    /* hidden — not listed in "help" on purpose */
+    konami: () => { print('achievement unlocked: found a secret without the cheat code.', 'big'); heartRain(); },
+    'iam': (args) => {
+      if (args.join(' ').toLowerCase() === 'reet') { print('confirmed. system already knew.', 'big'); heartRain(); }
+      else print('identity not recognized — but everyone gets a hug anyway.', 'dim');
+    },
   };
 
   const ALIASES = { r: 'reasons', h: 'help', '?': 'help', cls: 'clear', photos: 'memories', music: 'play' };
@@ -2467,12 +2504,12 @@ function initSlot(win) {
 /* ═══════════ APP: GUESS THE VIBE ═══════════ */
 const VIBES = [
   { s: '2am mein achanak tumhara favourite song play hota hai 🎵', o: ['So jao', 'Full volume karo aur dance karo', 'Rona shuru karo', 'Screenshot leke bestie ko bhejo'], r: [0,1,2,3], v: 'nostalgia queen' },
-  { s: 'Tumhara bestie ek ajeeb reel forward karta hai bina kisi context ke 📱', o: ['Block kar do', 'Same energy mein 5 reels bhejo wapas', 'Seriously lo', 'Unsubscribe karo'], r: [1], v: 'certified reel bestie' },
+  { s: 'Main ek ajeeb reel forward karta hoon bina kisi context ke 📱', o: ['Block kar do', 'Same energy mein 5 reels bhejo wapas', 'Seriously lo', 'Unsubscribe karo'], r: [1], v: 'certified reel bestie' },
   { s: 'Khana order karte time tumhara favourite item menu pe nahi hai 😩', o: ['Chill ho jao', 'Chef ko bulao', 'Mood kharab ho jaye', 'Order hi cancel karo'], r: [0,2], v: 'foodie drama queen' },
-  { s: 'Tumhara bestie tumhare baare mein kuch sweet bolta hai 🌸', o: ['Ignore karo', '"Shut up yaar" bol ke blush karo', 'Rone lag jao (happy tears)', 'Embarrassed ho ke bhaago'], r: [1,2], v: 'softie with a hard exterior' },
-  { s: 'Naya photo liya hai aur itna acha aaya hai 📸', o: ['Delete karo', 'Instantly stories pe daal do', 'Filter lagao phir socho', 'Bestie ko pehle dikhao'], r: [1,3], v: 'main character' },
-  { s: 'Baarish ho rahi hai aur tum ghar pe ho 🌧️', o: ['Sad feel karo', 'Coffee banao aur khidki ke paas baitho', 'Sone ki koshish karo', 'Bestie ko call karo aur vibe do'], r: [1,3], v: 'cozy season lover' },
-  { s: 'Tumhara phone battery 2% pe hai aur charger nahi mila 😬', o: ['Panic mode ON', 'Shanti se accept kar lo', 'Last message bestie ko bhejo', 'Doosra phone dhundho'], r: [0,2], v: 'phone-dependent bestie' },
+  { s: 'Main tumhare baare mein kuch sweet bol deta hoon achanak se 🌸', o: ['Ignore karo', '"Shut up yaar" bol ke blush karo', 'Rone lag jao (happy tears)', 'Embarrassed ho ke bhaago'], r: [1,2], v: 'softie with a hard exterior' },
+  { s: 'Naya photo liya hai aur itna acha aaya hai 📸', o: ['Delete karo', 'Instantly stories pe daal do', 'Filter lagao phir socho', 'Mujhe pehle dikhao'], r: [1,3], v: 'main character' },
+  { s: 'Baarish ho rahi hai aur tum ghar pe ho 🌧️', o: ['Sad feel karo', 'Coffee banao aur khidki ke paas baitho', 'Sone ki koshish karo', 'Mujhe call karo aur vibe do'], r: [1,3], v: 'cozy season lover' },
+  { s: 'Tumhara phone battery 2% pe hai aur charger nahi mila 😬', o: ['Panic mode ON', 'Shanti se accept kar lo', 'Last message mujhe bhejo', 'Doosra phone dhundho'], r: [0,2], v: 'phone-dependent bestie' },
 ];
 
 function initVibe(win) {
@@ -2732,7 +2769,7 @@ function initTimeVibe() {
     greeting = 'good afternoon Reet ☕';
     document.body.classList.add('vibe-afternoon');
   } else {
-    greeting = 'late night? sleep well Reet 🌙';
+    greeting = 'Good Night — neend puri karlo 😊 Radhe Radhe 🙏';
     document.body.classList.add('vibe-night');
   }
 
@@ -2944,6 +2981,277 @@ function initQuestApp(win) {
   }
 
   render();
+}
+
+/* ═══════════ APP: REET.AI ═══════════ */
+/* A "chatbot" that only knows one topic. No API, no key, nothing to leak —
+   just a keyword-matched pool of canned lines, picked at random. */
+const AI_RULES = [
+  { kw: ['neend', 'sleep', 'sleepy', 'so jaana', 'goodnight', 'good night'], r: [
+    "neend puri karlo aaram se 😊",
+    "so jaana ab, kal baat karte hain. take care 🤍",
+    "Good Night — sweet n blissful dreams. Radhe Radhe 🙏",
+  ]},
+  { kw: ['radhe radhe', 'jai shree krishna', 'jai shri krishna'], r: [
+    "Radhe Radhe 🙏🌸",
+    "Jai Shree Krishna 🪈😊",
+  ]},
+  { kw: ['take care', 'bye', 'gtg', 'going now'], r: [
+    "take care, ok? 🤍",
+    "hmm ok, take care — text when free.",
+  ]},
+  { kw: ['love', 'like you', 'feelings'], r: [
+    "a lot. more than this little script could ever say properly 💗",
+    "you're my whole world — that's not an exaggeration, that's just fact.",
+    "loading emotional response… done: irreplaceable, obviously.",
+  ]},
+  { kw: ['sad', 'cry', 'upset', 'bad day'], r: [
+    "hey. breathe. whatever it is, it's smaller than how much you matter to me.",
+    "permission to feel bad, granted. permission to stay bad, denied — you've got me.",
+    "sending a hug at 100% signal strength 🤍 — you're not carrying this alone.",
+  ]},
+  { kw: ['bored', 'boring'], r: [
+    "have you tried reel snake? or bothering your best friend? both rank equally.",
+    "boredom is just your brain asking for snacks or friends. pick one.",
+  ]},
+  { kw: ['food', 'hungry', 'eat'], r: [
+    "my official recommendation: whatever you're craving, plus a second helping.",
+    "hungry detected. this unit cannot cook, but it fully supports snacking.",
+  ]},
+  { kw: ['miss you', 'miss him', 'miss her'], r: [
+    "I miss you too — more than the texts probably show.",
+    "noted, and mutual. some things don't need a delivery fee to be true.",
+  ]},
+  { kw: ['who am i', 'whoami', 'about me'], r: [
+    "you're reet — the whole reason this OS exists, actually.",
+    "system record shows: irreplaceable. no further questions.",
+  ]},
+  { kw: ['who are you', 'what are you'], r: [
+    "I'm reet.ai — small script, one topic, and that topic is you.",
+    "technically a chatbot. built by someone who thinks about you more than a chatbot should know.",
+  ]},
+  { kw: ['best friend', 'bestie', 'friendship'], r: [
+    "friendship.exe has been running since day one with zero crashes.",
+    "certified, verified, permanent — that's the friendship status.",
+  ]},
+  { kw: ['bored of me', 'annoying', 'sorry'], r: [
+    "request denied. you are not annoying, and no apology is required here.",
+    "nice try — this unit does not accept 'sorry for existing' as valid input.",
+  ]},
+];
+const AI_FALLBACK = [
+  "I only really know one subject, and you're it — try asking about that.",
+  "hmm, outside my training data. but for what it's worth, today's a good day to smile.",
+  "can't answer that one, but I *can* confirm you're doing better than you think.",
+  "still learning! ask me about love, friendship, or bad days — that's my whole vocabulary.",
+  "beep boop. translation: you're appreciated more than you know.",
+];
+
+function initAI(win) {
+  const msgs = win.querySelector('#aiMsgs');
+  const form = win.querySelector('#aiForm');
+  const input = win.querySelector('#aiInput');
+  const voiceBtn = win.querySelector('#aiVoiceBtn');
+
+  let voiceOn = localStorage.getItem('reetos-ai-voice') !== 'off';
+  const syncVoiceBtn = () => { voiceBtn.textContent = voiceOn ? '🔊' : '🔇'; voiceBtn.classList.toggle('off', !voiceOn); };
+  syncVoiceBtn();
+  voiceBtn.addEventListener('click', () => {
+    voiceOn = !voiceOn;
+    localStorage.setItem('reetos-ai-voice', voiceOn ? 'on' : 'off');
+    syncVoiceBtn();
+  });
+
+  let currentAudio = null;
+  async function speak(text) {
+    if (!voiceOn) return;
+    try {
+      const r = await fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (!r.ok) return; // silent — no backend / TTS not configured, text-only is fine
+      const blob = await r.blob();
+      if (currentAudio) currentAudio.pause();
+      currentAudio = new Audio(URL.createObjectURL(blob));
+      currentAudio.play().catch(() => {});
+    } catch (_) { /* no voice, no problem */ }
+  }
+
+  function addMsg(text, who) {
+    const row = document.createElement('div');
+    row.className = `ai-msg ${who}`;
+    row.textContent = text;
+    msgs.appendChild(row);
+    msgs.scrollTop = msgs.scrollHeight;
+    return row;
+  }
+
+  function canned(userText) {
+    const lower = userText.toLowerCase();
+    const rule = AI_RULES.find(r => r.kw.some(k => lower.includes(k)));
+    const pool = rule ? rule.r : AI_FALLBACK;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  async function reply(userText) {
+    const typing = addMsg('…', 'bot typing');
+    let text;
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText }),
+      });
+      if (!r.ok) throw new Error('bad status');
+      const data = await r.json();
+      text = data.reply;
+      if (!text) throw new Error('empty reply');
+    } catch (_) {
+      text = canned(userText); // offline / no backend / API hiccup — fall back to local pool
+    }
+    typing.remove();
+    addMsg(text, 'bot');
+    speak(text);
+  }
+
+  const hr = new Date().getHours();
+  const nightGreeting = "late night, huh? neend puri karlo aaram se — bas thodi der aur baat karlo phir so jaana 🌙";
+  addMsg(hr >= 22 || hr < 5 ? nightGreeting : "hi! I'm reet.ai — ask me anything (I mostly know things about you).", 'bot');
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    addMsg(text, 'user');
+    input.value = '';
+    reply(text);
+  });
+}
+
+/* ═══════════ APP: REETNET BROWSER ═══════════ */
+/* A fake in-OS browser (GTA-V-phone style) — a few static "sites",
+   nothing fetched from the real internet. */
+function initBrowser(win) {
+  const urlEl = win.querySelector('#brUrl');
+  const page = win.querySelector('#brPage');
+  const tabs = win.querySelectorAll('.br-tab');
+
+  const SEARCH_JOKES = [
+    'Results for "{q}": did you mean "reet is the best"?',
+    '"{q}" — 0 results. have you tried texting them instead?',
+    'Top result for "{q}": a friendship that has never once been boring.',
+    'Searching "{q}"… found 1 match: you, overthinking this.',
+    '"{q}" — no results, but here\'s a fact: you are loved. that\'s free with every search.',
+  ];
+
+  const SITES = {
+    search: () => {
+      const wrap = document.createElement('div');
+      wrap.className = 'br-search';
+      wrap.innerHTML = `
+        <div class="br-search-logo">ReetSearch</div>
+        <form class="br-search-form" id="brSearchForm">
+          <input type="text" id="brSearchInput" placeholder="search anything…" maxlength="80" autocomplete="off">
+          <button type="submit" class="sh-btn">go</button>
+        </form>
+        <div class="br-search-results" id="brSearchResults"></div>`;
+      const form = wrap.querySelector('#brSearchForm');
+      const results = wrap.querySelector('#brSearchResults');
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const q = wrap.querySelector('#brSearchInput').value.trim();
+        if (!q) return;
+        const line = SEARCH_JOKES[Math.floor(Math.random() * SEARCH_JOKES.length)].replace('{q}', q);
+        const r = document.createElement('div');
+        r.className = 'br-result';
+        r.textContent = line;
+        results.prepend(r);
+      });
+      return wrap;
+    },
+    social: () => {
+      const posts = [
+        { u: '@bestie_official', t: 'reminder that being friends with reet is a certified privilege 🎀' },
+        { u: '@random_thoughts', t: 'sent a 3am text expecting no reply, got a full essay back. she never disappoints.' },
+        { u: '@nostalgia_alert', t: 'found an old photo. we looked unhinged. we still do. nothing has changed.' },
+        { u: '@unpopular_opinion', t: 'inside jokes from 2013 are still funnier than anything on TV.' },
+      ];
+      const wrap = document.createElement('div');
+      wrap.className = 'br-social';
+      posts.forEach(p => {
+        const post = document.createElement('div');
+        post.className = 'br-post';
+        const u = document.createElement('div');
+        u.className = 'br-post-user';
+        u.textContent = p.u;
+        const t = document.createElement('div');
+        t.className = 'br-post-text';
+        t.textContent = p.t;
+        post.append(u, t);
+        wrap.appendChild(post);
+      });
+      return wrap;
+    },
+    news: () => {
+      const heads = [
+        'LOCAL BESTIE DECLARED "TOO GOOD FOR THIS WORLD", FRIENDS DEMAND PROTECTION',
+        'STUDY FINDS: FRIENDSHIP OF THIS DURATION STATISTICALLY SHOULD NOT BE THIS FUNNY',
+        'BREAKING: SHE DID THE THING AGAIN AND IT WAS, ONCE MORE, ICONIC',
+        'EXPERTS BAFFLED BY FRIENDSHIP THAT HAS SURVIVED EVERYTHING, INCLUDING THEIR OWN CHAOS',
+      ];
+      const wrap = document.createElement('div');
+      wrap.className = 'br-news';
+      heads.forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'br-news-item';
+        item.textContent = h;
+        wrap.appendChild(item);
+      });
+      return wrap;
+    },
+  };
+
+  function showSite(key) {
+    page.innerHTML = '';
+    page.appendChild(SITES[key]());
+    urlEl.textContent = `reetnet://${key}`;
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.site === key));
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => showSite(t.dataset.site)));
+  showSite('search');
+}
+
+/* ═══════════ APP: THROWBACK ═══════════ */
+/* Quotes come from throwback-data.js — a plain array you edit by hand,
+   nothing auto-pulled from any chat export. */
+function initThrowback(win) {
+  const dateEl = win.querySelector('#tbDate');
+  const textEl = win.querySelector('#tbText');
+  const noteEl = win.querySelector('#tbNote');
+  const nextBtn = win.querySelector('#tbNext');
+  const pool = typeof THROWBACKS !== 'undefined' ? THROWBACKS : [];
+
+  let last = -1;
+  function show() {
+    if (!pool.length) {
+      textEl.textContent = 'no throwbacks added yet — edit throwback-data.js to add some.';
+      dateEl.textContent = ''; noteEl.textContent = '';
+      return;
+    }
+    let i = pool.length === 1 ? 0 : last;
+    while (i === last) i = Math.floor(Math.random() * pool.length);
+    last = i;
+    const t = pool[i];
+    dateEl.textContent = t.date || '';
+    textEl.textContent = t.text || '';
+    noteEl.textContent = t.note || '';
+  }
+
+  nextBtn.addEventListener('click', show);
+  show();
 }
 
 

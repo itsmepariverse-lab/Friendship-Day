@@ -9,3 +9,6 @@ node_modules/
 # Radio station MP3s (~2GB of commercial music) — kept local, never committed.
 # The player reads them from disk; the generated manifest is committed instead.
 Friendship Day/assets/music/*/
+
+# Private WhatsApp export — never commit real chat history to a public repo.
+*WhatsApp Chat with*.txt

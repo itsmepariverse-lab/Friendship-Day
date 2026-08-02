@@ -1,5 +1,11 @@
 /* AUTO-GENERATED from assets/music/ — do not edit by hand.
    Regenerate after adding songs. Audio files are gitignored. */
+
+// Set this to a public base URL (e.g. an R2/S3 bucket URL, ending in "/")
+// once the station mp3s are hosted somewhere the deployed site can reach.
+// Leave empty to keep reading from the local (gitignored) assets/music/ path.
+const MUSIC_BASE_URL = '';
+
 const STATIONS = [
  {
   "key": "Alka Yagnik Radio",

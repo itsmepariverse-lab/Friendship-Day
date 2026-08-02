@@ -484,6 +484,54 @@
   </div>
 </template>
 
+<!-- ══════════ REET.AI ══════════ -->
+<template id="tpl-ai">
+  <div class="ai-app">
+    <div class="ai-head">
+      <div class="ai-title">reet.ai ✨</div>
+      <div class="ai-sub">a little assistant that only knows one topic: you.</div>
+      <button class="ai-voice-btn" id="aiVoiceBtn" aria-label="toggle voice" title="toggle voice replies">🔊</button>
+    </div>
+    <div class="ai-msgs" id="aiMsgs"></div>
+    <form class="ai-form" id="aiForm">
+      <input type="text" id="aiInput" placeholder="ask me anything…" maxlength="200"
+             autocomplete="off" enterkeyhint="send">
+      <button type="submit" class="ai-send" id="aiSendBtn" aria-label="send"><span data-icon="send"></span></button>
+    </form>
+  </div>
+</template>
+
+<!-- ══════════ REETNET BROWSER ══════════ -->
+<template id="tpl-browser">
+  <div class="browser-app">
+    <div class="br-bar">
+      <span class="br-url" id="brUrl">reetnet://home</span>
+    </div>
+    <div class="br-tabs" id="brTabs">
+      <button class="br-tab active" data-site="search">ReetSearch</button>
+      <button class="br-tab" data-site="social">BestieBook</button>
+      <button class="br-tab" data-site="news">Tea Time News</button>
+    </div>
+    <div class="br-page" id="brPage"></div>
+  </div>
+</template>
+
+<!-- ══════════ THROWBACK ══════════ -->
+<template id="tpl-throwback">
+  <div class="tb-app">
+    <div class="tb-head">
+      <div class="tb-title">throwback 📼</div>
+      <div class="tb-sub">a little scroll back through us</div>
+    </div>
+    <div class="tb-card">
+      <div class="tb-date" id="tbDate"></div>
+      <div class="tb-text" id="tbText"></div>
+      <div class="tb-note" id="tbNote"></div>
+    </div>
+    <button class="sh-btn" id="tbNext">another one 🔁</button>
+  </div>
+</template>
+
 <!-- ══════════ WELCOME MODAL ══════════ -->
 <div class="welcome-overlay hidden" id="welcomeOverlay">
   <div class="welcome-modal">
@@ -503,6 +551,7 @@
 
 <script src="music-data.js"></script>
 <script src="video-data.js"></script>
+<script src="throwback-data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
