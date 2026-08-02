@@ -896,6 +896,11 @@ html, body {
   }
   #desktop.app-open .home-bar { background: rgba(60,35,65,.55); }
   #desktop.app-open .dock { opacity: 0; pointer-events: none; transition: opacity .25s; }
+  /* the status-bar overlay (white icons/clock, tuned for photo wallpapers) sits directly
+     on top of the app win-bar's own light background and close button once an app is
+     open full-screen — invisible icons + overlapping the close (X). Hide it; the app's
+     own title bar already shows the title and close control. */
+  #desktop.app-open .menubar { opacity: 0; pointer-events: none; transition: opacity .2s; }
 
   /* ── apps run full screen, like iOS ── */
   .win {

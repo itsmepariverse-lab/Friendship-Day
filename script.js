@@ -479,7 +479,7 @@ const APPS = {
   videos:   { name: 'reet in motion', icon: 'appVideos',   tpl: 'tpl-videos',   w: 460, h: 460, init: initVideos,   desktop: true },
   letter:   { name: 'letter.txt',  icon: 'appLetter',   tpl: 'tpl-letter',   w: 440, h: 430, init: initLetter,   desktop: true },
   music:    { name: 'reet radio',  icon: 'appMusic',    tpl: 'tpl-music',    w: 320, h: 460, init: initMusic },
-  story:    { name: 'how we became us', icon: 'appStory', tpl: 'tpl-story', w: 420, h: 500, init: initStory, desktop: true },
+  story:    { name: 'Our Friendship Timeline', icon: 'appStory', tpl: 'tpl-story', w: 420, h: 500, init: initStory, desktop: true },
   shayari:  { name: 'shayari',     icon: 'appShayari',  tpl: 'tpl-shayari',  w: 380, h: 440, init: initShayari, desktop: true },
   quiz:     { name: 'reet 101',    icon: 'appQuiz',     tpl: 'tpl-quiz',     w: 380, h: 460, init: initQuiz },
   reply:    { name: 'reet replies',icon: 'appReply',    tpl: 'tpl-reply',    w: 380, h: 440, init: initReply },
@@ -1653,25 +1653,27 @@ function initMusic(win) {
 const STORY = [
   { d: [2011, 6],      approx: true,  what: 'The first time I ever saw you',
     note: 'You had no idea. Neither did I, really.' },
-  { d: [2013, 4],      approx: true,  what: 'We ended up in the same class',
-    note: 'Two years later, the room finally got smaller.' },
-  { d: [2013, 11],     approx: true,  what: 'We spoke for the first time',
-    note: 'Late, considering.' },
+  { d: [2012, 5],      approx: true,  what: 'We ended up in the same class',
+    note: 'One year later, the room finally got smaller.' },
+  { d: [2012, 7],      approx: true,  what: 'Our First Direct Talk',
+    note: 'Being shy, took me long enough.' },
   { d: [2014, 5],      approx: true,  what: 'Properly friends now',
-    note: 'The kind you stop introducing and just bring along.' },
-  { d: [2015, 6],      approx: true,  what: 'The bond got real',
-    note: 'This is the year it stopped being casual.' },
+    note: 'The kind of friend you just bring along, no introduction needed.' },
+  { d: [2015, 6],      approx: true,  what: 'It stopped being casual',
+    note: 'We started having good vibe, fun and daily conversation.' },
+  { d: [2016, 3],      approx: true,  what: 'My Detachment Issues Started',
+    note: 'Made you confused and hurt since then till 2019 mid.' },
   { d: [2019, 6],      approx: true,  what: 'Reconnected',
     note: 'Some things come back around on their own.' },
   { d: [2020, 10, 24], break: true,   what: 'Everything fell apart',
     note: 'No version of this one is easy to write.' },
   { d: [2020, 11, 20], break: true,   what: 'The last message',
     note: 'Neither of us knew it was the last one.' },
-  { gap: [[2020, 10, 24], [2024, 11, 18]], label: 'days of not speaking' },
+  { gap: [[2020, 10, 24], [2024, 11, 18]], label: 'days we lost touch' },
   { d: [2024, 11, 18], bloom: true,   what: 'A Haldi ceremony, four years later',
-    note: "Friend's sister's wedding. We saw each other again." },
+    note: 'A wedding brought us back into the same room.' },
   { d: [2024, 11, 24], bloom: true,   what: 'The Baraat and the wedding day',
-    note: 'Six days later it already felt easier.' },
+    note: 'By the wedding day, it already felt easy again.' },
   { d: [2025, 3, 3],   now: true,     what: 'Back — and better than it ever was',
     note: 'Since this day: talking, sharing, laughing. Not one day missed.' },
 ];
@@ -1688,7 +1690,7 @@ function initStory(win) {
 
   win.querySelector('#stTotal').textContent = fmtNum(dayDiff(toDate(STORY[0].d), today));
   const streak = dayDiff(new Date(2025, 2, 3), today);
-  win.querySelector('#stStreak').textContent = `${fmtNum(streak)} days of talking every single day, none missed`;
+  win.querySelector('#stStreak').textContent = `${fmtNum(streak)} days straight — talking, every single day`;
 
   STORY.forEach(item => {
     if (item.gap) {
