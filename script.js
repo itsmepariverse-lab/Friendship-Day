@@ -2030,6 +2030,9 @@ function initTerminal(win) {
       '  neofetch          system specs',
       '  friendship -s     current status report',
       '  hug               it does what you think',
+      '  weather           today\'s forecast',
+      '  fortune           a random one-liner',
+      '  ping              check if this friendship is responsive',
       '  sudo love         ⚠ elevated privileges',
       '  clear             wipe the screen',
     ], 'lav'),
@@ -2116,12 +2119,43 @@ function initTerminal(win) {
     hug: () => { printAll(['        ╭───────────╮', '        │  ⊂(  ˘ ³˘)⊃  │', '        ╰───────────╯', 'consider yourself hugged.'], 'pink'); },
 
     sudo: (args) => {
-      if (args.join(' ') === 'love') {
+      const joined = args.join(' ');
+      if (joined === 'love') {
         print('[sudo] password for reet: ********', 'dim');
         print('permission granted. you never needed to ask.', 'big');
         heartRain();
+      } else if (joined === 'rm -rf /' || joined === 'rm -rf /*') {
+        print('[sudo] password for reet: ********', 'dim');
+        print('nice try. this friendship has no uninstall option.', 'err');
       } else if (!args.length) print('sudo: a command is required', 'err');
       else print(`sudo: ${args[0]}: permission denied (nice try)`, 'err');
+    },
+
+    weather: () => printAll([
+      'fetching forecast…',
+      '  today:     100% chance of you being kind of a big deal',
+      '  tonight:   scattered good vibes, clearing up nicely',
+      '  outlook:   consistently better than the actual weather app',
+    ], 'lav'),
+
+    ping: (args) => {
+      const target = args[0] || 'reet';
+      printAll([
+        `PING ${target}: 4 packets transmitted, 4 received, 0% loss`,
+        `  time=0ms — you're never actually far`,
+      ], 'lav');
+    },
+
+    fortune: () => {
+      const fortunes = [
+        'a good WiFi signal and an even better friend — you have both.',
+        'plot twist: you were the main character the whole time.',
+        'today\'s forecast: minor chaos, major main-character energy.',
+        'reminder: you are someone\'s favourite notification.',
+        'error 404: reasons to doubt yourself not found.',
+        'warning: this level of likeable should require a permit.',
+      ];
+      print(fortunes[Math.floor(Math.random() * fortunes.length)], 'pink');
     },
 
     shayari: (args) => {
@@ -2436,6 +2470,7 @@ const M8_ANSWERS = [
   'Pata nahi yaar, tumhe better pata hoga', 'Hmm... signs point to chai first',
   'Nahi yaar, baar baar poochho mat 😂', 'Definitely nahi — aur yeh final hai',
   'Itna obvious question kyun pooch rahi ho 😭', 'Sleep pe soch ke bata',
+  'Magic 8-ball ne coffee break le liya, phir se poochho ☕', 'The stars say maybe, the vibes say definitely',
 ];
 
 function initMagic8(win) {
@@ -2567,9 +2602,9 @@ function initMatch(win) {
 
 /* ═══════════ APP: COMPLIMENT SLOT MACHINE ═══════════ */
 const SLOT_DATA = [
-  ['Absolutely', 'Genuinely', 'Completely', 'Effortlessly', 'Ridiculously', 'Undeniably', 'Clearly', 'So'],
-  ['gorgeous', 'radiant', 'brilliant', 'wonderful', 'stunning', 'lovable', 'iconic', 'glowing'],
-  ['always 🎀', 'no notes ✨', 'fr fr 💕', 'every day 🌸', 'facts only', 'ek dum sach', 'non-stop', 'verified 💯'],
+  ['Absolutely', 'Genuinely', 'Completely', 'Effortlessly', 'Ridiculously', 'Undeniably', 'Clearly', 'So', 'Aggressively', 'Scientifically'],
+  ['gorgeous', 'radiant', 'brilliant', 'wonderful', 'stunning', 'lovable', 'iconic', 'glowing', 'unbothered', 'chaotic (affectionate)'],
+  ['always 🎀', 'no notes ✨', 'fr fr 💕', 'every day 🌸', 'facts only', 'ek dum sach', 'non-stop', 'verified 💯', 'case closed 👩‍⚖️', 'no cap'],
 ];
 
 function initSlot(win) {
@@ -2638,6 +2673,7 @@ const VIBES = [
   { s: 'Naya photo liya hai aur itna acha aaya hai 📸', o: ['Delete karo', 'Instantly stories pe daal do', 'Filter lagao phir socho', 'Mujhe pehle dikhao'], r: [1,3], v: 'main character' },
   { s: 'Baarish ho rahi hai aur tum ghar pe ho 🌧️', o: ['Sad feel karo', 'Coffee banao aur khidki ke paas baitho', 'Sone ki koshish karo', 'Mujhe call karo aur vibe do'], r: [1,3], v: 'cozy season lover' },
   { s: 'Tumhara phone battery 2% pe hai aur charger nahi mila 😬', o: ['Panic mode ON', 'Shanti se accept kar lo', 'Last message mujhe bhejo', 'Doosra phone dhundho'], r: [0,2], v: 'phone-dependent bestie' },
+  { s: 'Main tumhe ek terrible pun bhejta hoon 3 baar ek din mein 😅', o: ['Group chat mein forward karo', 'Ek dum groan karo phir hasso', 'Ignore karke chai piyo', 'Ek aur bhi bhejne ko bolo'], r: [1,3], v: 'pun tolerance: legendary' },
 ];
 
 function initVibe(win) {
@@ -3302,6 +3338,21 @@ const AI_RULES = [
   { kw: ['movie', 'film', 'series', 'watch'], r: [
     "no spoilers till you've actually seen it, that's the rule.",
     "movie night suggestion pending — send me what you're in the mood for.",
+  ]},
+  { kw: ['joke', 'make me laugh', 'funny'], r: [
+    "why do programmers prefer dark mode? because light attracts bugs. anyway, that's the whole bit.",
+    "I'd tell you a chemistry joke but I know I wouldn't get a reaction.",
+    "not a joke, but did you know you're objectively very funny yourself? just checking you knew.",
+  ]},
+  { kw: ['roast me', 'roast'], r: [
+    "okay: your only flaw is being so likeable it's honestly a little unfair to everyone else.",
+    "roast level: mild, because the harshest true thing about you is that you undersell yourself.",
+    "system attempted a roast, generated a compliment instead. that's a you problem, not a bug.",
+  ]},
+  { kw: ['pickup line', 'rizz'], r: [
+    "are you a browser tab? because you're the one I never close.",
+    "if being irreplaceable were a crime, you'd be doing life without parole.",
+    "that's the whole pickup line — this script's rizz is entirely borrowed from you being great.",
   ]},
 ];
 const AI_FALLBACK = [
