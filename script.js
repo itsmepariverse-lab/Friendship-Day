@@ -819,6 +819,7 @@ document.addEventListener('keydown', e => {
     konamiProgress = 0;
     heartRain();
     toast('🎮 secret code found — this friendship has cheat codes enabled 💕');
+    markEggFound();
   }
 });
 
@@ -2058,9 +2059,9 @@ function initTerminal(win) {
     sorry: () => print('nothing to apologise for. never has been.', 'pink'),
 
     /* hidden — not listed in "help" on purpose */
-    konami: () => { print('achievement unlocked: found a secret without the cheat code.', 'big'); heartRain(); },
+    konami: () => { print('achievement unlocked: found a secret without the cheat code.', 'big'); heartRain(); markEggFound(); },
     'iam': (args) => {
-      if (args.join(' ').toLowerCase() === 'reet') { print('confirmed. system already knew.', 'big'); heartRain(); }
+      if (args.join(' ').toLowerCase() === 'reet') { print('confirmed. system already knew.', 'big'); heartRain(); markEggFound(); }
       else print('identity not recognized — but everyone gets a hug anyway.', 'dim');
     },
   };
@@ -2972,6 +2973,18 @@ function revealSecretIcon(celebrate) {
   }
 }
 
+const EGG_KEY = 'reetos-egg-found';
+function markEggFound() {
+  try {
+    if (localStorage.getItem(EGG_KEY) === '1') return;
+    localStorage.setItem(EGG_KEY, '1');
+  } catch (_) {}
+  const check = document.getElementById('qBonusCheck');
+  const bonus = document.getElementById('qBonus');
+  if (check) check.textContent = '✓';
+  if (bonus) bonus.classList.add('done');
+}
+
 function checkBadges() {
   const questState = loadQuest();
   QUEST_ITEMS.forEach(q => {
@@ -3021,6 +3034,15 @@ function initQuestApp(win) {
   const bar = win.querySelector('#qBarFill');
   const status = win.querySelector('#qStatus');
   const reward = win.querySelector('#qReward');
+  const bonus = win.querySelector('#qBonus');
+  const bonusCheck = win.querySelector('#qBonusCheck');
+
+  let eggFound = false;
+  try { eggFound = localStorage.getItem(EGG_KEY) === '1'; } catch (_) {}
+  if (eggFound) {
+    bonus.classList.add('done');
+    bonusCheck.textContent = '✓';
+  }
 
   function render() {
     const questState = loadQuest();
