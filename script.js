@@ -82,6 +82,11 @@ const ICONS = {
   appThrowback: sq('k', '#ffd8a8', '#ff9d6b', `
     <path d="M15 19l-4.5 5 4.5 5" ${S}/>
     <path d="M10.5 24h13a7 7 0 100-14h-2" ${S}/>`),
+  appPromise: sq('z', '#ffb8d4', '#ff7aa8', `
+    <path d="M16 24c-2.6-3.6-5.4-5.6-8.2-5.2-2.4.4-3.6 2.6-2.8 4.8.9 2.4 4.4 3.4 11 .4z" fill="#fff" opacity=".9"/>
+    <path d="M16 24c2.6-3.6 5.4-5.6 8.2-5.2 2.4.4 3.6 2.6 2.8 4.8-.9 2.4-4.4 3.4-11 .4z" fill="#fff" opacity=".9"/>
+    <circle cx="16" cy="24" r="2.2" fill="#fff"/>
+    <path d="M8 14l4 4M24 14l-4 4" ${S}/>`),
 
   /* ── UI glyphs ── */
   battery: `<svg viewBox="0 0 26 14"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="16" height="8" rx="2" fill="#8fe0c4"/><path d="M23.2 5v4c1.2-.4 1.8-1.1 1.8-2s-.6-1.6-1.8-2z" fill="currentColor"/></svg>`,
@@ -363,6 +368,7 @@ const APPS = {
   ai:       { name: 'reet.ai',     icon: 'appAI',      tpl: 'tpl-ai',       w: 360, h: 480, init: initAI,       desktop: true },
   browser:  { name: 'ReetNet',     icon: 'appBrowser',  tpl: 'tpl-browser', w: 380, h: 520, init: initBrowser,  desktop: true },
   throwback:{ name: 'throwback 📼', icon: 'appThrowback', tpl: 'tpl-throwback', w: 360, h: 420, init: initThrowback, desktop: true },
+  promise:  { name: 'seal the promise', icon: 'appPromise', tpl: 'tpl-promise', w: 400, h: 560, init: initPromise, desktop: true },
 };
 
 /* ═══════════ WINDOW MANAGER ═══════════ */
@@ -3254,5 +3260,178 @@ function initThrowback(win) {
   show();
 }
 
+/* ═══════════ APP: SEAL THE PROMISE ═══════════ */
+const PROMISES = [
+  "I promise to always pick up, even at 2am.",
+  "I promise your bad days get to be my problem too — no arguing about it.",
+  "I promise I'm not going anywhere. Not again. Not after everything it took to come back.",
+  "I promise to remember the small things, even when you think no one's keeping track.",
+  "I promise to keep making you feel like you're never too much — because you're not.",
+  "I promise Radhe Radhe every night, whether you reply or not.",
+  "I promise this friendship stays exactly what it is: permanent, no exit door.",
+];
+
+function initPromise(win) {
+  const label = win.querySelector('#pmLabel');
+  const textEl = win.querySelector('#pmText');
+  const sealBtn = win.querySelector('#pmSealBtn');
+  const sealAnim = win.querySelector('#pmSealAnim');
+  const progressFill = win.querySelector('#pmProgressFill');
+  const stepsWrap = win.querySelector('#pmSteps');
+  const customWrap = win.querySelector('#pmCustom');
+  const customInput = win.querySelector('#pmCustomInput');
+  const customBtn = win.querySelector('#pmCustomBtn');
+  const certWrap = win.querySelector('#pmCertWrap');
+  const canvas = win.querySelector('#pmCertCanvas');
+  const downloadBtn = win.querySelector('#pmDownload');
+  const restartBtn = win.querySelector('#pmRestart');
+
+  let i = 0;
+  let sealing = false;
+
+  function showPromise() {
+    label.textContent = `promise ${i + 1} of ${PROMISES.length}`;
+    textEl.textContent = PROMISES[i];
+    progressFill.style.width = `${(i / PROMISES.length) * 100}%`;
+    sealAnim.classList.remove('sealed');
+    sealBtn.disabled = false;
+    sealBtn.textContent = 'seal it 🤝';
+  }
+
+  function seal() {
+    if (sealing) return;
+    sealing = true;
+    sealBtn.disabled = true;
+    sealAnim.classList.add('sealed');
+    sealBtn.textContent = 'sealed ✓';
+    setTimeout(() => {
+      sealing = false;
+      i++;
+      if (i < PROMISES.length) {
+        showPromise();
+      } else {
+        progressFill.style.width = '100%';
+        stepsWrap.querySelector('.pm-card').classList.add('hidden');
+        customWrap.classList.remove('hidden');
+      }
+    }, 1100);
+  }
+
+  sealBtn.addEventListener('click', seal);
+
+  customBtn.addEventListener('click', () => {
+    renderCertificate(customInput.value.trim());
+    stepsWrap.classList.add('hidden');
+    certWrap.classList.remove('hidden');
+  });
+
+  function cssVar(name, fallback) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  function renderCertificate(herPromise) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const pink = cssVar('--pink', '#ff8fb8');
+    const lav = cssVar('--lav', '#b79dff');
+    const pinkDeep = cssVar('--pink-deep', '#e85a92');
+
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#fff8fb');
+    bg.addColorStop(1, '#f5f1ff');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = pink;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(24, 24, W - 48, H - 48);
+    ctx.strokeStyle = lav;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(38, 38, W - 76, H - 76);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = pinkDeep;
+    ctx.font = '46px Georgia, serif';
+    ctx.fillText('🎀', W / 2, 105);
+
+    ctx.font = '30px Georgia, serif';
+    ctx.fillStyle = '#6b5169';
+    ctx.fillText('Certificate of Friendship', W / 2, 160);
+
+    ctx.font = '16px Georgia, serif';
+    ctx.fillStyle = '#9a8398';
+    ctx.fillText('This certifies that the friendship between', W / 2, 205);
+
+    ctx.font = 'italic 40px Georgia, serif';
+    ctx.fillStyle = pinkDeep;
+    ctx.fillText('Reet Kumari  &  Deepak Kumar', W / 2, 260);
+
+    ctx.font = '16px Georgia, serif';
+    ctx.fillStyle = '#9a8398';
+    ctx.fillText('has been sealed with the following promises —', W / 2, 300);
+    ctx.fillText('permanent, no exit door, non-negotiable.', W / 2, 322);
+
+    ctx.textAlign = 'left';
+    ctx.font = '14px Georgia, serif';
+    ctx.fillStyle = '#6b5169';
+    let y = 365;
+    PROMISES.slice(0, 5).forEach(p => {
+      const line = wrapText(ctx, `🤍 ${p}`, W - 140);
+      line.forEach(l => { ctx.fillText(l, 70, y); y += 22; });
+      y += 6;
+    });
+
+    if (herPromise) {
+      ctx.font = 'italic 15px Georgia, serif';
+      ctx.fillStyle = pinkDeep;
+      const line = wrapText(ctx, `Reet's promise back: "${herPromise}"`, W - 140);
+      line.forEach(l => { ctx.fillText(l, 70, y); y += 20; });
+    }
+
+    ctx.textAlign = 'center';
+    ctx.font = '13px Georgia, serif';
+    ctx.fillStyle = '#b09aae';
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    ctx.fillText(`sealed on ${dateStr} · reetOS`, W / 2, H - 50);
+  }
+
+  function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(w => {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > maxWidth && cur) {
+        lines.push(cur);
+        cur = w;
+      } else {
+        cur = test;
+      }
+    });
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'friendship-certificate.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  restartBtn.addEventListener('click', () => {
+    i = 0;
+    sealing = false;
+    customInput.value = '';
+    certWrap.classList.add('hidden');
+    stepsWrap.classList.remove('hidden');
+    stepsWrap.querySelector('.pm-card').classList.remove('hidden');
+    customWrap.classList.add('hidden');
+    showPromise();
+  });
+
+  showPromise();
+}
 
 

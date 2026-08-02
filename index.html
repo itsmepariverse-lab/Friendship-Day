@@ -532,6 +532,38 @@
   </div>
 </template>
 
+<!-- ══════════ SEAL THE PROMISE ══════════ -->
+<template id="tpl-promise">
+  <div class="pm-app">
+    <div class="pm-steps" id="pmSteps">
+      <div class="pm-progress"><div class="pm-progress-fill" id="pmProgressFill"></div></div>
+      <div class="pm-card">
+        <div class="pm-label" id="pmLabel">promise 1 of 7</div>
+        <div class="pm-text" id="pmText"></div>
+        <div class="pm-seal-anim" id="pmSealAnim">
+          <span class="pm-hand pm-hand-l">🫲</span>
+          <span class="pm-ribbon" id="pmRibbon">🎀</span>
+          <span class="pm-hand pm-hand-r">🫱</span>
+        </div>
+        <button class="sh-btn" id="pmSealBtn">seal it 🤝</button>
+      </div>
+      <div class="pm-custom hidden" id="pmCustom">
+        <div class="pm-label">and one from you, if you'd like</div>
+        <textarea id="pmCustomInput" class="pm-custom-input" maxlength="200"
+          placeholder="I promise… (optional)"></textarea>
+        <button class="sh-btn" id="pmCustomBtn">seal the certificate 🎀</button>
+      </div>
+    </div>
+    <div class="pm-cert hidden" id="pmCertWrap">
+      <canvas id="pmCertCanvas" width="900" height="620"></canvas>
+      <div class="pm-cert-actions">
+        <button class="sh-btn" id="pmDownload">download certificate 🎀</button>
+        <button class="sh-ghost" id="pmRestart">do it again</button>
+      </div>
+    </div>
+  </div>
+</template>
+
 <!-- ══════════ WELCOME MODAL ══════════ -->
 <div class="welcome-overlay hidden" id="welcomeOverlay">
   <div class="welcome-modal">
