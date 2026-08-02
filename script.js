@@ -87,6 +87,10 @@ const ICONS = {
     <path d="M16 24c2.6-3.6 5.4-5.6 8.2-5.2 2.4.4 3.6 2.6 2.8 4.8-.9 2.4-4.4 3.4-11 .4z" fill="#fff" opacity=".9"/>
     <circle cx="16" cy="24" r="2.2" fill="#fff"/>
     <path d="M8 14l4 4M24 14l-4 4" ${S}/>`),
+  appSecret: sq('sec', '#ffe08f', '#ffb347', `
+    <path d="M24 14c-3.6-4.6-7.4-6.4-10.6-4.9-3 1.4-3.8 5-1.6 8.3C14 21 24 30 24 30s10-9 12.2-12.6c2.2-3.3 1.4-6.9-1.6-8.3-3.2-1.5-7 .3-10.6 4.9z" fill="#fff" opacity=".95"/>
+    <path d="M15 30h18v6a2 2 0 01-2 2H17a2 2 0 01-2-2v-6z" ${S}/>
+    <path d="M15 30l9 6 9-6" ${S}/>`),
 
   /* ── UI glyphs ── */
   battery: `<svg viewBox="0 0 26 14"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="16" height="8" rx="2" fill="#8fe0c4"/><path d="M23.2 5v4c1.2-.4 1.8-1.1 1.8-2s-.6-1.6-1.8-2z" fill="currentColor"/></svg>`,
@@ -369,6 +373,7 @@ const APPS = {
   browser:  { name: 'ReetNet',     icon: 'appBrowser',  tpl: 'tpl-browser', w: 380, h: 520, init: initBrowser,  desktop: true },
   throwback:{ name: 'throwback 📼', icon: 'appThrowback', tpl: 'tpl-throwback', w: 360, h: 420, init: initThrowback, desktop: true },
   promise:  { name: 'seal the promise', icon: 'appPromise', tpl: 'tpl-promise', w: 400, h: 560, init: initPromise, desktop: true },
+  secret:   { name: 'a final thing 💌', icon: 'appSecret', tpl: 'tpl-secret', w: 380, h: 460, init: initSecret, desktop: true, hidden: true },
 };
 
 /* ═══════════ WINDOW MANAGER ═══════════ */
@@ -595,6 +600,8 @@ function initDesktop() {
   const homeGrid = $('#homeGrid');
 
   Object.entries(APPS).forEach(([id, app]) => {
+    if (app.hidden) return;
+
     const item = document.createElement('div');
     item.className = 'dock-item' + (PINNED.includes(id) ? '' : ' not-pinned');
     item.dataset.app = id;
@@ -630,6 +637,7 @@ function initDesktop() {
   initMenuBar();
   restoreWallpaper();
   restoreTheme();
+  if (isSecretUnlocked()) revealSecretIcon(false);
   initTimeVibe();
   initSparkleTrail();
 
@@ -2909,13 +2917,58 @@ function markAppExplored(id) {
     const item = QUEST_ITEMS.find(q => q.id === id);
     if (item) toast(`quest completed: ${item.t} ${item.e}`);
     checkBadges();
-    const doneCount = Object.keys(questState).length;
+    const doneCount = QUEST_ITEMS.filter(q => questState[q.id]).length;
     if (doneCount === QUEST_ITEMS.length) {
-      setTimeout(() => {
-        heartRain();
-        toast('🎉 100% QUEST COMPLETED! You unlocked ultimate bestie status 🎀');
-      }, 600);
+      setTimeout(() => revealSecretIcon(true), 600);
     }
+  }
+}
+
+const SECRET_KEY = 'reetos-secret-unlocked';
+function isSecretUnlocked() {
+  try { return localStorage.getItem(SECRET_KEY) === '1'; } catch (_) { return false; }
+}
+
+function revealSecretIcon(celebrate) {
+  const already = isSecretUnlocked();
+  if (already && document.querySelector('.dicon[data-app="secret"]')) return;
+
+  try { localStorage.setItem(SECRET_KEY, '1'); } catch (_) {}
+  const app = APPS.secret;
+
+  if (!document.querySelector('.dock-item[data-app="secret"]')) {
+    const item = document.createElement('div');
+    item.className = 'dock-item not-pinned secret-glow';
+    item.dataset.app = 'secret';
+    item.innerHTML = `<div class="dock-img" data-icon="${app.icon}"></div>
+      <div class="dock-tip">${app.name}</div><div class="dock-dot"></div>`;
+    item.addEventListener('click', () => openApp('secret'));
+    $('#dock').appendChild(item);
+
+    const hi = document.createElement('div');
+    hi.className = 'hi-app secret-glow';
+    hi.dataset.app = 'secret';
+    hi.innerHTML = `<div class="hi-img" data-icon="${app.icon}"></div>
+      <div class="hi-label">${app.name}</div>`;
+    hi.addEventListener('click', () => openApp('secret'));
+    $('#homeGrid').appendChild(hi);
+
+    const di = document.createElement('div');
+    di.className = 'dicon secret-glow';
+    di.dataset.app = 'secret';
+    di.innerHTML = `<div class="dicon-img" data-icon="${app.icon}"></div>
+      <div class="dicon-label">${app.name}</div>`;
+    di.addEventListener('dblclick', () => openApp('secret'));
+    di.addEventListener('click', () => {
+      $('#desktopIcons').querySelectorAll('.dicon').forEach(x => x.classList.remove('selected'));
+      di.classList.add('selected');
+    });
+    $('#desktopIcons').appendChild(di);
+  }
+
+  if (celebrate) {
+    heartRain();
+    toast('🎉 100% QUEST COMPLETED! a new icon just appeared… go find it 💌');
   }
 }
 
@@ -3494,6 +3547,22 @@ function initPromise(win) {
   });
 
   showPromise();
+}
+
+/* ═══════════ APP: SECRET (unlocks at 100% quest completion) ═══════════ */
+function initSecret(win) {
+  const lock = win.querySelector('#secLock');
+  const letter = win.querySelector('#secLetter');
+  const openBtn = win.querySelector('#secOpenBtn');
+  const dateEl = win.querySelector('#secDate');
+
+  dateEl.textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  openBtn.addEventListener('click', () => {
+    lock.classList.add('hidden');
+    letter.classList.remove('hidden');
+    heartRain();
+  });
 }
 
 

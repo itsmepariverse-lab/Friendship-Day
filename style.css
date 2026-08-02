@@ -1365,4 +1365,32 @@ html, body {
 
 #pmSteps.hidden { display: none; }
 
+.sec-app { position: relative; height: 100%; display: flex; align-items: center; justify-content: center;
+  padding: 1.6rem; background: linear-gradient(170deg, #fffaf0, #fff0e0); overflow: hidden; }
+.sec-glow-bg { position: absolute; inset: -20%; background: radial-gradient(circle at 50% 40%, rgba(255,195,90,.35), transparent 60%);
+  animation: secPulseBg 3.5s ease-in-out infinite; pointer-events: none; }
+@keyframes secPulseBg { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+
+.sec-lock { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center; z-index: 1; }
+.sec-lock.hidden { display: none; }
+.sec-lock-icon { font-size: 3rem; animation: secBob 2.2s ease-in-out infinite; }
+@keyframes secBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.sec-lock-text { font-family: var(--script); font-size: 1.3rem; color: #a8763a; }
+
+.sec-letter { position: relative; z-index: 1; max-width: 420px; display: flex; flex-direction: column; gap: .8rem; text-align: center; }
+.sec-letter.hidden { display: none; }
+.sec-letter-head { font-size: 2rem; }
+.sec-letter-date { font-family: var(--mono); font-size: .65rem; color: #b8905a; letter-spacing: .04em; }
+.sec-letter-body { font-family: var(--sans); font-size: .95rem; line-height: 1.7; color: #6b5535; }
+.sec-letter-sign { font-family: var(--script); font-size: 1.2rem; color: #c9954a; margin-top: .4rem; }
+
+/* golden pulsing glow on the hidden app's icon once revealed */
+.secret-glow .dock-img, .secret-glow .hi-img, .secret-glow .dicon-img {
+  animation: secretGlow 1.8s ease-in-out infinite;
+}
+@keyframes secretGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,180,60,.5)); }
+  50% { filter: drop-shadow(0 0 10px rgba(255,180,60,.9)); }
+}
+
 
