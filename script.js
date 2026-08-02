@@ -4033,4 +4033,116 @@ function initSecret(win) {
   });
 }
 
+/* ═══════════ VISUAL EFFECTS ═══════════ */
 
+// 1. Floating Hearts/Sparkles (Ambient)
+function spawnAmbientParticle() {
+  const layer = document.getElementById('particleLayer');
+  if(!layer) return;
+  const p = document.createElement('div');
+  p.className = 'ambient-particle';
+  const emojis = ['🤍', '🌸', '✨', '🎀', '🦋'];
+  p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+  p.style.left = Math.random() * 100 + 'vw';
+  p.style.setProperty('--dur', (6 + Math.random() * 6) + 's');
+  p.style.setProperty('--rot', (Math.random() * 360 - 180) + 'deg');
+  p.style.setProperty('--max-op', 0.4 + Math.random() * 0.4);
+  layer.appendChild(p);
+  setTimeout(() => p.remove(), 12000);
+}
+setInterval(spawnAmbientParticle, 3000);
+
+// 2. Confetti Burst on App Close
+function triggerConfetti(x, y) {
+  const layer = document.getElementById('particleLayer');
+  if(!layer) return;
+  const colors = ['#ff8fb8', '#a8dcff', '#ffc4a8', '#f2b8ff', '#a8e6c4'];
+  const shapes = ['■', '●', '✦', '▲'];
+  for(let i=0; i<25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+    p.style.color = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 50 + Math.random() * 150;
+    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+    p.style.setProperty('--tr', (Math.random() * 720 - 360) + 'deg');
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), 1600);
+  }
+}
+// Hook into app closing logic
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.win-close') || e.target.closest('.folder-close') || e.target.closest('#secCloseBtn')) {
+    triggerConfetti(e.clientX, e.clientY);
+  }
+});
+
+// 3. Surprise Sweet Pop-ups
+const POPUP_MESSAGES = [
+  "Just a little reminder: you're doing great 🤍",
+  "Hope this random popup makes you smile today ✨",
+  "You're the main character, never forget that 🌸",
+  "Take a deep breath, you've got this 🦋",
+  "Sending a little extra love your way today 🎀",
+  "No matter what, I'm always cheering for you 🙌",
+  "Your smile is literally the best thing ever 😊"
+];
+
+function triggerRandomPopup() {
+  const container = document.getElementById('toastContainer');
+  if(!container) return;
+  const msg = document.createElement('div');
+  msg.className = 'toast-msg';
+  msg.textContent = POPUP_MESSAGES[Math.floor(Math.random() * POPUP_MESSAGES.length)];
+  container.appendChild(msg);
+  setTimeout(() => msg.remove(), 6000);
+  setTimeout(triggerRandomPopup, 60000 + Math.random() * 60000);
+}
+setTimeout(triggerRandomPopup, 45000);
+
+// 4. Shake + Glow Triggers
+function shakeGlowTarget(el) {
+  if(!el) return;
+  el.classList.remove('shake-glow');
+  void el.offsetWidth; // trigger reflow
+  el.classList.add('shake-glow');
+  setTimeout(() => el.classList.remove('shake-glow'), 500);
+}
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.home-icon') || e.target.closest('.dt-icon') || e.target.closest('#aiSendBtn')) {
+    shakeGlowTarget(e.target.closest('.home-icon') || e.target.closest('.dt-icon') || e.target.closest('#aiForm'));
+  }
+});
+
+// 5. Easter Egg (Menu Logo 3x Tap)
+let eeClickCount = 0;
+let eeClickTimer = null;
+const logo = document.querySelector('.mb-logo');
+if (logo) {
+  logo.addEventListener('click', (e) => {
+    eeClickCount++;
+    clearTimeout(eeClickTimer);
+    if (eeClickCount >= 3) {
+      eeClickCount = 0;
+      triggerEasterEgg();
+    } else {
+      eeClickTimer = setTimeout(() => { eeClickCount = 0; }, 1500);
+    }
+  });
+}
+
+function triggerEasterEgg() {
+  const ee = document.getElementById('eeOverlay');
+  if (ee) {
+    ee.classList.add('show');
+    for(let i=0; i<3; i++) setTimeout(heartRain, i*400);
+    
+    document.getElementById('eeCloseBtn').onclick = () => {
+      ee.classList.remove('show');
+    };
+  }
+}
