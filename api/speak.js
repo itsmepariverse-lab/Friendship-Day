@@ -39,6 +39,7 @@ module.exports = async (req, res) => {
     });
 
     if (!groqRes.ok) {
+      console.error('speak upstream error', groqRes.status, await groqRes.text());
       res.status(502).json({ error: 'upstream error' });
       return;
     }

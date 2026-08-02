@@ -12,3 +12,10 @@ Friendship Day/assets/music/*/
 
 # Private WhatsApp export — never commit real chat history to a public repo.
 *WhatsApp Chat with*.txt
+
+# Local env vars (API keys) — never commit secrets.
+.env
+.env.local
+.vercel
+
+.vercel

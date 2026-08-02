@@ -67,11 +67,13 @@ module.exports = async (req, res) => {
           { role: 'user', content: message },
         ],
         temperature: mode === 'magic8' ? 1.0 : 0.8,
-        max_tokens: mode === 'magic8' ? 30 : 150,
+        max_tokens: mode === 'magic8' ? 100 : 150,
+        reasoning_effort: 'low',
       }),
     });
 
     if (!groqRes.ok) {
+      console.error('chat upstream error', groqRes.status, await groqRes.text());
       res.status(502).json({ error: 'upstream error' });
       return;
     }
@@ -79,6 +81,7 @@ module.exports = async (req, res) => {
     const data = await groqRes.json();
     const reply = data?.choices?.[0]?.message?.content?.trim();
     if (!reply) {
+      console.error('chat empty reply', JSON.stringify(data));
       res.status(502).json({ error: 'empty reply' });
       return;
     }
