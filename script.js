@@ -1440,8 +1440,7 @@ function initVideos(win) {
    "Ours" is prepended so their own song stays the default track. */
 // Path stays inside this folder so the site can be deployed with
 // "Friendship Day" as the project root (Vercel, Pages, anything static).
-const OURS = { name: 'Falak Tak', key: null, tracks: [{ t: 'Falak Tak', f: null, src: 'assets/falak_tak.mp3' }] };
-const ALL_STATIONS = [OURS, ...(typeof STATIONS !== 'undefined' ? STATIONS : [])];
+const ALL_STATIONS = typeof STATIONS !== 'undefined' ? STATIONS : [];
 
 const MUSIC_BASE = typeof MUSIC_BASE_URL !== 'undefined' ? MUSIC_BASE_URL : '';
 // Hosted (R2/S3) buckets have station folders at the bucket root - no "assets/music/"
