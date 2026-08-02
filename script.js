@@ -2887,6 +2887,10 @@ const QUEST_ITEMS = [
   { id: 'snake',   t: 'Eat reels in Reel Snake', e: '📱', desc: 'Play a game of bestie snake' },
   { id: 'sticky',  t: 'Read care notes & reminders', e: '📌', desc: 'Check your gentle daily notes' },
   { id: 'reply',   t: 'Write back to him', e: '💌', desc: 'Send a note or WhatsApp reply' },
+  { id: 'ai',      t: 'Chat with reet.ai', e: '🤖', desc: 'Say hi and see what it knows about you' },
+  { id: 'browser', t: 'Browse ReetNet', e: '🌐', desc: 'Explore your own personal internet' },
+  { id: 'throwback', t: 'Relive a throwback', e: '📼', desc: 'Open an old message from the vault' },
+  { id: 'promise', t: 'Seal the promise', e: '🤝', desc: 'Complete the friendship day ritual' },
 ];
 
 const QUEST_KEY = 'reetos-quest';
