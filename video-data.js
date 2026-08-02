@@ -7,62 +7,52 @@ const VIDEOS = [
    {
     "f": "reels01",
     "t": "Falak Tak",
-    "d": "January 31st 2025",
-    "s": 0
+    "d": "January 31st 2025"
    },
    {
     "f": "reels02",
     "t": "Jahan Main Jati Hu",
-    "d": "January 31st 2025",
-    "s": 0
+    "d": "January 31st 2025"
    },
    {
     "f": "reels03",
     "t": "Kabhi Kabhi Kuch Toh Kaho",
-    "d": "January 31st 2025",
-    "s": 0
+    "d": "January 31st 2025"
    },
    {
     "f": "reels04",
     "t": "Maine Koi Jaadu Nahi Kiya",
-    "d": "January 10th 2025",
-    "s": 0
+    "d": "January 10th 2025"
    },
    {
     "f": "reels05",
     "t": "Tu Ishq Hain",
-    "d": "February 2nd 2025",
-    "s": 0
+    "d": "February 2nd 2025"
    },
    {
     "f": "reels06",
     "t": "Gali Gali Mere Naam Ke Deewane",
-    "d": "March 14th 2025",
-    "s": 0
+    "d": "March 14th 2025"
    },
    {
     "f": "reels07",
     "t": "Tere Bina",
-    "d": "February 13",
-    "s": 0
+    "d": "February 13"
    },
    {
     "f": "reels08",
     "t": "Zindagi Rubic Cube Jaisi",
-    "d": "December 27th 2024",
-    "s": 0
+    "d": "December 27th 2024"
    },
    {
     "f": "reels09",
     "t": "With Bindi, Haayeee",
-    "d": "January 31st 2025",
-    "s": 0
+    "d": "January 31st 2025"
    },
    {
     "f": "reels10",
     "t": "Kesa Ladka Chahiye",
-    "d": "May 4th 2024",
-    "s": 0
+    "d": "May 4th 2024"
    }
   ]
  },
@@ -73,50 +63,128 @@ const VIDEOS = [
    {
     "f": "days01",
     "t": "College Holi Dance Party",
-    "d": "March 11th 2025",
-    "s": 0
+    "d": "March 11th 2025"
    },
    {
     "f": "days02",
     "t": "Holi, Latepost",
-    "d": "March 22nd 2025",
-    "s": 0
+    "d": "March 22nd 2025"
    },
    {
     "f": "days03",
     "t": "The Whole World Is A Garden",
-    "d": "March 7th 2025",
-    "s": 0
+    "d": "March 7th 2025"
    },
    {
     "f": "days04",
     "t": "First Resin Art",
-    "d": "March 4th 2025",
-    "s": 0
+    "d": "March 4th 2025"
    },
    {
     "f": "days05",
     "t": "Sunset On The Way Home",
-    "d": "January 19th 2025",
-    "s": 0
+    "d": "January 19th 2025"
    },
    {
     "f": "days06",
     "t": "First Meet Of 2025",
-    "d": "January 16th 2025",
-    "s": 0
+    "d": "January 16th 2025"
    },
    {
     "f": "days07",
     "t": "Bhandara Day",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "days08",
     "t": "My Heartbeat",
-    "d": "June 3rd 2025",
-    "s": 0
+    "d": "June 3rd 2025"
+   }
+  ]
+ },
+ {
+  "key": "keepsakes",
+  "title": "Keepsakes",
+  "items": [
+   {
+    "f": "keepsakes01",
+    "t": "7 Years of Trust and Devotion",
+    "d": ""
+   },
+   {
+    "f": "keepsakes02",
+    "t": "Mad Monkey",
+    "d": ""
+   },
+   {
+    "f": "keepsakes03",
+    "t": "peak chaos",
+    "d": ""
+   },
+   {
+    "f": "keepsakes04",
+    "t": "Grace with Tint",
+    "d": ""
+   },
+   {
+    "f": "keepsakes05",
+    "t": "happiest kind of loud",
+    "d": ""
+   },
+   {
+    "f": "keepsakes06",
+    "t": "a whole mood",
+    "d": ""
+   },
+   {
+    "f": "keepsakes07",
+    "t": "Beautiful Bond",
+    "d": ""
+   },
+   {
+    "f": "keepsakes08",
+    "t": "Subtle and Kind",
+    "d": ""
+   },
+   {
+    "f": "keepsakes09",
+    "t": "Just Late to Meet You",
+    "d": ""
+   },
+   {
+    "f": "keepsakes10",
+    "t": "Still Moment",
+    "d": ""
+   },
+   {
+    "f": "keepsakes11",
+    "t": "This one still makes me Smile",
+    "d": ""
+   },
+   {
+    "f": "keepsakes12",
+    "t": "Kudi Kamaal Hai Ni",
+    "d": ""
+   },
+   {
+    "f": "keepsakes13",
+    "t": "All Done",
+    "d": ""
+   },
+   {
+    "f": "keepsakes14",
+    "t": "Fairy in Real",
+    "d": ""
+   },
+   {
+    "f": "keepsakes15",
+    "t": "Two Cuties Together",
+    "d": ""
+   },
+   {
+    "f": "keepsakes16",
+    "t": "One Look",
+    "d": ""
    }
   ]
  },
@@ -127,74 +195,183 @@ const VIDEOS = [
    {
     "f": "bestie01",
     "t": "us being us",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie02",
     "t": "no context needed",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie03",
     "t": "peak chaos",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie04",
     "t": "my favourite people",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie05",
     "t": "partners in crime",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie06",
     "t": "this one still makes me laugh",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie07",
     "t": "unserious behaviour",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie08",
     "t": "the group chat, live",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie09",
     "t": "certified nonsense",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie10",
     "t": "happiest kind of loud",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie11",
     "t": "you two, always",
-    "d": "",
-    "s": 0
+    "d": ""
    },
    {
     "f": "bestie12",
     "t": "a whole mood",
-    "d": "",
-    "s": 0
+    "d": ""
+   },
+   {
+    "f": "bestie13",
+    "t": "us being us",
+    "d": ""
+   },
+   {
+    "f": "bestie14",
+    "t": "no context needed",
+    "d": ""
+   },
+   {
+    "f": "bestie15",
+    "t": "peak chaos",
+    "d": ""
+   },
+   {
+    "f": "bestie16",
+    "t": "my favourite people",
+    "d": ""
+   },
+   {
+    "f": "bestie17",
+    "t": "partners in crime",
+    "d": ""
+   },
+   {
+    "f": "bestie18",
+    "t": "this one still makes me laugh",
+    "d": ""
+   },
+   {
+    "f": "bestie19",
+    "t": "unserious behaviour",
+    "d": ""
+   },
+   {
+    "f": "bestie20",
+    "t": "the group chat, live",
+    "d": ""
+   },
+   {
+    "f": "bestie21",
+    "t": "certified nonsense",
+    "d": ""
+   },
+   {
+    "f": "bestie22",
+    "t": "happiest kind of loud",
+    "d": ""
+   },
+   {
+    "f": "bestie23",
+    "t": "you two, always",
+    "d": ""
+   },
+   {
+    "f": "bestie24",
+    "t": "a whole mood",
+    "d": ""
+   },
+   {
+    "f": "bestie25",
+    "t": "us being us",
+    "d": ""
+   }
+  ]
+ },
+ {
+  "key": "her-solo",
+  "title": "Just Her",
+  "items": [
+   {
+    "f": "her-solo01",
+    "t": "just her being her",
+    "d": ""
+   },
+   {
+    "f": "her-solo02",
+    "t": "main character energy",
+    "d": ""
+   },
+   {
+    "f": "her-solo03",
+    "t": "her, unfiltered",
+    "d": ""
+   },
+   {
+    "f": "her-solo04",
+    "t": "caught mid-laugh",
+    "d": ""
+   },
+   {
+    "f": "her-solo05",
+    "t": "that smile again",
+    "d": ""
+   },
+   {
+    "f": "her-solo06",
+    "t": "her own thing",
+    "d": ""
+   },
+   {
+    "f": "her-solo07",
+    "t": "this one is all her",
+    "d": ""
+   },
+   {
+    "f": "her-solo08",
+    "t": "quietly iconic",
+    "d": ""
+   },
+   {
+    "f": "her-solo09",
+    "t": "her at her best",
+    "d": ""
+   },
+   {
+    "f": "her-solo10",
+    "t": "no caption needed",
+    "d": ""
    }
   ]
  }

@@ -1232,6 +1232,8 @@ const ALBUMS_DATA = [
   { key: 'art',        title: 'Her Art',    n: 4,  caps: ['made by her', 'steady hands', 'patience, drawn', 'her patterns'] },
   { key: 'moments',    title: 'Moments',    n: 11, caps: ['worth keeping', 'a good day', 'celebration mode', 'all dressed up'] },
   { key: 'favourites', title: 'Favourites', n: 33, caps: ['my favourite', 'pure joy', 'golden hour', 'caught laughing', 'sunshine', 'the best one'] },
+  { key: 'keepsakes',  title: 'Keepsakes',  n: 25, caps: ['worth saving', 'kept for a reason', 'a good one', 'still my favourite'],
+    capOverrides: { 23: 'No Caption', 24: 'Flower with Flowers' } },
 ];
 
 const albThumb = (k, i) => `photos/${k}/t/${k}${pad(i + 1)}.jpg`;
@@ -1305,7 +1307,7 @@ function initPhotos(win) {
   function showPhoto() {
     if (!album) return;
     lbImg.src = albFull(album.key, idx);
-    lbCap.textContent = album.caps[idx % album.caps.length];
+    lbCap.textContent = (album.capOverrides && album.capOverrides[idx]) || album.caps[idx % album.caps.length];
     lbIdx.textContent = `${idx + 1} / ${album.n}`;
     lb.classList.add('open');
   }

@@ -8,8 +8,11 @@ import os, re, json, subprocess, sys
 
 HL   = r"E:\New Folder\Highlights"
 NF   = r"E:\New Folder\New folder"
-ROOT = r"C:\Users\Axel\reet-birthday-wish\Friendship Day"
+EDITS = r"D:\New folder (2)\New folder (2)\Edits"
+ROOT = r"C:\Users\Axel\reet-birthday-wish"
 OUT  = os.path.join(ROOT, "videos")
+
+def ed(name): return os.path.join(EDITS, name)
 
 MAX_W, CRF, MAX_SECS = 720, 30, 60
 
@@ -42,6 +45,24 @@ SETS = [
         (nf("Bhandara day - Feb 13th 2025.mp4"),                 "Bhandara Day"),
         (nf("My son is my Heart beat - June 3rd 2025.mp4"),      "My Heartbeat"),
     ]),
+    ("keepsakes", "Keepsakes", [
+        (ed("7 year.mp4"), "7 Years of Trust and Devotion"),
+        (ed("WhatsApp Video 2025-08-05 at 5.45.13 PM.mp4"), "Mad Monkey"),
+        (ed("WhatsApp Video 2026-03-13 at 5.53.49 PM.mp4"), "peak chaos"),
+        (ed("baithe.mp4"), "Grace with Tint"),
+        (ed("beauty.mp4"), "happiest kind of loud"),
+        (ed("kinni.mp4"), "a whole mood"),
+        (ed("guggu.mp4"), "Beautiful Bond"),
+        (ed("suitt.mp4"), "Subtle and Kind"),
+        (ed("meet me.mp4"), "Just Late to Meet You"),
+        (ed("S1.mp4"), "Still Moment"),
+        (ed("S2.mp4"), "This one still makes me Smile"),
+        (ed("S3.mp4"), "Kudi Kamaal Hai Ni"),
+        (ed("Status (192).mp4"), "All Done"),
+        (ed("AQMG5IF90A0k_Cx_X8q-SBba_bLi7F1S2lIzq0ONJ9Hz4H3AsmgzgSs7TuXBPhb6_eFzTodP21LQRK6KnxK2YI6DaQKF_DCKs9ihYSQ.mp4"), "Fairy in Real"),
+        (ed("Status (150).mp4"), "Two Cuties Together"),
+        (ed("Status (50).mp4"), "One Look"),
+    ]),
 ]
 
 def pick(folder, n):
@@ -51,7 +72,17 @@ def pick(folder, n):
                 key=lambda f: os.path.getsize(os.path.join(d, f)), reverse=True)
     return [(os.path.join(d, f), None) for f in fs[:n]]
 
-SETS.append(("bestie", "Bestie", pick(BESTIE, 8) + pick(HEART, 4)))
+SETS.append(("bestie", "Bestie", pick(BESTIE, 8) + pick(HEART, 4)
+             + pick("❣️", 4) + pick("💕", 3) + pick("😍", 4) + pick("🦋🫶✨", 2)))
+
+# Her solo highlights - not "us" specifically, but still her, still worth keeping.
+SOLO_CAPTIONS = ['just her being her', 'main character energy', 'her, unfiltered',
+                  'caught mid-laugh', 'that smile again', 'her own thing',
+                  'this one is all her', 'quietly iconic', 'her at her best', 'no caption needed']
+her_solo_items = (pick("😍😊its me Reet.😋😘", 6) + pick("Birthday Girl", 3)
+                  + pick("Its My Birthday", 3) + pick("Create your ownself", 3) + pick("New look", 1))
+her_solo_items = [(src, SOLO_CAPTIONS[i % len(SOLO_CAPTIONS)]) for i, (src, _) in enumerate(her_solo_items)]
+SETS.append(("her-solo", "Just Her", her_solo_items))
 
 # Highlight exports have meaningless filenames, so unlabelled clips draw from here.
 CAPTIONS = ['us being us', 'no context needed', 'peak chaos', 'my favourite people',
