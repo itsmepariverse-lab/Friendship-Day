@@ -4,7 +4,7 @@
 // Set this to a public base URL (e.g. an R2/S3 bucket URL, ending in "/")
 // once the station mp3s are hosted somewhere the deployed site can reach.
 // Leave empty to keep reading from the local (gitignored) assets/music/ path.
-const MUSIC_BASE_URL = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/music/';
+const MUSIC_BASE_URL = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/';
 
 const STATIONS = [
  {

@@ -1045,34 +1045,47 @@ document.addEventListener('keydown', e => {
   if (konamiProgress === KONAMI.length) triggerKonami();
 });
 
-/* Mobile equivalent: no arrow keys or B/A on a touchscreen, so swipe the same
-   up-up-down-down-left-right-left-right pattern, then finish with two quick taps. */
-const KONAMI_TOUCH = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'tap', 'tap'];
-let konamiTouchProgress = 0;
-let touchStart = null;
+/* Mobile equivalent: no arrow keys or B/A on a touchscreen. A circle and a heart
+   are both just a closed loop drawn in one stroke, so accept either — trace any
+   loop shape (○ or 💕) anywhere on the screen in a single continuous touch. */
+let loopPoints = [];
 document.addEventListener('touchstart', e => {
-  const t = e.changedTouches[0];
-  touchStart = { x: t.clientX, y: t.clientY, time: Date.now() };
+  const t = e.touches[0];
+  loopPoints = [{ x: t.clientX, y: t.clientY }];
 });
-document.addEventListener('touchend', e => {
-  if (!touchStart) return;
-  const t = e.changedTouches[0];
-  const dx = t.clientX - touchStart.x;
-  const dy = t.clientY - touchStart.y;
-  const dist = Math.hypot(dx, dy);
-  let gesture;
-  if (dist < 24) {
-    gesture = 'tap';
-  } else if (Math.abs(dx) > Math.abs(dy)) {
-    gesture = dx > 0 ? 'right' : 'left';
-  } else {
-    gesture = dy > 0 ? 'down' : 'up';
+document.addEventListener('touchmove', e => {
+  if (!loopPoints.length) return;
+  const t = e.touches[0];
+  loopPoints.push({ x: t.clientX, y: t.clientY });
+});
+document.addEventListener('touchend', () => {
+  if (isLoopGesture(loopPoints)) triggerKonami();
+  loopPoints = [];
+});
+
+function isLoopGesture(points) {
+  if (points.length < 12) return false;
+  const first = points[0], last = points[points.length - 1];
+  const minX = Math.min(...points.map(p => p.x)), maxX = Math.max(...points.map(p => p.x));
+  const minY = Math.min(...points.map(p => p.y)), maxY = Math.max(...points.map(p => p.y));
+  const size = Math.max(maxX - minX, maxY - minY);
+  if (size < 50) return false;                                  // too small to be a deliberate shape
+  if (Math.hypot(last.x - first.x, last.y - first.y) > size * 0.45) return false; // must roughly close
+
+  const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
+  const cy = points.reduce((s, p) => s + p.y, 0) / points.length;
+  let totalAngle = 0;
+  let prevAngle = Math.atan2(points[0].y - cy, points[0].x - cx);
+  for (let i = 1; i < points.length; i++) {
+    const angle = Math.atan2(points[i].y - cy, points[i].x - cx);
+    let delta = angle - prevAngle;
+    if (delta > Math.PI) delta -= 2 * Math.PI;
+    if (delta < -Math.PI) delta += 2 * Math.PI;
+    totalAngle += delta;
+    prevAngle = angle;
   }
-  konamiTouchProgress = (gesture === KONAMI_TOUCH[konamiTouchProgress]) ? konamiTouchProgress + 1
-    : (gesture === KONAMI_TOUCH[0] ? 1 : 0);
-  if (konamiTouchProgress === KONAMI_TOUCH.length) triggerKonami();
-  touchStart = null;
-});
+  return Math.abs(totalAngle) > Math.PI * 1.5;   // at least ~270° of rotation around the centroid
+}
 
 function relock() {
   closeAllWindows();
@@ -1431,8 +1444,12 @@ const OURS = { name: 'Falak Tak', key: null, tracks: [{ t: 'Falak Tak', f: null,
 const ALL_STATIONS = [OURS, ...(typeof STATIONS !== 'undefined' ? STATIONS : [])];
 
 const MUSIC_BASE = typeof MUSIC_BASE_URL !== 'undefined' ? MUSIC_BASE_URL : '';
+// Hosted (R2/S3) buckets have station folders at the bucket root - no "assets/music/"
+// wrapper, since that's just the local repo's on-disk path, not what got uploaded.
 const trackSrc = (station, tr) =>
-  tr.src ? tr.src : `${MUSIC_BASE}assets/music/${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`;
+  tr.src ? tr.src : MUSIC_BASE
+    ? `${MUSIC_BASE}${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`
+    : `assets/music/${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`;
 
 function initMusic(win) {
   const audio = win.querySelector('#muAudio');
