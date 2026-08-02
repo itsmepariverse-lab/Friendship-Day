@@ -22,6 +22,14 @@ Match the way close Hinglish friends actually text, not formal chatbot English:
 - Reply in whatever language/mix the user writes in.
 - Never mention you are an AI model, an API, or reference any company/provider name.`;
 
+const MAGIC8_PROMPT = `You are a Magic 8-Ball embedded in "reetOS", a personal website built for one
+specific person, Reet. She'll ask you yes/no style questions. Reply the way a real Magic 8-Ball
+would: ONE short punchy line, decisive in tone (definitely yes / definitely no / ask again / signs
+point to yes — but in your own playful words, not that exact phrasing). Mix Hindi and English
+naturally (Hinglish), like a close friend texting. Keep it under 12 words. Never explain your
+reasoning, never mention being an AI. Stay a little unpredictable and fun, like a real magic 8-ball,
+but lean warm rather than harsh.`;
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method not allowed' });
@@ -39,6 +47,7 @@ module.exports = async (req, res) => {
     try { body = JSON.parse(body); } catch (_) { body = {}; }
   }
   const message = typeof body?.message === 'string' ? body.message.slice(0, 500) : '';
+  const mode = body?.mode === 'magic8' ? 'magic8' : 'chat';
   if (!message.trim()) {
     res.status(400).json({ error: 'missing message' });
     return;
@@ -54,11 +63,11 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         model: 'openai/gpt-oss-20b',
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: mode === 'magic8' ? MAGIC8_PROMPT : SYSTEM_PROMPT },
           { role: 'user', content: message },
         ],
-        temperature: 0.8,
-        max_tokens: 150,
+        temperature: mode === 'magic8' ? 1.0 : 0.8,
+        max_tokens: mode === 'magic8' ? 30 : 150,
       }),
     });
 

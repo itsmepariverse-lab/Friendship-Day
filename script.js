@@ -347,7 +347,7 @@ const APPS = {
   videos:   { name: 'reet in motion', icon: 'appVideos',   tpl: 'tpl-videos',   w: 460, h: 460, init: initVideos,   desktop: true },
   letter:   { name: 'letter.txt',  icon: 'appLetter',   tpl: 'tpl-letter',   w: 440, h: 430, init: initLetter,   desktop: true },
   music:    { name: 'reet radio',  icon: 'appMusic',    tpl: 'tpl-music',    w: 320, h: 460, init: initMusic },
-  story:    { name: 'us, so far',  icon: 'appStory',    tpl: 'tpl-story',    w: 420, h: 500, init: initStory,   desktop: true },
+  story:    { name: 'how we became us', icon: 'appStory', tpl: 'tpl-story', w: 420, h: 500, init: initStory, desktop: true },
   shayari:  { name: 'shayari',     icon: 'appShayari',  tpl: 'tpl-shayari',  w: 380, h: 440, init: initShayari, desktop: true },
   quiz:     { name: 'reet 101',    icon: 'appQuiz',     tpl: 'tpl-quiz',     w: 380, h: 460, init: initQuiz },
   reply:    { name: 'reet replies',icon: 'appReply',    tpl: 'tpl-reply',    w: 380, h: 440, init: initReply },
@@ -1375,7 +1375,7 @@ function initStory(win) {
 
   win.querySelector('#stTotal').textContent = fmtNum(dayDiff(toDate(STORY[0].d), today));
   const streak = dayDiff(new Date(2025, 2, 3), today);
-  win.querySelector('#stStreak').textContent = `${fmtNum(streak)} days straight since we came back`;
+  win.querySelector('#stStreak').textContent = `${fmtNum(streak)} days of talking every single day, none missed`;
 
   STORY.forEach(item => {
     if (item.gap) {
@@ -2031,7 +2031,7 @@ function initTerminal(win) {
       printAll([
         `${fmtNum(total)} days since I first saw you.`,
         `${fmtNum(1486)} of those we did not speak at all.`,
-        `${fmtNum(streak)} days straight since we came back — none missed.`,
+        `${fmtNum(streak)} days of talking every single day — none missed.`,
       ], 'pink');
       print('opening the full timeline …', 'dim');
       openApp('story');
@@ -2339,23 +2339,43 @@ function initMagic8(win) {
 
   let spinning = false;
 
+  async function getAnswer(question) {
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: question, mode: 'magic8' }),
+      });
+      if (!r.ok) throw new Error('bad status');
+      const data = await r.json();
+      if (!data.reply) throw new Error('empty reply');
+      return data.reply;
+    } catch (_) {
+      return M8_ANSWERS[Math.floor(Math.random() * M8_ANSWERS.length)];
+    }
+  }
+
   function ask() {
     if (spinning) return;
-    if (!input.value.trim()) { toast('pehle sawaal toh pucho 😄'); input.focus(); return; }
+    const question = input.value.trim();
+    if (!question) { toast('pehle sawaal toh pucho 😄'); input.focus(); return; }
     spinning = true;
     hint.textContent = '';
     num.classList.remove('hidden');
     answer.classList.add('hidden');
     ball.classList.add('m8-shake');
 
-    setTimeout(() => {
+    const answerPromise = getAnswer(question);
+    const minShake = new Promise(res => setTimeout(res, 1200));
+
+    Promise.all([answerPromise, minShake]).then(([text]) => {
       ball.classList.remove('m8-shake');
       num.classList.add('hidden');
-      answer.textContent = M8_ANSWERS[Math.floor(Math.random() * M8_ANSWERS.length)];
+      answer.textContent = text;
       answer.classList.remove('hidden');
       spinning = false;
       hint.textContent = 'tap ask for another question ✨';
-    }, 1200);
+    });
   }
 
   askBtn.addEventListener('click', ask);
@@ -3037,6 +3057,42 @@ const AI_RULES = [
     "request denied. you are not annoying, and no apology is required here.",
     "nice try — this unit does not accept 'sorry for existing' as valid input.",
   ]},
+  { kw: ['thank', 'thanks', 'thankyou'], r: [
+    "no mention 😊",
+    "koi nahi yaar, that's what I'm here for.",
+  ]},
+  { kw: ['morning', 'good morning', 'gm'], r: [
+    "good morning ☀️ hope today's kind to you.",
+    "morning! kuch khaya? don't skip breakfast.",
+  ]},
+  { kw: ['tired', 'exhausted', 'thak gayi'], r: [
+    "sit down for two minutes. the world can wait, I promise.",
+    "acha, rest karlo — everything else is negotiable, your rest isn't.",
+  ]},
+  { kw: ['proud', 'achievement', 'did it', 'passed', 'selected'], r: [
+    "wait, I need a second to be this proud out loud 🎉",
+    "obviously. did you expect anything less from you?",
+  ]},
+  { kw: ['genius', 'smart', 'intelligent'], r: [
+    "genius vs. hardworking debate again? you win both categories, always have.",
+    "certified genius behaviour, no notes.",
+  ]},
+  { kw: ['gift', 'present', 'washing machine'], r: [
+    "still owe you that washing machine, don't think I forgot 😂",
+    "gift idea pending — quarterly instalments accepted.",
+  ]},
+  { kw: ['coincidence', '11:11', 'same time'], r: [
+    "11:11 again? at this point it's not a coincidence, it's a pattern.",
+    "some things just sync up. we're clearly one of them.",
+  ]},
+  { kw: ['chocolate', 'cocoa'], r: [
+    "did you know cocoa has more antioxidants than most fruit? anyway, eat the chocolate.",
+    "chocolate trivia loading… conclusion: you deserve some.",
+  ]},
+  { kw: ['movie', 'film', 'series', 'watch'], r: [
+    "no spoilers till you've actually seen it, that's the rule.",
+    "movie night suggestion pending — send me what you're in the mood for.",
+  ]},
 ];
 const AI_FALLBACK = [
   "I only really know one subject, and you're it — try asking about that.",
@@ -3044,6 +3100,11 @@ const AI_FALLBACK = [
   "can't answer that one, but I *can* confirm you're doing better than you think.",
   "still learning! ask me about love, friendship, or bad days — that's my whole vocabulary.",
   "beep boop. translation: you're appreciated more than you know.",
+  "acha, that one's outside my range — but hydrate and take a break anyway.",
+  "not sure about that, but I am sure you're having a better day than you think.",
+  "my vocabulary is small, my opinion of you is not.",
+  "can't compute that one. can confirm: you're doing great regardless.",
+  "that's above my pay grade (I'm unpaid), but you're still the main character today.",
 ];
 
 function initAI(win) {
@@ -3087,11 +3148,15 @@ function initAI(win) {
     return row;
   }
 
+  let lastCanned = '';
   function canned(userText) {
     const lower = userText.toLowerCase();
     const rule = AI_RULES.find(r => r.kw.some(k => lower.includes(k)));
     const pool = rule ? rule.r : AI_FALLBACK;
-    return pool[Math.floor(Math.random() * pool.length)];
+    const options = pool.length > 1 ? pool.filter(p => p !== lastCanned) : pool;
+    const pick = options[Math.floor(Math.random() * options.length)];
+    lastCanned = pick;
+    return pick;
   }
 
   async function reply(userText) {
