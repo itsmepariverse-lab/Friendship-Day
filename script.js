@@ -1226,18 +1226,51 @@ function initLetter(win) {
 // Files are pre-optimised: photos/<key>/<key>NN.jpg (full, max 1400px)
 //                          photos/<key>/t/<key>NN.jpg (thumb, max 420px)
 const ALBUMS_DATA = [
-  { key: 'us',         title: 'Us',         n: 23, caps: ['the whole crew', 'partners in crime', 'my people', 'chaos, organised', 'bestie era', 'no notes'] },
+  { key: 'us',         title: 'Friends',    n: 23, caps: ['the whole crew', 'partners in crime', 'my people', 'chaos, organised', 'bestie era', 'no notes'] },
   { key: 'holi',       title: 'Holi',       n: 17, caps: ['colours everywhere', 'happiest mess', 'rang barse', 'unfiltered joy', 'covered in it'] },
   { key: 'her',        title: 'Her',        n: 22, caps: ['main character', 'that smile', 'glowing', 'effortless', 'radiant', 'timeless'] },
   { key: 'art',        title: 'Her Art',    n: 4,  caps: ['made by her', 'steady hands', 'patience, drawn', 'her patterns'] },
   { key: 'moments',    title: 'Moments',    n: 11, caps: ['worth keeping', 'a good day', 'celebration mode', 'all dressed up'] },
   { key: 'favourites', title: 'Favourites', n: 33, caps: ['my favourite', 'pure joy', 'golden hour', 'caught laughing', 'sunshine', 'the best one'] },
-  { key: 'keepsakes',  title: 'Keepsakes',  n: 25, caps: ['worth saving', 'kept for a reason', 'a good one', 'still my favourite'],
-    capOverrides: { 23: 'No Caption', 24: 'Flower with Flowers' } },
+  { key: 'keepsakes',  title: 'Keepsakes',  n: 25, caps: [
+    'just being you',
+    'that unfiltered smile',
+    'pure happiness',
+    'golden light moment',
+    'laughing at nothing',
+    'candid and real',
+    'radiant energy',
+    'caught mid-thought',
+    'glowing from within',
+    'effortless grace',
+    'that look in your eyes',
+    'genuine joy',
+    'simply beautiful',
+    'light and shadow',
+    'comfortable in your own skin',
+    'unguarded moment',
+    'timeless',
+    'perfectly imperfect',
+    'full of light',
+    'unforgettable',
+    'one of the good days',
+    'authenticity',
+    'no caption needed',
+    'favorite version of you',
+    'treasured always'
+  ] },
 ];
 
 const albThumb = (k, i) => `photos/${k}/t/${k}${pad(i + 1)}.jpg`;
 const albFull  = (k, i) => `photos/${k}/${k}${pad(i + 1)}.jpg`;
+
+// Helper to load images that exist as either JPG or PNG
+const loadImageWithFallback = (img, baseUrl) => {
+  const jpgUrl = baseUrl + '.jpg';
+  const pngUrl = baseUrl + '.png';
+  img.src = jpgUrl;
+  img.onerror = () => { img.src = pngUrl; };
+};
 
 function initPhotos(win) {
   const app = win.querySelector('#photosApp');
@@ -1260,7 +1293,7 @@ function initPhotos(win) {
     const card = document.createElement('div');
     card.className = 'album-card';
     card.innerHTML = `
-      <div class="album-cover"><img src="${albThumb(a.key, 0)}" alt="${a.title}" loading="lazy"></div>
+      <div class="album-cover"><img src="${albThumb(a.key, 0)}" alt="${a.title}" loading="lazy" onerror="this.src=this.src.replace('.jpg', '.png')"></div>
       <div class="album-meta">
         <div class="album-title">${a.title}</div>
         <div class="album-count">${a.n} photos</div>
@@ -1276,10 +1309,11 @@ function initPhotos(win) {
       const cell = document.createElement('div');
       cell.className = 'ph-thumb';
       const img = new Image();
-      img.src = albThumb(a.key, i);
       img.alt = a.title;
       img.loading = 'lazy';
       img.decoding = 'async';
+      img.onerror = () => { img.src = img.src.replace('.jpg', '.png'); };
+      img.src = albThumb(a.key, i);
       cell.appendChild(img);
       cell.addEventListener('click', () => { idx = i; showPhoto(); });
       grid.appendChild(cell);
@@ -1306,6 +1340,7 @@ function initPhotos(win) {
   /* ---- lightbox ---- */
   function showPhoto() {
     if (!album) return;
+    lbImg.onerror = () => { lbImg.src = lbImg.src.replace('.jpg', '.png'); };
     lbImg.src = albFull(album.key, idx);
     lbCap.textContent = (album.capOverrides && album.capOverrides[idx]) || album.caps[idx % album.caps.length];
     lbIdx.textContent = `${idx + 1} / ${album.n}`;
@@ -4226,7 +4261,7 @@ function triggerEasterEgg() {
 }
 
 // 6. Interactive Wallpaper Cycler
-const WALLPAPERS = [
+const WALLPAPER_GRADIENTS = [
   'linear-gradient(135deg, #1a1420 0%, #2d182b 100%)', // Default dark
   'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)', // Pink gradient
   'linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)', // Blue pastel
@@ -4254,10 +4289,10 @@ if (desktopEl) {
       const timeSince = now - lastTap;
       if (timeSince < 300 && timeSince > 0) {
         // Double tap confirmed
-        currentWallpaperIdx = (currentWallpaperIdx + 1) % WALLPAPERS.length;
+        currentWallpaperIdx = (currentWallpaperIdx + 1) % WALLPAPER_GRADIENTS.length;
         const wp = document.getElementById('wallpaper');
         if (wp) {
-          wp.style.background = WALLPAPERS[currentWallpaperIdx];
+          wp.style.background = WALLPAPER_GRADIENTS[currentWallpaperIdx];
           // Give a small visual feedback toast
           const toast = document.createElement('div');
           toast.className = 'toast-msg';
