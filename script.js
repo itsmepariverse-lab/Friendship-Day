@@ -95,6 +95,45 @@ const ICONS = {
     <circle cx="24" cy="24" r="6.2" ${S}/>
     <path d="M24 12.5v4M24 31.5v4M35.5 24h-4M16.5 24h-4M31.9 16.1l-2.8 2.8M18.9 29.1l-2.8 2.8M31.9 31.9l-2.8-2.8M18.9 18.9l-2.8-2.8" ${S}/>`),
 
+  /* ── previously-reused icons, now one distinct glyph per app ── */
+  appMood: sq('mo', '#fff3c4', '#ffb04d', `
+    <circle cx="24" cy="24" r="12" ${S}/>
+    <circle cx="19.3" cy="21" r="1.7" fill="#fff"/>
+    <circle cx="28.7" cy="21" r="1.7" fill="#fff"/>
+    <path d="M17.5 27c2.2 2.6 10.8 2.6 13 0" ${S}/>`),
+  appScratch: sq('sc', '#e4d6ff', '#b48cf0', `
+    <rect x="10" y="14" width="28" height="20" rx="4" ${S}/>
+    <path d="M14 20l4 8M20 17.5l4 13M26 17.5l4 13M32 20l4 8" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+    <path d="M24 20.3l1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" fill="#fff"/>`),
+  appMagic8: sq('m8', '#8b7fe0', '#3a3166', `
+    <circle cx="24" cy="24" r="13" fill="#241c40" stroke="rgba(255,255,255,.4)"/>
+    <circle cx="24" cy="25.5" r="7.2" fill="#fff"/>
+    <text x="24" y="28.5" font-size="9" font-weight="700" text-anchor="middle" fill="#241c40" font-family="Arial, sans-serif">8</text>`),
+  appMatch: sq('mt', '#ffcab3', '#ff8f66', `
+    <rect x="11" y="14" width="16" height="21" rx="3" transform="rotate(-9 19 24.5)" fill="rgba(255,255,255,.18)" stroke="#fff" stroke-width="1.7"/>
+    <rect x="20" y="13" width="17" height="22" rx="3" fill="rgba(255,255,255,.22)" stroke="#fff" stroke-width="2"/>
+    <path d="M28.5 21.3c-1.5-1.5-3.8-.9-3.8 1 0 1.9 3.8 4.3 3.8 4.3s3.8-2.4 3.8-4.3c0-1.9-2.3-2.5-3.8-1z" fill="#fff"/>`),
+  appSlot: sq('sl', '#ffe1a0', '#f2a33e', `
+    <rect x="10" y="14" width="28" height="20" rx="4" ${S}/>
+    <path d="M19 14v20M29 14v20" stroke="#fff" stroke-width="1.5"/>
+    <circle cx="14.5" cy="24" r="2" fill="#fff"/>
+    <path d="M22 21.3l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z" fill="#fff"/>
+    <circle cx="33.5" cy="24" r="2" fill="#fff"/>`),
+  appVibe: sq('vb', '#ffb8dd', '#ff6fae', `
+    <path d="M9 24h6l3-9 5 18 4-13 3 4h9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
+  appSnake: sq('sn', '#a3ecc9', '#3fbf87', `
+    <path d="M10 18h10a4 4 0 010 8h-2a4 4 0 000 8h12" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <circle cx="34" cy="34" r="2.2" fill="#fff"/>
+    <circle cx="18" cy="16.6" r="1.3" fill="#1a4a30"/>`),
+  appSticky: sq('sk', '#ffe3a3', '#ffab3d', `
+    <path d="M12 12h18l6 6v18a2 2 0 01-2 2H12a2 2 0 01-2-2V14a2 2 0 012-2z" ${S}/>
+    <path d="M30 12v6h6" ${S}/>
+    <path d="M15 24h12M15 29h9" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`),
+  appQuestTrophy: sq('qt', '#ffe29b', '#e8a63e', `
+    <path d="M17 14h14v6a7 7 0 01-14 0z" ${S}/>
+    <path d="M17 16h-4a4 4 0 004 4M31 16h4a4 4 0 01-4 4" ${S}/>
+    <path d="M24 27v5M19 36h10M20 32h8l1 4H19z" ${S}/>`),
+
   /* ── UI glyphs ── */
   battery: `<svg viewBox="0 0 26 14"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="16" height="8" rx="2" fill="#8fe0c4"/><path d="M23.2 5v4c1.2-.4 1.8-1.1 1.8-2s-.6-1.6-1.8-2z" fill="currentColor"/></svg>`,
   wifi: `<svg viewBox="0 0 24 18"><path d="M2 6.2a15 15 0 0120 0M5.6 10a10 10 0 0112.8 0M9.2 13.7a5 5 0 015.6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.4" fill="currentColor"/></svg>`,
@@ -487,16 +526,16 @@ const APPS = {
   notes:    { name: 'our list',    icon: 'appNotes',    tpl: 'tpl-notes',    w: 380, h: 420, init: initNotes },
   about:    { name: 'about this friendship', icon: 'appAbout', tpl: 'tpl-about', w: 380, h: 440, init: initAbout },
   trash:    { name: 'regrets',     icon: 'appTrash',    tpl: 'tpl-trash',    w: 340, h: 280, init: null, desktop: true },
-  mood:     { name: 'mood check',  icon: 'appReply',    tpl: 'tpl-mood',     w: 360, h: 440, init: initMood },
-  scratch:  { name: 'scratch card',icon: 'appLetter',   tpl: 'tpl-scratch',  w: 340, h: 420, init: initScratch },
-  magic8:   { name: 'magic 8 reet',icon: 'appAbout',    tpl: 'tpl-magic8',   w: 340, h: 460, init: initMagic8 },
-  match:    { name: 'memory match',icon: 'appPhotos',   tpl: 'tpl-match',    w: 400, h: 500, init: initMatch },
-  slot:     { name: 'compliment 🎰',icon: 'appReasons', tpl: 'tpl-slot',     w: 340, h: 460, init: initSlot },
-  vibe:     { name: 'guess the vibe',icon: 'appQuiz',   tpl: 'tpl-vibe',     w: 360, h: 480, init: initVibe },
-  snake:    { name: 'reel snake',  icon: 'appVideos',   tpl: 'tpl-snake',    w: 360, h: 500, init: initSnake },
-  sticky:   { name: 'care notes 📌', icon: 'appNotes',   tpl: 'tpl-sticky',   w: 420, h: 480, init: initStickyNotes, desktop: true },
+  mood:     { name: 'mood check',  icon: 'appMood',     tpl: 'tpl-mood',     w: 360, h: 440, init: initMood },
+  scratch:  { name: 'scratch card',icon: 'appScratch',  tpl: 'tpl-scratch',  w: 340, h: 420, init: initScratch },
+  magic8:   { name: 'magic 8 reet',icon: 'appMagic8',   tpl: 'tpl-magic8',   w: 340, h: 460, init: initMagic8 },
+  match:    { name: 'memory match',icon: 'appMatch',    tpl: 'tpl-match',    w: 400, h: 500, init: initMatch },
+  slot:     { name: 'compliment 🎰',icon: 'appSlot',    tpl: 'tpl-slot',     w: 340, h: 460, init: initSlot },
+  vibe:     { name: 'guess the vibe',icon: 'appVibe',   tpl: 'tpl-vibe',     w: 360, h: 480, init: initVibe },
+  snake:    { name: 'reel snake',  icon: 'appSnake',    tpl: 'tpl-snake',    w: 360, h: 500, init: initSnake },
+  sticky:   { name: 'care notes 📌', icon: 'appSticky', tpl: 'tpl-sticky',   w: 420, h: 480, init: initStickyNotes, desktop: true },
   theme:    { name: 'settings ⚙️', icon: 'appSettings', tpl: 'tpl-theme',    w: 380, h: 520, init: initThemeApp, desktop: true },
-  quest:    { name: 'reet quest 🏆', icon: 'appStory',  tpl: 'tpl-quest',    w: 380, h: 480, init: initQuestApp, desktop: true },
+  quest:    { name: 'reet quest 🏆', icon: 'appQuestTrophy', tpl: 'tpl-quest', w: 380, h: 480, init: initQuestApp, desktop: true },
   ai:       { name: 'reet.ai',     icon: 'appAI',      tpl: 'tpl-ai',       w: 360, h: 480, init: initAI,       desktop: true },
   browser:  { name: 'ReetNet',     icon: 'appBrowser',  tpl: 'tpl-browser', w: 380, h: 520, init: initBrowser,  desktop: true },
   throwback:{ name: 'throwback 📼', icon: 'appThrowback', tpl: 'tpl-throwback', w: 360, h: 420, init: initThrowback, desktop: true },
@@ -3454,10 +3493,14 @@ function markEggFound() {
 }
 
 function checkBadges() {
+  // "NEW" marks any app you haven't opened yet — same reetos-quest visited
+  // state that powers the quest checklist, just applied to every app icon
+  // (dock/desktop/home), not only the 14 curated quest items.
   const questState = loadQuest();
-  QUEST_ITEMS.forEach(q => {
-    const explored = !!questState[q.id];
-    document.querySelectorAll(`[data-app="${q.id}"]`).forEach(el => {
+  Object.keys(APPS).forEach(id => {
+    if (id === 'secret') return;   // reward icon reveals itself separately
+    const explored = !!questState[id];
+    document.querySelectorAll(`[data-app="${id}"]`).forEach(el => {
       let badge = el.querySelector('.app-badge');
       if (!explored) {
         if (!badge) {

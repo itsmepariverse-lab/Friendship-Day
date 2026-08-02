@@ -885,7 +885,7 @@ html, body {
   .dock-item:hover { transform: none; }
   .dock-item:active { transform: scale(.9); }
   .dock-img { width: 54px; height: 54px; border-radius: 14px; overflow: hidden; }
-  .dock-tip, .dock-dot { display: none; }
+  .dock-tip { display: none; }
   .dock-item.not-pinned { display: none; }
 
   /* ── home indicator ── */
