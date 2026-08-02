@@ -1169,6 +1169,131 @@ html, body {
   --sub: #6884a8;
 }
 
+/* ═══════════ MIDNIGHT STAR: DARK-MODE APP OVERRIDES ═══════════
+   Every app window has its own hardcoded light-pastel background/text,
+   independent of the theme system (--text/--sub/--glass only drive chrome:
+   dock, wallpaper, window border/glass). Without this block, switching to
+   Midnight Star leaves a dark dock but every opened app stays bright white. */
+[data-theme="midnight"] {
+  color-scheme: dark;
+}
+[data-theme="midnight"] .win-bar { background: rgba(20,12,35,.55); border-bottom-color: rgba(255,255,255,.1); }
+[data-theme="midnight"] .win-title { color: var(--text); }
+
+/* shared "white card on pastel app bg" pattern -> dark glass card */
+[data-theme="midnight"] .ai-msg.bot,
+[data-theme="midnight"] #aiInput,
+[data-theme="midnight"] .br-bar,
+[data-theme="midnight"] .br-tabs,
+[data-theme="midnight"] .br-url,
+[data-theme="midnight"] .br-tab,
+[data-theme="midnight"] .br-result,
+[data-theme="midnight"] .br-post,
+[data-theme="midnight"] .br-news-item,
+[data-theme="midnight"] .tb-card,
+[data-theme="midnight"] .pm-card,
+[data-theme="midnight"] .pm-custom,
+[data-theme="midnight"] .pm-custom-input,
+[data-theme="midnight"] .nt-item,
+[data-theme="midnight"] #ntInput,
+[data-theme="midnight"] .rp-text,
+[data-theme="midnight"] .st-streak,
+[data-theme="midnight"] .st-gap,
+[data-theme="midnight"] .rs-btn:active,
+[data-theme="midnight"] .sh-ghost:active {
+  background: rgba(255,255,255,.06) !important;
+  color: var(--text) !important;
+}
+[data-theme="midnight"] #aiInput,
+[data-theme="midnight"] .pm-custom-input,
+[data-theme="midnight"] #ntInput,
+[data-theme="midnight"] .rp-text {
+  border-color: rgba(255,255,255,.15);
+}
+[data-theme="midnight"] #aiInput::placeholder,
+[data-theme="midnight"] .pm-custom-input::placeholder,
+[data-theme="midnight"] #ntInput::placeholder,
+[data-theme="midnight"] .rp-text::placeholder,
+[data-theme="midnight"] #brSearchInput::placeholder { color: var(--sub); }
+[data-theme="midnight"] .rp-text:focus,
+[data-theme="midnight"] #ntInput:focus,
+[data-theme="midnight"] .pm-custom-input:focus { background: rgba(255,255,255,.1) !important; }
+
+/* per-app main background — dark tint keeping each app's own hue family */
+[data-theme="midnight"] .music-app  { background: linear-gradient(170deg, #1f1730, #241c3a); }
+[data-theme="midnight"] .story-app  { background: linear-gradient(180deg, #1c1730, #201a38 55%, #1a1f38); }
+[data-theme="midnight"] .quiz-app   { background: linear-gradient(170deg, #241a30, #2a1c38 60%, #201830); }
+[data-theme="midnight"] .reply-app  { background: linear-gradient(180deg, #201c30, #241826); }
+[data-theme="midnight"] .shayari-app{ background: linear-gradient(170deg, #241a30, #201828); }
+[data-theme="midnight"] .reasons-app{ background: linear-gradient(170deg, #241c30, #281c2a); }
+[data-theme="midnight"] .notes-app  { background: linear-gradient(180deg, #1e2018, #182018); }
+[data-theme="midnight"] .trash-app  { background: rgba(255,255,255,.05); }
+[data-theme="midnight"] .about-app  { background: linear-gradient(170deg, #201830, #1c1a30); }
+[data-theme="midnight"] .ai-app     { background: linear-gradient(180deg, #181c30, #201a30); }
+[data-theme="midnight"] .browser-app{ background: #141c1a; }
+[data-theme="midnight"] .tb-app     { background: linear-gradient(170deg, #241c10, #1f180d); }
+[data-theme="midnight"] .pm-app     { background: linear-gradient(170deg, #241222, #1c1830); }
+[data-theme="midnight"] .sec-app    { background: linear-gradient(170deg, #201808, #180f05); }
+[data-theme="midnight"] .quest-app, [data-theme="midnight"] .theme-app, [data-theme="midnight"] .sticky-app { background: transparent; }
+
+/* per-app hardcoded text colors -> theme vars or lightened equivalents */
+[data-theme="midnight"] .mu-title, [data-theme="midnight"] .ab-name, [data-theme="midnight"] .rs-text { color: var(--text); }
+[data-theme="midnight"] .mu-artist, [data-theme="midnight"] .st-hero-label, [data-theme="midnight"] .st-when,
+[data-theme="midnight"] .st-note, [data-theme="midnight"] .st-ago, [data-theme="midnight"] .st-gap-num,
+[data-theme="midnight"] .st-gap-label, [data-theme="midnight"] .st-foot, [data-theme="midnight"] .rp-sub,
+[data-theme="midnight"] .rp-meta, [data-theme="midnight"] .rp-hint, [data-theme="midnight"] .rs-label,
+[data-theme="midnight"] .rs-counter, [data-theme="midnight"] .nt-head, [data-theme="midnight"] .nt-foot,
+[data-theme="midnight"] .tr-sub, [data-theme="midnight"] .ab-ver, [data-theme="midnight"] .ab-specs span,
+[data-theme="midnight"] .tb-sub, [data-theme="midnight"] .tb-date, [data-theme="midnight"] .tb-note,
+[data-theme="midnight"] .pm-label, [data-theme="midnight"] .br-url, [data-theme="midnight"] .ai-sub {
+  color: var(--sub);
+}
+[data-theme="midnight"] .st-what, [data-theme="midnight"] .rp-text, [data-theme="midnight"] .nt-item .nt-txt,
+[data-theme="midnight"] .tr-title, [data-theme="midnight"] .ab-specs b, [data-theme="midnight"] .ai-title,
+[data-theme="midnight"] .br-result, [data-theme="midnight"] .br-post-text, [data-theme="midnight"] .br-news-item,
+[data-theme="midnight"] .tb-text, [data-theme="midnight"] .sec-letter-body {
+  color: var(--text);
+}
+[data-theme="midnight"] .tr-icon { color: var(--sub); }
+[data-theme="midnight"] .nt-box { border-color: rgba(255,255,255,.2); }
+[data-theme="midnight"] .nt-item.mine { background: rgba(255,220,120,.12) !important; }
+[data-theme="midnight"] .nt-del { color: var(--sub); }
+[data-theme="midnight"] .br-tab { color: #7ce0c0; }
+[data-theme="midnight"] .br-post-user { color: #7ce0c0; }
+[data-theme="midnight"] .sec-lock-text, [data-theme="midnight"] .sec-letter-sign { color: #e0b878; }
+[data-theme="midnight"] .sec-letter-date { color: #b8905a; }
+[data-theme="midnight"] .st-node::before { background: #241c3a; }
+[data-theme="midnight"] .st-node.break::before { background: #241c3a; border-color: #4a3a50; }
+[data-theme="midnight"] .st-node.break .st-what { color: var(--sub); }
+[data-theme="midnight"] .st-node.now .st-what { color: var(--text); }
+[data-theme="midnight"] #brSearchInput, [data-theme="midnight"] .br-search-results { color: var(--text); }
+[data-theme="midnight"] #brSearchInput { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.15); }
+
+/* sticky notes: dark-tinted cards + light text, same color family per note */
+[data-theme="midnight"] .st-pink     { background: rgba(232,150,176,.14); color: #f0d0dc; }
+[data-theme="midnight"] .st-yellow   { background: rgba(232,208,132,.14); color: #f0e4bc; }
+[data-theme="midnight"] .st-peach    { background: rgba(232,184,153,.14); color: #f0dcc8; }
+[data-theme="midnight"] .st-lavender { background: rgba(216,193,232,.14); color: #ece0f5; }
+[data-theme="midnight"] .st-blue     { background: rgba(168,209,240,.14); color: #d8ecfc; }
+[data-theme="midnight"] .st-mint     { background: rgba(148,217,205,.14); color: #d0f0e8; }
+
+[data-theme="midnight"] .q-reward { background: linear-gradient(135deg, rgba(255,224,240,.16), rgba(232,208,255,.16)); }
+
+/* music playlist/station rows have no background of their own at rest,
+   so their hardcoded dark text goes near-invisible on the now-dark app bg */
+[data-theme="midnight"] .mu-station, [data-theme="midnight"] .mu-track,
+[data-theme="midnight"] .mu-list.in-station .mu-station-btn { color: var(--text); }
+[data-theme="midnight"] .mu-station .n, [data-theme="midnight"] .mu-tnum,
+[data-theme="midnight"] .mu-station-btn, [data-theme="midnight"] .mu-unavail { color: var(--sub); }
+[data-theme="midnight"] .mu-station:active, [data-theme="midnight"] .mu-track:active,
+[data-theme="midnight"] .mu-track.active, [data-theme="midnight"] .qz-opt {
+  background: rgba(255,255,255,.08) !important;
+}
+[data-theme="midnight"] .qz-opt { color: var(--text) !important; border-color: rgba(255,255,255,.15); }
+[data-theme="midnight"] .qz-bar { background: rgba(255,255,255,.12); }
+[data-theme="midnight"] .mu-seek::-webkit-slider-runnable-track,
+[data-theme="midnight"] .mu-seek::-moz-range-track { background: rgba(255,255,255,.15); }
+
 /* Active Window Glowing Aura Ring */
 .win.active-win {
   box-shadow: 0 0 0 1px var(--accent-glow, rgba(232,90,146,.4)),
