@@ -2,7 +2,7 @@
    an installable app. Deliberately does NOT cache photos/videos/music (many
    hundred MB); it only pre-caches the tiny app shell, and otherwise gets out
    of the way and lets every request go straight to the network. */
-const SHELL_CACHE = 'reetos-shell-v1';
+const SHELL_CACHE = 'reetos-shell-v2';
 const SHELL_FILES = [
   './index.html', './style.css', './script.js',
   './music-data.js', './video-data.js', './manifest.json',
