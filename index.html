@@ -83,8 +83,20 @@
       <span class="mb-item mb-ico" id="themeBtn" title="Themes & Vibe"><span data-icon="sparkle"></span></span>
       <span class="mb-item mb-ico" id="battery"><span data-icon="battery"></span> ∞%</span>
       <span class="mb-item mb-ico" id="wifi"><span data-icon="wifi"></span></span>
+      <span class="mb-item mb-ico" id="notifBtn" title="Notifications">
+        <span data-icon="bell"></span>
+        <span class="mb-notif-dot hidden" id="notifDot"></span>
+      </span>
       <span class="mb-item" id="menuClock">--:--</span>
     </div>
+  </div>
+
+  <div class="notif-panel hidden" id="notifPanel">
+    <div class="notif-panel-head">
+      <span>notifications</span>
+      <button class="notif-clear" id="notifClearBtn">clear all</button>
+    </div>
+    <div class="notif-list" id="notifList"></div>
   </div>
 
   <!-- Desktop icons (mac) -->
@@ -454,13 +466,34 @@
 <template id="tpl-theme">
   <div class="theme-app">
     <div class="th-head">
-      <div class="th-title">choose your vibe 🎨</div>
-      <div class="th-sub">select a color theme & custom aura</div>
+      <div class="th-title">settings ⚙️</div>
+      <div class="th-sub">tune your OS the way you like it</div>
     </div>
-    <div class="th-grid" id="thGrid"></div>
-    <div class="th-actions">
-      <button class="sh-btn" id="thCycleWp">cycle wallpaper 🖼️</button>
-      <button class="sh-btn" id="thHeartRain">heart rain 💕</button>
+
+    <div class="th-section">
+      <div class="th-sec-title">appearance</div>
+      <div class="th-grid" id="thGrid"></div>
+    </div>
+
+    <div class="th-section">
+      <div class="th-sec-title">wallpaper</div>
+      <div class="th-wp-grid" id="thWpGrid"></div>
+    </div>
+
+    <div class="th-section">
+      <div class="th-sec-title">sound</div>
+      <div class="th-row">
+        <div class="th-row-label">system sounds</div>
+        <button class="th-switch" id="thSoundSwitch" role="switch" aria-label="toggle system sounds"><span class="th-switch-knob"></span></button>
+      </div>
+    </div>
+
+    <div class="th-section">
+      <div class="th-sec-title">utilities</div>
+      <div class="th-actions">
+        <button class="sh-btn" id="thHeartRain">heart rain 💕</button>
+        <button class="sh-ghost" id="thResetQuest">reset quest progress</button>
+      </div>
     </div>
   </div>
 </template>
@@ -617,9 +650,9 @@
 </div>
 
 
-<script src="music-data.js"></script>
-<script src="video-data.js"></script>
-<script src="throwback-data.js"></script>
-<script src="script.js"></script>
+<script src="music-data.js?v=2"></script>
+<script src="video-data.js?v=2"></script>
+<script src="throwback-data.js?v=2"></script>
+<script src="script.js?v=2"></script>
 </body>
 </html>

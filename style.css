@@ -1329,7 +1329,49 @@ html, body {
 .th-info { display: flex; flex-direction: column; gap: .15rem; }
 .th-name { font-size: .88rem; font-weight: 600; color: var(--text); }
 .th-desc { font-size: .72rem; color: var(--sub); }
-.th-actions { display: flex; gap: .6rem; justify-content: center; margin-top: .2rem; }
+.th-actions { display: flex; gap: .6rem; justify-content: center; margin-top: .2rem; flex-wrap: wrap; }
+
+.th-section { display: flex; flex-direction: column; gap: .6rem; }
+.th-sec-title { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
+
+.th-wp-grid { display: flex; gap: .6rem; }
+.th-wp-card { flex: 1; cursor: pointer; border-radius: 12px; border: 2px solid transparent; padding: .3rem; transition: border-color .15s, transform .15s; }
+.th-wp-card:hover { transform: translateY(-2px); }
+.th-wp-card.active { border-color: var(--accent); }
+.th-wp-preview { width: 100%; aspect-ratio: 1; border-radius: 9px; background-size: cover; background-position: center; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.th-wp-name { font-size: .64rem; color: var(--sub); text-align: center; margin-top: .35rem; }
+
+.th-row { display: flex; align-items: center; justify-content: space-between; background: var(--glass);
+  border: 1px solid var(--stroke); border-radius: 12px; padding: .7rem .9rem; }
+.th-row-label { font-size: .85rem; color: var(--text); font-weight: 600; }
+.th-switch { width: 42px; height: 24px; border-radius: 20px; border: none; background: rgba(150,130,150,.3);
+  position: relative; cursor: pointer; flex: 0 0 auto; transition: background .2s; }
+.th-switch-knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .2s; }
+.th-switch.on { background: var(--accent); }
+.th-switch.on .th-switch-knob { transform: translateX(18px); }
+
+/* ═══════════ NOTIFICATION CENTER ═══════════ */
+.mb-notif-dot { position: absolute; top: 4px; right: 2px; width: 6px; height: 6px; border-radius: 50%;
+  background: #ff5a7a; box-shadow: 0 0 0 1.5px rgba(255,255,255,.6); }
+.mb-ico { position: relative; }
+.notif-panel { position: absolute; top: 34px; right: 8px; z-index: 900; width: min(320px, calc(100vw - 24px));
+  max-height: 70vh; background: var(--glass-hi); backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4); border: 1px solid var(--stroke); border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(80,40,90,.25); overflow: hidden; display: flex; flex-direction: column; }
+.notif-panel.hidden { display: none; }
+.notif-panel-head { display: flex; align-items: center; justify-content: space-between; padding: .7rem 1rem;
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--sub);
+  border-bottom: 1px solid var(--stroke); }
+.notif-clear { border: none; background: none; color: var(--accent); font-family: var(--sans); font-size: .68rem;
+  font-weight: 600; cursor: pointer; }
+.notif-list { overflow-y: auto; max-height: 50vh; }
+.notif-row { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem;
+  padding: .65rem 1rem; border-bottom: 1px solid var(--stroke); }
+.notif-row:last-child { border-bottom: none; }
+.notif-msg { font-size: .78rem; color: var(--text); line-height: 1.4; }
+.notif-time { font-family: var(--mono); font-size: .58rem; color: var(--sub); flex: 0 0 auto; white-space: nowrap; }
+.notif-empty { padding: 1.4rem 1rem; text-align: center; font-size: .78rem; color: var(--sub); }
 
 /* ═══════════ APP BADGES ═══════════ */
 .dicon, .hi-app, .dock-item { position: relative; }

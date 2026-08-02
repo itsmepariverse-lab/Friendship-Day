@@ -91,10 +91,14 @@ const ICONS = {
     <path d="M24 14c-3.6-4.6-7.4-6.4-10.6-4.9-3 1.4-3.8 5-1.6 8.3C14 21 24 30 24 30s10-9 12.2-12.6c2.2-3.3 1.4-6.9-1.6-8.3-3.2-1.5-7 .3-10.6 4.9z" fill="#fff" opacity=".95"/>
     <path d="M15 30h18v6a2 2 0 01-2 2H17a2 2 0 01-2-2v-6z" ${S}/>
     <path d="M15 30l9 6 9-6" ${S}/>`),
+  appSettings: sq('cog', '#c4c9e0', '#8a92c4', `
+    <circle cx="24" cy="24" r="6.2" ${S}/>
+    <path d="M24 12.5v4M24 31.5v4M35.5 24h-4M16.5 24h-4M31.9 16.1l-2.8 2.8M18.9 29.1l-2.8 2.8M31.9 31.9l-2.8-2.8M18.9 18.9l-2.8-2.8" ${S}/>`),
 
   /* ── UI glyphs ── */
   battery: `<svg viewBox="0 0 26 14"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="3" width="16" height="8" rx="2" fill="#8fe0c4"/><path d="M23.2 5v4c1.2-.4 1.8-1.1 1.8-2s-.6-1.6-1.8-2z" fill="currentColor"/></svg>`,
   wifi: `<svg viewBox="0 0 24 18"><path d="M2 6.2a15 15 0 0120 0M5.6 10a10 10 0 0112.8 0M9.2 13.7a5 5 0 015.6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.4" fill="currentColor"/></svg>`,
+  bell: `<svg viewBox="0 0 20 20"><path d="M10 2.5c-2.4 0-4 1.9-4 4.3v2.3c0 .9-.3 1.8-.9 2.5l-.7.9h11.2l-.7-.9a3.9 3.9 0 01-.9-2.5V6.8c0-2.4-1.6-4.3-4-4.3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 15a2 2 0 004 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
   grid: `<svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1.6" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.6" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.6" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.6" fill="currentColor"/></svg>`,
   close: `<svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`,
   chevL: `<svg viewBox="0 0 16 16"><path d="M10.5 2.5L5 8l5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
@@ -150,6 +154,99 @@ function toast(msg) {
     t.classList.remove('show');
     setTimeout(() => t.remove(), 400);
   }, 2600);
+  playTone('notif');
+  pushNotif(msg);
+}
+
+/* ═══════════ SYSTEM SOUNDS (synthesized — no assets, works offline) ═══════════ */
+const SOUND_KEY = 'reetos-sound';
+function isSoundOn() {
+  try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch (_) { return true; }
+}
+function setSoundOn(on) {
+  try { localStorage.setItem(SOUND_KEY, on ? 'on' : 'off'); } catch (_) {}
+}
+
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
+}
+
+const TONE_PRESETS = {
+  open:  { freq: 660, dur: .09, type: 'sine',     vol: .05 },
+  close: { freq: 340, dur: .09, type: 'sine',     vol: .045 },
+  notif: { freq: 880, dur: .07, type: 'triangle', vol: .035 },
+  click: { freq: 520, dur: .05, type: 'sine',     vol: .04 },
+};
+function playTone(preset) {
+  if (!isSoundOn()) return;
+  const p = TONE_PRESETS[preset];
+  if (!p) return;
+  try {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = p.type;
+    osc.frequency.value = p.freq;
+    gain.gain.value = p.vol;
+    gain.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + p.dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + p.dur);
+  } catch (_) {}
+}
+
+/* ═══════════ NOTIFICATION CENTER ═══════════ */
+const NOTIF_LOG = [];
+function pushNotif(msg) {
+  NOTIF_LOG.unshift({ msg, time: new Date() });
+  if (NOTIF_LOG.length > 20) NOTIF_LOG.length = 20;
+  const dot = document.getElementById('notifDot');
+  if (dot) dot.classList.remove('hidden');
+  renderNotifPanel();
+}
+function renderNotifPanel() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+  if (!NOTIF_LOG.length) {
+    list.innerHTML = '<div class="notif-empty">nothing yet — go explore something 🎀</div>';
+    return;
+  }
+  list.innerHTML = NOTIF_LOG.map(n => `
+    <div class="notif-row">
+      <div class="notif-msg"></div>
+      <div class="notif-time">${n.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+    </div>`).join('');
+  list.querySelectorAll('.notif-msg').forEach((el, i) => { el.textContent = NOTIF_LOG[i].msg; });
+}
+function initNotifCenter() {
+  const btn = document.getElementById('notifBtn');
+  const panel = document.getElementById('notifPanel');
+  const clearBtn = document.getElementById('notifClearBtn');
+  const dot = document.getElementById('notifDot');
+  if (!btn || !panel) return;
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) dot.classList.add('hidden');
+  });
+  document.addEventListener('click', e => {
+    if (!panel.contains(e.target) && e.target !== btn) panel.classList.add('hidden');
+  });
+  clearBtn.addEventListener('click', () => {
+    NOTIF_LOG.length = 0;
+    renderNotifPanel();
+  });
+  renderNotifPanel();
 }
 
 /* ═══════════ PWA INSTALL ═══════════ */
@@ -367,7 +464,7 @@ const APPS = {
   vibe:     { name: 'guess the vibe',icon: 'appQuiz',   tpl: 'tpl-vibe',     w: 360, h: 480, init: initVibe },
   snake:    { name: 'reel snake',  icon: 'appVideos',   tpl: 'tpl-snake',    w: 360, h: 500, init: initSnake },
   sticky:   { name: 'care notes 📌', icon: 'appNotes',   tpl: 'tpl-sticky',   w: 420, h: 480, init: initStickyNotes, desktop: true },
-  theme:    { name: 'themes 🎨',   icon: 'appReasons', tpl: 'tpl-theme',    w: 380, h: 440, init: initThemeApp, desktop: true },
+  theme:    { name: 'settings ⚙️', icon: 'appSettings', tpl: 'tpl-theme',    w: 380, h: 520, init: initThemeApp, desktop: true },
   quest:    { name: 'reet quest 🏆', icon: 'appStory',  tpl: 'tpl-quest',    w: 380, h: 480, init: initQuestApp, desktop: true },
   ai:       { name: 'reet.ai',     icon: 'appAI',      tpl: 'tpl-ai',       w: 360, h: 480, init: initAI,       desktop: true },
   browser:  { name: 'ReetNet',     icon: 'appBrowser',  tpl: 'tpl-browser', w: 380, h: 520, init: initBrowser,  desktop: true },
@@ -440,6 +537,7 @@ function openApp(id) {
   focusWin(win);
   markDock(id, true);
   syncHomeState();
+  playTone('open');
 
   if (app.init) app.init(win);
 }
@@ -447,6 +545,7 @@ function openApp(id) {
 function closeWin(id) {
   const win = openWindows[id];
   if (!win) return;
+  playTone('close');
   win.dispatchEvent(new CustomEvent('win-closing'));
   // never leave audio/video playing behind a closed window
   win.querySelectorAll('audio, video').forEach(m => { try { m.pause(); } catch (_) {} });
@@ -635,6 +734,7 @@ function initDesktop() {
 
   renderIcons($('#desktop'));
   initMenuBar();
+  initNotifCenter();
   restoreWallpaper();
   restoreTheme();
   if (isSecretUnlocked()) revealSecretIcon(false);
@@ -2877,11 +2977,42 @@ function initThemeApp(win) {
     grid.appendChild(card);
   });
 
-  const wpBtn = win.querySelector('#thCycleWp');
-  if (wpBtn) wpBtn.addEventListener('click', () => cycleWallpaper());
+  const wpGrid = win.querySelector('#thWpGrid');
+  const currentWp = (() => { try { return localStorage.getItem('reetos-wallpaper') || 'collage'; } catch (_) { return 'collage'; } })();
+  wpGrid.innerHTML = '';
+  WALLPAPERS.forEach(wp => {
+    const card = document.createElement('div');
+    card.className = `th-wp-card ${wp.id === currentWp ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="th-wp-preview" style="${wp.src ? `background-image:url('${wp.src}')` : 'background: linear-gradient(165deg, #ffe4f0, #ecdcff, #dcebff)'}"></div>
+      <div class="th-wp-name">${wp.name}</div>`;
+    card.addEventListener('click', () => {
+      wpGrid.querySelectorAll('.th-wp-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      setWallpaper(wp.id, true);
+      playTone('click');
+    });
+    wpGrid.appendChild(card);
+  });
+
+  const soundSwitch = win.querySelector('#thSoundSwitch');
+  soundSwitch.classList.toggle('on', isSoundOn());
+  soundSwitch.addEventListener('click', () => {
+    const next = !isSoundOn();
+    setSoundOn(next);
+    soundSwitch.classList.toggle('on', next);
+    if (next) playTone('click');
+  });
 
   const rainBtn = win.querySelector('#thHeartRain');
   if (rainBtn) rainBtn.addEventListener('click', () => heartRain());
+
+  const resetBtn = win.querySelector('#thResetQuest');
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    saveQuest({});
+    checkBadges();
+    toast('quest progress reset — go explore again 🎀');
+  });
 }
 
 /* ═══════════ REET'S QUEST CHECKLIST & ONBOARDING ═══════════ */
