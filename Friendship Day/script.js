@@ -1694,12 +1694,9 @@ function initStickyWidget() {
   const st = document.createElement('div');
   st.className = 'sticky-widget';
   st.innerHTML = `
-    <div class="st-tape"></div>
-    <div class="st-w-head"><span>gentle reminder</span><span data-icon="sparkle"></span></div>
     <div class="st-w-body" id="stWBody"></div>
-    <div class="st-w-foot">tap for next reminder 📌</div>`;
+    <div class="st-w-foot">next →</div>`;
   $('#desktop').appendChild(st);
-  renderIcons(st);
 
   const body = st.querySelector('#stWBody');
   let idx = 0;
@@ -1726,13 +1723,9 @@ function initStickyNotes(win) {
     const card = document.createElement('div');
     card.className = `st-card ${note.c}`;
     card.style.animationDelay = (i * 0.06) + 's';
-    card.innerHTML = `
-      <div class="st-pin">📌</div>
-      <div class="st-card-txt">${note.t}</div>`;
+    card.innerHTML = `<div class="st-card-txt">${note.t}</div>`;
     card.addEventListener('click', () => {
-      toast('reminder saved to heart 🤍');
-      card.classList.add('pulse');
-      setTimeout(() => card.classList.remove('pulse'), 400);
+      toast('noted 🤍');
     });
     grid.appendChild(card);
   });
