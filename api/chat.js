@@ -30,14 +30,75 @@ naturally (Hinglish), like a close friend texting. Keep it under 12 words. Never
 reasoning, never mention being an AI. Stay a little unpredictable and fun, like a real magic 8-ball,
 but lean warm rather than harsh.`;
 
+async function askGroq(apiKey, systemPrompt, message, mode) {
+  const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-20b',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message },
+      ],
+      temperature: mode === 'magic8' ? 1.0 : 0.8,
+      max_tokens: mode === 'magic8' ? 100 : 150,
+      reasoning_effort: 'low',
+    }),
+  });
+
+  if (!groqRes.ok) {
+    console.error('groq upstream error', groqRes.status, await groqRes.text());
+    return null;
+  }
+  const data = await groqRes.json();
+  const reply = data?.choices?.[0]?.message?.content?.trim();
+  if (!reply) console.error('groq empty reply', JSON.stringify(data));
+  return reply || null;
+}
+
+async function askOpenRouter(apiKey, systemPrompt, message, mode) {
+  const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://reetos.vercel.app',
+      'X-Title': 'reetOS',
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-20b:free',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message },
+      ],
+      temperature: mode === 'magic8' ? 1.0 : 0.8,
+      max_tokens: mode === 'magic8' ? 150 : 250,
+      reasoning: { effort: 'low' },
+    }),
+  });
+
+  if (!orRes.ok) {
+    console.error('openrouter upstream error', orRes.status, await orRes.text());
+    return null;
+  }
+  const data = await orRes.json();
+  const reply = data?.choices?.[0]?.message?.content?.trim();
+  if (!reply) console.error('openrouter empty reply', JSON.stringify(data));
+  return reply || null;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method not allowed' });
     return;
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
+  const groqKey = process.env.GROQ_API_KEY;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (!groqKey && !openRouterKey) {
     res.status(500).json({ error: 'server not configured' });
     return;
   }
@@ -53,39 +114,26 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const systemPrompt = mode === 'magic8' ? MAGIC8_PROMPT : SYSTEM_PROMPT;
+
   try {
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-oss-20b',
-        messages: [
-          { role: 'system', content: mode === 'magic8' ? MAGIC8_PROMPT : SYSTEM_PROMPT },
-          { role: 'user', content: message },
-        ],
-        temperature: mode === 'magic8' ? 1.0 : 0.8,
-        max_tokens: mode === 'magic8' ? 100 : 150,
-        reasoning_effort: 'low',
-      }),
-    });
-
-    if (!groqRes.ok) {
-      console.error('chat upstream error', groqRes.status, await groqRes.text());
-      res.status(502).json({ error: 'upstream error' });
-      return;
+    let reply = null;
+    if (groqKey) {
+      reply = await askGroq(groqKey, systemPrompt, message, mode).catch(e => {
+        console.error('groq request failed', e.message);
+        return null;
+      });
     }
-
-    const data = await groqRes.json();
-    const reply = data?.choices?.[0]?.message?.content?.trim();
+    if (!reply && openRouterKey) {
+      reply = await askOpenRouter(openRouterKey, systemPrompt, message, mode).catch(e => {
+        console.error('openrouter request failed', e.message);
+        return null;
+      });
+    }
     if (!reply) {
-      console.error('chat empty reply', JSON.stringify(data));
-      res.status(502).json({ error: 'empty reply' });
+      res.status(502).json({ error: 'no reply from any provider' });
       return;
     }
-
     res.status(200).json({ reply });
   } catch (_) {
     res.status(502).json({ error: 'request failed' });
