@@ -1405,6 +1405,51 @@ html, body {
 .wm-body { font-size: .84rem; color: var(--sub); line-height: 1.6; }
 .wm-actions { margin-top: .4rem; }
 
+/* ═══════════ APP FOLDERS ═══════════ */
+.folder-preview {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px;
+  background: rgba(255,255,255,.28); border-radius: 15px; padding: 6px;
+  width: 60px; height: 60px; box-shadow: 0 5px 14px rgba(90,55,100,.28);
+}
+.dicon .folder-preview { width: 42px; height: 42px; border-radius: 11px; padding: 4px; gap: 2px; }
+.folder-preview span { border-radius: 5px; overflow: hidden; background: rgba(255,255,255,.4); }
+.dicon .folder-preview span { border-radius: 3px; }
+.folder-preview span svg { width: 100%; height: 100%; display: block; }
+
+.folder-overlay {
+  position: fixed; inset: 0; z-index: 860;
+  background: rgba(20,10,30,.5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center; padding: 1.2rem;
+}
+.folder-overlay.hidden { display: none; }
+.folder-modal {
+  background: var(--glass-hi); border: 1px solid var(--stroke);
+  box-shadow: 0 20px 60px rgba(120,60,150,.3);
+  border-radius: 22px; padding: 1.3rem; max-width: 420px; width: 100%; max-height: 80vh;
+  display: flex; flex-direction: column; gap: 1rem;
+  animation: wmOpen .3s cubic-bezier(.2,1.2,.3,1);
+}
+.folder-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 1.05rem; font-weight: 700; color: var(--text); text-transform: capitalize;
+}
+.folder-close {
+  border: none; background: var(--glass); color: var(--sub); width: 28px; height: 28px;
+  border-radius: 50%; cursor: pointer; font-size: .85rem; display: grid; place-items: center;
+}
+.folder-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 1.1rem .6rem;
+  overflow-y: auto; padding: .2rem;
+}
+.folder-app { display: flex; flex-direction: column; align-items: center; gap: .35rem; cursor: pointer; }
+.folder-app-img {
+  width: 54px; height: 54px; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 5px 14px rgba(90,55,100,.22); transition: transform .15s;
+}
+.folder-app:active .folder-app-img { transform: scale(.9); }
+.folder-app-label { font-size: .68rem; color: var(--text); text-align: center; line-height: 1.2; max-width: 76px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ═══════════ QUEST APP ═══════════ */
 .quest-app { height: 100%; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: .9rem; }
 .q-head { text-align: center; }

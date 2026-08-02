@@ -693,36 +693,104 @@ function syncHomeState() {
 // everything else lives on the home screen grid.
 const PINNED = ['letter', 'photos', 'music', 'terminal'];
 
+/* Grouping the ~27 apps into folders (iOS/Android-style) so the home
+   screen and desktop don't turn into one giant flat grid. PINNED apps
+   stay as standalone favorites; everything else lives in a folder.
+   The dock stays flat/scrollable — that's how real docks work too. */
+const FOLDERS = [
+  { id: 'games',    name: 'games',    icon: '🎮', apps: ['quiz', 'magic8', 'match', 'slot', 'vibe', 'snake', 'scratch'] },
+  { id: 'memories', name: 'memories', icon: '📸', apps: ['videos', 'story', 'throwback', 'shayari', 'notes', 'reasons', 'promise'] },
+  { id: 'connect',  name: 'connect',  icon: '💬', apps: ['ai', 'browser', 'reply', 'mood'] },
+  { id: 'system',   name: 'system',   icon: '⚙️', apps: ['theme', 'quest', 'sticky', 'trash', 'about'] },
+];
+
+function makeAppIcon(id, app, kind) {
+  const el = document.createElement('div');
+  el.className = kind;
+  el.dataset.app = id;
+  const imgClass = kind === 'dock-item' ? 'dock-img' : kind === 'hi-app' ? 'hi-img' : 'dicon-img';
+  const labelClass = kind === 'dock-item' ? 'dock-tip' : kind === 'hi-app' ? 'hi-label' : 'dicon-label';
+  el.innerHTML = `<div class="${imgClass}" data-icon="${app.icon}"></div>
+    <div class="${labelClass}">${app.name}</div>${kind === 'dock-item' ? '<div class="dock-dot"></div>' : ''}`;
+  return el;
+}
+
+function makeFolderIcon(folder, kind, appsInFolder) {
+  const el = document.createElement('div');
+  el.className = kind + ' folder-icon';
+  el.dataset.folder = folder.id;
+  const imgClass = kind === 'hi-app' ? 'hi-img' : 'dicon-img';
+  const labelClass = kind === 'hi-app' ? 'hi-label' : 'dicon-label';
+  const preview = appsInFolder.slice(0, 4).map(a => `<span data-icon="${a.icon}"></span>`).join('');
+  el.innerHTML = `<div class="${imgClass} folder-preview">${preview}</div>
+    <div class="${labelClass}">${folder.icon} ${folder.name}</div>`;
+  if (kind === 'hi-app') {
+    el.addEventListener('click', () => openFolder(folder));
+  } else {
+    el.addEventListener('dblclick', () => openFolder(folder));
+    el.addEventListener('click', () => {
+      el.parentElement.querySelectorAll('.dicon').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+  }
+  return el;
+}
+
+function openFolder(folder) {
+  const overlay = $('#folderOverlay');
+  const title = $('#folderTitle');
+  const grid = $('#folderGrid');
+  title.textContent = `${folder.icon} ${folder.name}`;
+  grid.innerHTML = '';
+  folder.apps.forEach(id => {
+    const app = APPS[id];
+    if (!app) return;
+    const item = document.createElement('div');
+    item.className = 'folder-app';
+    item.innerHTML = `<div class="folder-app-img" data-icon="${app.icon}"></div><div class="folder-app-label">${app.name}</div>`;
+    item.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      openApp(id);
+    });
+    grid.appendChild(item);
+  });
+  renderIcons(grid);
+  overlay.classList.remove('hidden');
+}
+
+function initFolderOverlay() {
+  const overlay = $('#folderOverlay');
+  if (!overlay) return;
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
+  $('#folderCloseBtn').addEventListener('click', () => overlay.classList.add('hidden'));
+}
+
 function initDesktop() {
   const dock = $('#dock');
   const dIcons = $('#desktopIcons');
   const homeGrid = $('#homeGrid');
+  const folderedIds = new Set(FOLDERS.flatMap(f => f.apps));
 
+  // dock: flat, scrollable — every app, unfoldered (matches a real OS dock/taskbar)
   Object.entries(APPS).forEach(([id, app]) => {
     if (app.hidden) return;
-
-    const item = document.createElement('div');
-    item.className = 'dock-item' + (PINNED.includes(id) ? '' : ' not-pinned');
-    item.dataset.app = id;
-    item.innerHTML = `<div class="dock-img" data-icon="${app.icon}"></div>
-      <div class="dock-tip">${app.name}</div><div class="dock-dot"></div>`;
+    const item = makeAppIcon(id, app, 'dock-item');
+    item.classList.toggle('not-pinned', !PINNED.includes(id));
     item.addEventListener('click', () => openApp(id));
     dock.appendChild(item);
+  });
 
-    // iPhone home screen icon
-    const hi = document.createElement('div');
-    hi.className = 'hi-app';
-    hi.dataset.app = id;
-    hi.innerHTML = `<div class="hi-img" data-icon="${app.icon}"></div>
-      <div class="hi-label">${app.name}</div>`;
+  // home screen (mobile) + desktop icons: pinned favorites + folders
+  PINNED.forEach(id => {
+    const app = APPS[id];
+    if (!app) return;
+    const hi = makeAppIcon(id, app, 'hi-app');
     hi.addEventListener('click', () => openApp(id));
     homeGrid.appendChild(hi);
-
     if (app.desktop) {
-      const di = document.createElement('div');
-      di.className = 'dicon';
-      di.innerHTML = `<div class="dicon-img" data-icon="${app.icon}"></div>
-        <div class="dicon-label">${app.name}</div>`;
+      const di = makeAppIcon(id, app, 'dicon');
       di.addEventListener('dblclick', () => openApp(id));
       di.addEventListener('click', () => {
         dIcons.querySelectorAll('.dicon').forEach(x => x.classList.remove('selected'));
@@ -732,9 +800,31 @@ function initDesktop() {
     }
   });
 
+  FOLDERS.forEach(folder => {
+    const homeApps = folder.apps.map(id => APPS[id]).filter(Boolean);
+    if (homeApps.length) homeGrid.appendChild(makeFolderIcon(folder, 'hi-app', homeApps));
+
+    const deskApps = folder.apps.map(id => APPS[id]).filter(a => a && a.desktop);
+    if (deskApps.length) dIcons.appendChild(makeFolderIcon(folder, 'dicon', deskApps));
+  });
+
+  // any app that's neither pinned nor in a folder (shouldn't happen, but stay safe)
+  Object.entries(APPS).forEach(([id, app]) => {
+    if (app.hidden || PINNED.includes(id) || folderedIds.has(id)) return;
+    const hi = makeAppIcon(id, app, 'hi-app');
+    hi.addEventListener('click', () => openApp(id));
+    homeGrid.appendChild(hi);
+    if (app.desktop) {
+      const di = makeAppIcon(id, app, 'dicon');
+      di.addEventListener('dblclick', () => openApp(id));
+      dIcons.appendChild(di);
+    }
+  });
+
   renderIcons($('#desktop'));
   initMenuBar();
   initNotifCenter();
+  initFolderOverlay();
   restoreWallpaper();
   restoreTheme();
   if (isSecretUnlocked()) revealSecretIcon(false);
