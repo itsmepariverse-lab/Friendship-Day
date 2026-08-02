@@ -3618,6 +3618,46 @@ const AI_RULES = [
     "if being irreplaceable were a crime, you'd be doing life without parole.",
     "that's the whole pickup line — this script's rizz is entirely borrowed from you being great.",
   ]},
+  { kw: ['story', 'tell me a story'], r: [
+    "Once upon a time, there was a girl named Reet who had 100 things to do. So she took a nap instead. The End.",
+    "Here is a story: You walked into a room, everyone stared because you looked amazing, you made a slightly chaotic joke, and then left. A classic.",
+  ]},
+  { kw: ['future', 'horoscope', 'prediction'], r: [
+    "My highly advanced AI prediction: You will soon crave something sweet, eat it, and then instantly regret it. (But it was worth it).",
+    "Your horoscope for today: The stars say you are a 10/10, and anyone who disagrees is astrologically incorrect.",
+  ]},
+  { kw: ['gossip', 'tea', 'spill'], r: [
+    "Okay, I shouldn't tell you this... but someone (who coded this) thinks you are literally the best person alive. Don't tell anyone.",
+    "The streets are saying you've been looking extra pretty lately. And by the streets, I mean me. I am the streets.",
+  ]},
+  { kw: ['vent', 'rant', 'annoyed', 'work', 'study', 'hate this'], r: [
+    "I fully support your rage right now. Want me to virtually fight them for you?",
+    "That sounds incredibly annoying. On behalf of the universe, I apologise. Now go eat a snack to feel better.",
+  ]},
+  { kw: ['compliment', 'praise', 'flatter'], r: [
+    "You are the human equivalent of finding an extra fry at the bottom of the bag.",
+    "If perfection had a synonym in the dictionary, it would just be a picture of you.",
+  ]},
+  { kw: ['secret'], r: [
+    "Here's a secret: this AI isn't actually that smart. It just knows how to appreciate you, which is the only intelligence that matters.",
+    "Secret file unlocked: You are the most important notification on his phone.",
+  ]},
+  { kw: ['angry', 'mad', 'furious'], r: [
+    "I would tell you to calm down, but honestly, angry Reet is kind of terrifying and I value my code.",
+    "Take a deep breath! (Or break something, I'm just an app, I can't stop you).",
+  ]},
+  { kw: ['advice', 'help', 'stuck'], r: [
+    "My best advice? When in doubt, take a nap. If that fails, eat chocolate.",
+    "I'm an AI, my advice is terrible. But I *can* tell you that whatever you choose, you'll rock it.",
+  ]},
+  { kw: ['overthinking', 'stress', 'anxious'], r: [
+    "Hey. Stop overthinking. Your brain is lying to you, you are doing absolutely fine.",
+    "Error 404: Overthinking detected. Please restart your brain by watching a funny reel.",
+  ]},
+  { kw: ['beautiful', 'pretty', 'cute', 'gorgeous'], r: [
+    "Obviously. Did you need an AI to tell you what every mirror already knows?",
+    "Facts. You're so pretty it actually breaks my algorithms.",
+  ]},
 ];
 const AI_FALLBACK = [
   "I only really know one subject, and you're it — try asking about that.",
@@ -3798,6 +3838,44 @@ function initBrowser(win) {
         item.textContent = h;
         wrap.appendChild(item);
       });
+      return wrap;
+    },
+    video: () => {
+      const vids = [
+        { title: 'VLOG: surviving another day of doing absolutely nothing', views: '1.2M views', thumb: '▶️' },
+        { title: 'GRWM to go nowhere and overthink everything', views: '800K views', thumb: '🎬' },
+        { title: 'Top 10 reasons why our friendship is superior (Number 4 will shock you)', views: '5M views', thumb: '✨' },
+        { title: 'ASMR: typing aggressively while complaining', views: '300K views', thumb: '⌨️' }
+      ];
+      const wrap = document.createElement('div');
+      wrap.className = 'br-social'; // reuse social styling
+      vids.forEach(v => {
+        const item = document.createElement('div');
+        item.className = 'br-post';
+        item.innerHTML = `<div style="font-size: 2rem; margin-bottom: 10px;">${v.thumb}</div>
+                          <div class="br-post-text" style="font-weight: bold;">${v.title}</div>
+                          <div class="br-post-user" style="margin-top: 5px;">${v.views}</div>`;
+        wrap.appendChild(item);
+      });
+      return wrap;
+    },
+    vault: () => {
+      const wrap = document.createElement('div');
+      wrap.className = 'br-news';
+      wrap.style.textAlign = 'center';
+      wrap.style.padding = '30px';
+      
+      const lock = document.createElement('div');
+      lock.style.fontSize = '3rem';
+      lock.textContent = '🔒';
+      
+      const msg = document.createElement('div');
+      msg.style.marginTop = '20px';
+      msg.style.lineHeight = '1.6';
+      msg.className = 'br-post-text';
+      msg.innerHTML = "<b>Secure Vault Access Restricted</b><br/><br/>Just kidding.<br/><br/>I just wanted another excuse to put a little note here to say: you're doing amazing, and I am endlessly grateful that you are my best friend. 🤍";
+      
+      wrap.append(lock, msg);
       return wrap;
     },
   };
@@ -4145,4 +4223,55 @@ function triggerEasterEgg() {
       ee.classList.remove('show');
     };
   }
+}
+
+// 6. Interactive Wallpaper Cycler
+const WALLPAPERS = [
+  'linear-gradient(135deg, #1a1420 0%, #2d182b 100%)', // Default dark
+  'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)', // Pink gradient
+  'linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)', // Blue pastel
+  'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)', // Mint fresh
+  'linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)', // Silver
+  'linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)', // Peach
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Deep purple
+  'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', // Clean white
+  'linear-gradient(to top, #30cfd0 0%, #330867 100%)', // Cyberpunk
+  'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)', // Ocean
+  'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)', // Fire red
+  'radial-gradient(circle, #5c0067 0%, #00d4ff 100%)', // Galaxy
+  'radial-gradient(circle 248px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%)', // Bright sky
+  'linear-gradient(to right, #fa709a 0%, #fee140 100%)' // Sunset
+];
+let currentWallpaperIdx = 0;
+
+const desktopEl = document.getElementById('desktop');
+if (desktopEl) {
+  let lastTap = 0;
+  desktopEl.addEventListener('click', (e) => {
+    // Only trigger if clicking directly on the desktop background (not on an icon or window)
+    if (e.target.id === 'desktop' || e.target.id === 'wallpaper' || e.target.classList.contains('wp-wash')) {
+      const now = new Date().getTime();
+      const timeSince = now - lastTap;
+      if (timeSince < 300 && timeSince > 0) {
+        // Double tap confirmed
+        currentWallpaperIdx = (currentWallpaperIdx + 1) % WALLPAPERS.length;
+        const wp = document.getElementById('wallpaper');
+        if (wp) {
+          wp.style.background = WALLPAPERS[currentWallpaperIdx];
+          // Give a small visual feedback toast
+          const toast = document.createElement('div');
+          toast.className = 'toast-msg';
+          toast.textContent = "✨ Wallpaper Changed!";
+          toast.style.position = 'fixed';
+          toast.style.bottom = '80px';
+          toast.style.left = '50%';
+          toast.style.transform = 'translateX(-50%)';
+          toast.style.zIndex = '99999';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 2000);
+        }
+      }
+      lastTap = now;
+    }
+  });
 }
