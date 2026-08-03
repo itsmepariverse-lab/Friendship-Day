@@ -187,6 +187,18 @@ html, body {
 .wallpaper.photo .blob { opacity: .28; }
 .wallpaper.sharp .wp-wash { opacity: .55; }
 
+/* solid "Midnight Velvet" gradient wallpaper option */
+.wallpaper.dark { background: linear-gradient(160deg, #140b1f 0%, #1c1030 55%, #241534 100%); }
+.wallpaper.dark .blob { opacity: .22; }
+
+/* mosaic wallpaper: a grid of her photos filling the screen */
+.wp-grid { position: absolute; inset: 0; display: none; gap: 2px; }
+.wallpaper.grid .wp-grid { display: grid; }
+.wallpaper.grid .wp-photo { opacity: 0; }
+.wallpaper.grid .wp-wash { opacity: .5; }
+.wallpaper.grid .blob { opacity: .16; }
+.wp-grid-cell { background-size: cover; background-position: center; }
+
 .blob { position: absolute; border-radius: 50%; filter: blur(78px); opacity: .34; }
 .b1 { width: 46vw; height: 46vw; background: #ffaed0; top: -8%; left: -8%; animation: drift1 22s ease-in-out infinite; }
 .b2 { width: 40vw; height: 40vw; background: #b9a6ff; bottom: -10%; right: -6%; animation: drift2 26s ease-in-out infinite; }
@@ -824,6 +836,49 @@ html, body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ═══════════ REET RADIO MINI PLAYER ═══════════ */
+/* Sits just above the dock while music plays minimized in the background. */
+.mini-player {
+  position: fixed; bottom: calc(88px + var(--safe-b)); left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  z-index: 920; width: min(340px, calc(100vw - 24px));
+  display: flex; align-items: center; gap: .7rem;
+  background: rgba(40,26,45,.82);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,.14); border-radius: 16px;
+  padding: .5rem .6rem .5rem .5rem; box-shadow: 0 10px 28px rgba(20,10,25,.32);
+  opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+  cursor: pointer;
+}
+.mini-player.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.mp-thumb {
+  width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
+  background: linear-gradient(135deg, #c9b3ff, #9d8fff);
+  display: grid; place-items: center; animation: mpSpin 6s linear infinite; animation-play-state: paused;
+}
+.mini-player.playing .mp-thumb { animation-play-state: running; }
+.mp-thumb [data-icon] { width: 20px; height: 20px; }
+@keyframes mpSpin { to { transform: rotate(360deg); } }
+.mp-info { flex: 1; min-width: 0; }
+.mp-title {
+  font-size: .78rem; font-weight: 600; color: #fff; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.mp-artist {
+  font-size: .68rem; color: rgba(255,255,255,.65); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.mp-play {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.16); color: #fff; display: grid; place-items: center; cursor: pointer;
+}
+.mp-play:active { transform: scale(.9); }
+.mp-play [data-icon] { width: 15px; height: 15px; }
+
+@media (max-width: 768px) {
+  .mini-player { bottom: calc(74px + var(--safe-b)); }
+}
+
 /* ═══════════ iPHONE MODE (mobile) ═══════════ */
 .home, .home-bar { display: none; }
 
@@ -870,6 +925,14 @@ html, body {
     text-shadow: 0 1px 5px rgba(70,40,75,.6); max-width: 74px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  /* on the light "Pastel Dream" wallpaper white labels/icons wash out —
+     flip to dark text with a light shadow so they stay readable. */
+  body.wp-light .hi-label { color: #4a3550; text-shadow: 0 1px 4px rgba(255,255,255,.75); }
+  body.wp-light .home-dots i { background: rgba(90,60,90,.35); }
+  body.wp-light .home-dots i.on { background: #5a3c5a; }
+  body.wp-light .menubar-left::before,
+  body.wp-light .mb-item { color: #5a3c5a; text-shadow: 0 1px 4px rgba(255,255,255,.6); }
+  body.wp-light .home-bar { background: rgba(90,60,90,.4); }
   .home-dots { display: flex; justify-content: center; gap: .35rem; margin-top: auto; padding-bottom: .8rem; }
   .home-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.45); }
   .home-dots i.on { background: #fff; }
@@ -929,16 +992,17 @@ html, body {
   }
   .win-body { padding-bottom: calc(18px + var(--safe-b)); }
 
-  /* ── iOS close button — X glyph, no min/max traffic lights ── */
+  /* ── close button — red circle + X glyph, no min/max traffic lights ── */
   .wl-min, .wl-max { display: none; }
   .wl { width: 28px; height: 28px; }
-  .wl-close { background: rgba(255,255,255,.75); position: relative; border-radius: 50%; }
+  .wl-close { background: #ff5a5f; position: relative; border-radius: 50%; box-shadow: 0 2px 6px rgba(255,90,95,.4); }
   .wl-close::before, .wl-close::after {
     content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px;
-    border-radius: 2px; background: #8a5f85; transform-origin: center;
+    border-radius: 2px; background: #fff; transform-origin: center;
   }
   .wl-close::before { transform: translate(-50%,-50%) rotate(45deg); }
   .wl-close::after  { transform: translate(-50%,-50%) rotate(-45deg); }
+  .wl-close:active { transform: scale(.9); }
   .win-spacer { width: 28px; }
   .win-title { font-size: .85rem; font-weight: 600; }
 
@@ -1372,14 +1436,23 @@ html, body {
 .th-actions { display: flex; gap: .6rem; justify-content: center; margin-top: .2rem; flex-wrap: wrap; }
 
 .th-section { display: flex; flex-direction: column; gap: .6rem; }
-.th-sec-title { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
+.th-sec-title {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sub);
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+}
+.th-wp-shuffle {
+  font-family: var(--sans); font-size: .64rem; letter-spacing: 0; text-transform: none;
+  background: var(--glass); border: 1px solid var(--stroke); border-radius: 20px; padding: .2rem .6rem;
+  color: var(--text); cursor: pointer;
+}
+.th-wp-shuffle:active { transform: scale(.95); }
 
-.th-wp-grid { display: flex; gap: .6rem; }
-.th-wp-card { flex: 1; cursor: pointer; border-radius: 12px; border: 2px solid transparent; padding: .3rem; transition: border-color .15s, transform .15s; }
+.th-wp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem .5rem; }
+.th-wp-card { cursor: pointer; border-radius: 12px; border: 2px solid transparent; padding: .3rem; transition: border-color .15s, transform .15s; }
 .th-wp-card:hover { transform: translateY(-2px); }
 .th-wp-card.active { border-color: var(--accent); }
 .th-wp-preview { width: 100%; aspect-ratio: 1; border-radius: 9px; background-size: cover; background-position: center; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
-.th-wp-name { font-size: .64rem; color: var(--sub); text-align: center; margin-top: .35rem; }
+.th-wp-name { font-size: .62rem; color: var(--sub); text-align: center; margin-top: .35rem; line-height: 1.2; }
 
 .th-row { display: flex; align-items: center; justify-content: space-between; background: var(--glass);
   border: 1px solid var(--stroke); border-radius: 12px; padding: .7rem .9rem; }

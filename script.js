@@ -548,6 +548,49 @@ const openWindows = {};
 let zTop = 200;
 let cascade = 0;
 
+/* Reet Radio keeps playing after the app window is minimized (mobile: on
+   close/swipe-down/home too — see closeWin below) — this is what
+   initMusic() points at the audio element it owns, and what the mini
+   player reads to stay in sync. */
+let musicNowPlaying = null;
+
+function syncMiniPlayer() {
+  const bar = $('#miniPlayer');
+  if (!bar) return;
+  const win = openWindows.music;
+  const minimized = !!(win && win.dataset.min === '1');
+  const hasTrack = !!(musicNowPlaying && musicNowPlaying.audio && musicNowPlaying.audio.src);
+  if (!minimized || !hasTrack) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  const t = $('#mpTitle'), a = $('#mpArtist'), p = $('#mpPlay');
+  if (t) t.textContent = musicNowPlaying.titleEl.textContent || '—';
+  if (a) a.textContent = musicNowPlaying.artistEl.textContent || '—';
+  const playing = !musicNowPlaying.audio.paused;
+  bar.classList.toggle('playing', playing);
+  const icon = playing ? 'pause' : 'play';
+  if (p && p.getAttribute('data-icon') !== icon) {
+    p.dataset.filled = '';
+    p.setAttribute('data-icon', icon);
+    renderIcons(bar);
+  }
+}
+
+function initMiniPlayer() {
+  const bar = $('#miniPlayer');
+  if (!bar) return;
+  bar.addEventListener('click', e => {
+    if (e.target.closest('#mpPlay')) return;
+    restoreWin('music');
+  });
+  const playBtn = $('#mpPlay');
+  playBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (!musicNowPlaying) return;
+    const a = musicNowPlaying.audio;
+    if (a.paused) a.play().catch(() => {}); else a.pause();
+  });
+}
+
 function openApp(id) {
   const app = APPS[id];
   if (!app) return;
@@ -615,6 +658,13 @@ function openApp(id) {
 function closeWin(id) {
   const win = openWindows[id];
   if (!win) return;
+  // On mobile there's no separate "minimize" control (just the X / swipe-down /
+  // home-indicator), so treat those as backgrounding Reet Radio instead of
+  // killing it — same as tapping home on a real phone leaves music playing.
+  if (id === 'music' && isMobile() && musicNowPlaying && musicNowPlaying.audio.src) {
+    minimizeWin(id, true);
+    return;
+  }
   playTone('close');
   win.dispatchEvent(new CustomEvent('win-closing'));
   // never leave audio/video playing behind a closed window
@@ -624,6 +674,7 @@ function closeWin(id) {
   delete openWindows[id];
   markDock(id, false);
   syncHomeState();
+  syncMiniPlayer();
 }
 
 function focusWin(win) {
@@ -634,13 +685,17 @@ function focusWin(win) {
 }
 
 // Minimize keeps the app running (music keeps playing); the dock restores it.
-function minimizeWin(id) {
+function minimizeWin(id, silent) {
   const win = openWindows[id];
   if (!win) return;
   win.dataset.min = '1';
   win.style.display = 'none';
+  // clear any leftover swipe-to-dismiss drag transform so it doesn't reappear off-screen
+  win.style.transform = '';
+  win.style.transition = '';
   syncHomeState();
-  toast('minimized — tap it in the dock to bring it back');
+  syncMiniPlayer();
+  if (!silent) toast('minimized — tap it in the dock to bring it back');
 }
 
 function restoreWin(id) {
@@ -650,6 +705,7 @@ function restoreWin(id) {
   win.style.display = '';
   focusWin(win);
   syncHomeState();
+  syncMiniPlayer();
 }
 
 function closeAllWindows() {
@@ -897,6 +953,7 @@ function initDesktop() {
   initFolderOverlay();
   restoreWallpaper();
   restoreTheme();
+  initMiniPlayer();
   if (isSecretUnlocked()) revealSecretIcon(false);
   initTimeVibe();
   initSparkleTrail();
@@ -919,19 +976,70 @@ function markDock(id, running) {
 }
 
 /* ═══════════ WALLPAPER ═══════════ */
+// Reuses the same 22-photo pool the lock screen slideshow shuffles through,
+// so no new assets are needed for the single-photo / mosaic options.
+const WP_PHOTO_POOL = LOCK_PHOTOS;
+
 const WALLPAPERS = [
-  { id: 'pastel',  name: 'Pastel Dream',  src: null },
-  { id: 'collage', name: 'Her Collage',   src: 'wallpapers/collage-soft.jpg' },
-  { id: 'sharp',   name: 'Collage, Sharp', src: 'wallpapers/collage.jpg', sharp: true },
+  { id: 'pastel',  name: 'Pastel Dream',    type: 'gradient', light: true },
+  { id: 'dark',    name: 'Midnight Velvet', type: 'gradient', dark: true },
+  { id: 'collage', name: 'Her Collage',     type: 'photo', src: 'wallpapers/collage-soft.jpg' },
+  { id: 'sharp',   name: 'Collage, Sharp',  type: 'photo', src: 'wallpapers/collage.jpg', sharp: true },
+  { id: 'photoA',  name: 'Reet · one',      type: 'photo', src: WP_PHOTO_POOL[2] },
+  { id: 'photoB',  name: 'Reet · two',      type: 'photo', src: WP_PHOTO_POOL[7] },
+  { id: 'photoC',  name: 'Reet · three',    type: 'photo', src: WP_PHOTO_POOL[13] },
+  { id: 'photoD',  name: 'Reet · four',     type: 'photo', src: WP_PHOTO_POOL[19] },
+  { id: 'shuffle', name: 'Shuffle Photo',   type: 'photo', shuffle: true },
+  { id: 'grid4',   name: 'Mosaic · 4',      type: 'grid', count: 4, cols: 2 },
+  { id: 'grid6',   name: 'Mosaic · 6',      type: 'grid', count: 6, cols: 3 },
+  { id: 'grid8',   name: 'Mosaic · 8',      type: 'grid', count: 8, cols: 4 },
 ];
 
-function setWallpaper(id, announce) {
+function pickRandomPhotos(n) {
+  const pool = WP_PHOTO_POOL.slice();
+  const out = [];
+  while (out.length < n && pool.length) {
+    out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  return out;
+}
+
+function setWallpaper(id, announce, reshuffle) {
   const wp = WALLPAPERS.find(w => w.id === id) || WALLPAPERS[0];
   const el = $('#wallpaper');
   const photo = $('#wpPhoto');
-  el.classList.toggle('photo', !!wp.src);
+  const grid = $('#wpGrid');
+
+  el.classList.toggle('photo', wp.type === 'photo');
+  el.classList.toggle('grid', wp.type === 'grid');
   el.classList.toggle('sharp', !!wp.sharp);
-  if (wp.src) photo.style.backgroundImage = `url("${wp.src}")`;
+  el.classList.toggle('dark', !!wp.dark);
+  document.body.classList.toggle('wp-light', !!wp.light);
+
+  if (wp.type === 'photo') {
+    const src = wp.shuffle ? WP_PHOTO_POOL[Math.floor(Math.random() * WP_PHOTO_POOL.length)] : wp.src;
+    photo.style.backgroundImage = `url("${src}")`;
+  }
+
+  if (wp.type === 'grid') {
+    const key = 'reetos-wp-' + wp.id;
+    let imgs = null;
+    if (!reshuffle) {
+      try { imgs = JSON.parse(localStorage.getItem(key)); } catch (_) {}
+    }
+    if (!imgs || imgs.length !== wp.count) imgs = pickRandomPhotos(wp.count);
+    try { localStorage.setItem(key, JSON.stringify(imgs)); } catch (_) {}
+
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${wp.cols}, 1fr)`;
+    imgs.forEach(src => {
+      const cell = document.createElement('div');
+      cell.className = 'wp-grid-cell';
+      cell.style.backgroundImage = `url("${src}")`;
+      grid.appendChild(cell);
+    });
+  }
+
   try { localStorage.setItem('reetos-wallpaper', wp.id); } catch (_) {}
   if (announce) toast('wallpaper: ' + wp.name);
   return wp;
@@ -942,6 +1050,16 @@ function cycleWallpaper() {
   try { cur = localStorage.getItem('reetos-wallpaper') || 'pastel'; } catch (_) {}
   const i = WALLPAPERS.findIndex(w => w.id === cur);
   setWallpaper(WALLPAPERS[(i + 1) % WALLPAPERS.length].id, true);
+}
+
+// Re-rolls the current wallpaper's random pick — only meaningful for
+// 'shuffle' (single photo) and the mosaic grids; a no-op toast otherwise.
+function reshuffleWallpaper() {
+  let cur = 'pastel';
+  try { cur = localStorage.getItem('reetos-wallpaper') || 'pastel'; } catch (_) {}
+  const wp = WALLPAPERS.find(w => w.id === cur) || WALLPAPERS[0];
+  if (wp.type !== 'grid' && !wp.shuffle) { toast('pick a shuffle or mosaic wallpaper first'); return; }
+  setWallpaper(wp.id, true, true);
 }
 
 function restoreWallpaper() {
@@ -1549,6 +1667,12 @@ function initMusic(win) {
   const fmt = s => (isFinite(s) && s > 0 ? `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}` : '0:00');
   const setIcon = key => { playBtn.dataset.filled = ''; playBtn.setAttribute('data-icon', key); renderIcons(win); };
 
+  // lets the mini player (and mobile background playback) reach this station's audio
+  musicNowPlaying = { audio, titleEl, artistEl };
+  audio.addEventListener('play', syncMiniPlayer);
+  audio.addEventListener('pause', syncMiniPlayer);
+  win.addEventListener('win-closing', () => { if (musicNowPlaying && musicNowPlaying.audio === audio) musicNowPlaying = null; });
+
   let station = ALL_STATIONS[0];
   let current = 0;
   let shuffle = false;
@@ -1631,6 +1755,7 @@ function initMusic(win) {
     artistEl.textContent = station.name;
     dur.textContent = '0:00'; cur.textContent = '0:00'; seek.value = 0;
     markActive();
+    syncMiniPlayer();
     if (autoplay) play();
   }
 
@@ -3204,9 +3329,9 @@ function initSnake(win) {
 
 /* ═══════════ THEME MANAGER & VIBES ═══════════ */
 const THEMES = [
-  { k: 'sakura',   n: '🌸 Soft Sakura',   c1: '#ff8fb8', c2: '#b79dff', d: 'Pastel Pink & Lavender (Default)' },
+  { k: 'midnight', n: '🌌 Midnight Star', c1: '#b070ff', c2: '#201235', d: 'Deep Velvet & Glowing Starlight (Default)' },
+  { k: 'sakura',   n: '🌸 Soft Sakura',   c1: '#ff8fb8', c2: '#b79dff', d: 'Pastel Pink & Lavender' },
   { k: 'sunset',   n: '🌅 Sunset Glow',   c1: '#f26b38', c2: '#ffb98f', d: 'Warm Amber & Golden Coral' },
-  { k: 'midnight', n: '🌌 Midnight Star', c1: '#b070ff', c2: '#201235', d: 'Deep Velvet & Glowing Starlight' },
   { k: 'sage',     n: '🌿 Sage & Mint',   c1: '#3b9b78', c2: '#8fe0c4', d: 'Cozy Mint & Soft Emerald' },
   { k: 'ocean',    n: '💙 Ocean Breeze',  c1: '#3a82ee', c2: '#8fc7ff', d: 'Cool Periwinkle & Sky Blue' },
 ];
@@ -3222,10 +3347,10 @@ function setTheme(key, notify = true) {
 
 function restoreTheme() {
   try {
-    const saved = localStorage.getItem('reetos-theme') || 'sakura';
+    const saved = localStorage.getItem('reetos-theme') || 'midnight';
     setTheme(saved, false);
   } catch (_) {
-    setTheme('sakura', false);
+    setTheme('midnight', false);
   }
 }
 
@@ -3302,7 +3427,7 @@ function initSparkleTrail() {
 function initThemeApp(win) {
   const grid = win.querySelector('#thGrid');
   grid.innerHTML = '';
-  const current = document.documentElement.getAttribute('data-theme') || 'sakura';
+  const current = document.documentElement.getAttribute('data-theme') || 'midnight';
 
   THEMES.forEach(t => {
     const card = document.createElement('div');
@@ -3327,9 +3452,14 @@ function initThemeApp(win) {
   WALLPAPERS.forEach(wp => {
     const card = document.createElement('div');
     card.className = `th-wp-card ${wp.id === currentWp ? 'active' : ''}`;
+    let previewStyle = 'background: linear-gradient(165deg, #ffe4f0, #ecdcff, #dcebff)';
+    if (wp.dark) previewStyle = 'background: linear-gradient(160deg, #140b1f, #1c1030 55%, #241534)';
+    else if (wp.type === 'photo' && wp.src) previewStyle = `background-image:url('${wp.src}')`;
+    else if (wp.type === 'photo' && wp.shuffle) previewStyle = `background-image:url('${WP_PHOTO_POOL[0]}')`;
+    else if (wp.type === 'grid') previewStyle = `background-image:url('${WP_PHOTO_POOL[1]}')`;
     card.innerHTML = `
-      <div class="th-wp-preview" style="${wp.src ? `background-image:url('${wp.src}')` : 'background: linear-gradient(165deg, #ffe4f0, #ecdcff, #dcebff)'}"></div>
-      <div class="th-wp-name">${wp.name}</div>`;
+      <div class="th-wp-preview" style="${previewStyle}"></div>
+      <div class="th-wp-name">${wp.name}${wp.type === 'grid' ? ` · ${wp.count}` : ''}</div>`;
     card.addEventListener('click', () => {
       wpGrid.querySelectorAll('.th-wp-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
@@ -3338,6 +3468,9 @@ function initThemeApp(win) {
     });
     wpGrid.appendChild(card);
   });
+
+  const wpShuffleBtn = win.querySelector('#thWpShuffle');
+  if (wpShuffleBtn) wpShuffleBtn.addEventListener('click', () => { reshuffleWallpaper(); playTone('click'); });
 
   const soundSwitch = win.querySelector('#thSoundSwitch');
   soundSwitch.classList.toggle('on', isSoundOn());

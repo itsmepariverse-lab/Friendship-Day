@@ -78,6 +78,7 @@
 
   <div class="wallpaper" id="wallpaper">
     <div class="wp-photo" id="wpPhoto"></div>
+    <div class="wp-grid" id="wpGrid"></div>
     <div class="wp-wash"></div>
     <div class="blob b1"></div>
     <div class="blob b2"></div>
@@ -125,6 +126,16 @@
 
   <!-- Windows container -->
   <div id="windows"></div>
+
+  <!-- Reet Radio mini player — shown while music plays minimized in the background -->
+  <div class="mini-player" id="miniPlayer">
+    <div class="mp-thumb" data-icon="vinyl"></div>
+    <div class="mp-info">
+      <div class="mp-title" id="mpTitle">—</div>
+      <div class="mp-artist" id="mpArtist">—</div>
+    </div>
+    <button class="mp-play" id="mpPlay" data-icon="pause"></button>
+  </div>
 
   <!-- Dock -->
   <div class="dock" id="dock"></div>
@@ -491,7 +502,9 @@
     </div>
 
     <div class="th-section">
-      <div class="th-sec-title">wallpaper</div>
+      <div class="th-sec-title">wallpaper
+        <button class="th-wp-shuffle" id="thWpShuffle" title="reshuffle mosaic / shuffle photo">🔀 shuffle</button>
+      </div>
       <div class="th-wp-grid" id="thWpGrid"></div>
     </div>
 
