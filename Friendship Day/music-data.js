@@ -2044,5 +2044,47 @@ const STATIONS = [
     "f": "Zaalima_spotdown.org.mp3"
    }
   ]
+ },
+ {
+  "key": "YJHD Radio",
+  "name": "YJHD",
+  "tracks": [
+   {
+    "t": "Badtameez Dil",
+    "f": "Badtameez Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Balam Pichkari",
+    "f": "Balam Pichkari_spotdown.org.mp3"
+   },
+   {
+    "t": "Dilliwaali Girlfriend",
+    "f": "Dilliwaali Girlfriend_spotdown.org.mp3"
+   },
+   {
+    "t": "Ghagra",
+    "f": "Ghagra_spotdown.org.mp3"
+   },
+   {
+    "t": "Ilahi (Reprise)",
+    "f": "Ilahi (Reprise)_spotdown.org.mp3"
+   },
+   {
+    "t": "Ilahi",
+    "f": "Ilahi_spotdown.org.mp3"
+   },
+   {
+    "t": "Kabira (Encore)",
+    "f": "Kabira (Encore)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kabira",
+    "f": "Kabira_spotdown.org.mp3"
+   },
+   {
+    "t": "Subhanallah",
+    "f": "Subhanallah_spotdown.org.mp3"
+   }
+  ]
  }
 ];
