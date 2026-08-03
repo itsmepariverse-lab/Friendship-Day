@@ -8,6 +8,212 @@ const MUSIC_BASE_URL = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/';
 
 const STATIONS = [
  {
+  "key": "A R Rahman Radio",
+  "name": "A R Rahman",
+  "tracks": [
+   {
+    "t": "Aaruyire",
+    "f": "Aaruyire_spotdown.org.mp3"
+   },
+   {
+    "t": "Anbae Anbae (Jeans)",
+    "f": "Anbae Anbae (From _Jeans_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Chinna Chinna Asai",
+    "f": "Chinna Chinna Asai_spotdown.org.mp3"
+   },
+   {
+    "t": "En Kadhal Solla",
+    "f": "En Kadhal Solla_spotdown.org.mp3"
+   },
+   {
+    "t": "Enakke Enakkaa (Jeans)",
+    "f": "Enakke Enakkaa (From _Jeans_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Engeyo Paartha",
+    "f": "Engeyo Paartha_spotdown.org.mp3"
+   },
+   {
+    "t": "Enna Solla - The New Life of Tamizh",
+    "f": "Enna Solla - The New Life of Tamizh_spotdown.org.mp3"
+   },
+   {
+    "t": "Enna Solla Pogirai",
+    "f": "Enna Solla Pogirai_spotdown.org.mp3"
+   },
+   {
+    "t": "Ennake Ennaka (Jeans)",
+    "f": "Ennake Ennaka (From _Jeans_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Ennavale Adi Ennavale",
+    "f": "Ennavale Adi Ennavale_spotdown.org.mp3"
+   },
+   {
+    "t": "Ennodu Nee Irundhaal",
+    "f": "Ennodu Nee Irundhaal_spotdown.org.mp3"
+   },
+   {
+    "t": "Gehra Hua",
+    "f": "Gehra Hua_spotdown.org.mp3"
+   },
+   {
+    "t": "Hosanna",
+    "f": "Hosanna_spotdown.org.mp3"
+   },
+   {
+    "t": "Idhazhin Oram - The Innocence of Love",
+    "f": "Idhazhin Oram - The Innocence of Love_spotdown.org.mp3"
+   },
+   {
+    "t": "Innum Konjam Neram",
+    "f": "Innum Konjam Neram_spotdown.org.mp3"
+   },
+   {
+    "t": "Kaadhal Rojave",
+    "f": "Kaadhal Rojave_spotdown.org.mp3"
+   },
+   {
+    "t": "Kaadhal kaditham (“Jodi”)",
+    "f": "Kaadhal kaditham (From “Jodi”)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kaattrae En Vaasal - Wind",
+    "f": "Kaattrae En Vaasal - Wind_spotdown.org.mp3"
+   },
+   {
+    "t": "Kadhaippoma (Oh My Kadavule)",
+    "f": "Kadhaippoma (From _Oh My Kadavule_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kadhal Sadugudu",
+    "f": "Kadhal Sadugudu_spotdown.org.mp3"
+   },
+   {
+    "t": "Kannalane",
+    "f": "Kannalane_spotdown.org.mp3"
+   },
+   {
+    "t": "Kathalikkum Penin Kaikal",
+    "f": "Kathalikkum Penin Kaikal_spotdown.org.mp3"
+   },
+   {
+    "t": "Marudaani",
+    "f": "Marudaani_spotdown.org.mp3"
+   },
+   {
+    "t": "Maruvaarthai (Enai Noki Paayum Thota)",
+    "f": "Maruvaarthai (From _Enai Noki Paayum Thota_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Masakali",
+    "f": "Masakali_spotdown.org.mp3"
+   },
+   {
+    "t": "Mast Magan (2 States)",
+    "f": "Mast Magan (From _2 States)_spotdown.org.mp3"
+   },
+   {
+    "t": "Mazhai Kuruvi",
+    "f": "Mazhai Kuruvi_spotdown.org.mp3"
+   },
+   {
+    "t": "Mental Manadhil",
+    "f": "Mental Manadhil_spotdown.org.mp3"
+   },
+   {
+    "t": "Minsara Kanna",
+    "f": "Minsara Kanna_spotdown.org.mp3"
+   },
+   {
+    "t": "Mitwa",
+    "f": "Mitwa_spotdown.org.mp3"
+   },
+   {
+    "t": "Mudhal Nee Mudivum Nee Title Track (Mudhal Nee Mudivum Nee)",
+    "f": "Mudhal Nee Mudivum Nee Title Track (From _Mudhal Nee Mudivum Nee_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Mukkala Mukkabla (Tamil) [From Kaadhalan ]",
+    "f": "Mukkala Mukkabla (Tamil) [From _Kaadhalan_]_spotdown.org.mp3"
+   },
+   {
+    "t": "Munbe Vaa",
+    "f": "Munbe Vaa_spotdown.org.mp3"
+   },
+   {
+    "t": "Naan Nee",
+    "f": "Naan Nee_spotdown.org.mp3"
+   },
+   {
+    "t": "Narumugaye (Iruvar)",
+    "f": "Narumugaye (From _Iruvar_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Nenjukkule",
+    "f": "Nenjukkule_spotdown.org.mp3"
+   },
+   {
+    "t": "New York Nagaram",
+    "f": "New York Nagaram_spotdown.org.mp3"
+   },
+   {
+    "t": "O Rangrez",
+    "f": "O Rangrez_spotdown.org.mp3"
+   },
+   {
+    "t": "Othaiyadi Pathayila",
+    "f": "Othaiyadi Pathayila_spotdown.org.mp3"
+   },
+   {
+    "t": "Pachai Nirame",
+    "f": "Pachai Nirame_spotdown.org.mp3"
+   },
+   {
+    "t": "Poovukkul (Jeans)",
+    "f": "Poovukkul (From _Jeans_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Pudhu Vellai Mazhai (Roja (Tamil))",
+    "f": "Pudhu Vellai Mazhai (From _Roja (Tamil)_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Rasaali (Achcham Yenbadhu Madamaiyada)",
+    "f": "Rasaali (From _Achcham Yenbadhu Madamaiyada_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Snehidhane New Version",
+    "f": "Snehidhane New Version_spotdown.org.mp3"
+   },
+   {
+    "t": "Snehidhane",
+    "f": "Snehidhane_spotdown.org.mp3"
+   },
+   {
+    "t": "Sotta Sotta (Tajmahal)",
+    "f": "Sotta Sotta (From _Tajmahal_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Thuli Thuli",
+    "f": "Thuli Thuli_spotdown.org.mp3"
+   },
+   {
+    "t": "Uyire Uyire",
+    "f": "Uyire Uyire_spotdown.org.mp3"
+   },
+   {
+    "t": "Vaseegara",
+    "f": "Vaseegara_spotdown.org.mp3"
+   },
+   {
+    "t": "Yaanji (Vikram Vedha)",
+    "f": "Yaanji - From _Vikram Vedha__spotdown.org.mp3"
+   }
+  ]
+ },
+ {
   "key": "Alka Yagnik Radio",
   "name": "Alka Yagnik",
   "tracks": [
@@ -420,6 +626,266 @@ const STATIONS = [
   ]
  },
  {
+  "key": "Ashiqui 2 Radio",
+  "name": "Ashiqui 2",
+  "tracks": [
+   {
+    "t": "Aasan Nahin Yahan",
+    "f": "Aasan Nahin Yahan_spotdown.org.mp3"
+   },
+   {
+    "t": "Aashiqui (The Love Theme)",
+    "f": "Aashiqui (The Love Theme)_spotdown.org.mp3"
+   },
+   {
+    "t": "Bhula Dena",
+    "f": "Bhula Dena_spotdown.org.mp3"
+   },
+   {
+    "t": "Chahun Main Ya Naa",
+    "f": "Chahun Main Ya Naa_spotdown.org.mp3"
+   },
+   {
+    "t": "Hum Mar Jayenge",
+    "f": "Hum Mar Jayenge_spotdown.org.mp3"
+   },
+   {
+    "t": "Meri Aashiqui",
+    "f": "Meri Aashiqui_spotdown.org.mp3"
+   },
+   {
+    "t": "Milne Hai Mujhse Aayi",
+    "f": "Milne Hai Mujhse Aayi_spotdown.org.mp3"
+   },
+   {
+    "t": "Piya Aaye Na",
+    "f": "Piya Aaye Na_spotdown.org.mp3"
+   },
+   {
+    "t": "Sunn Raha Hai (Female Version)",
+    "f": "Sunn Raha Hai (Female Version)_spotdown.org.mp3"
+   },
+   {
+    "t": "Sunn Raha Hai",
+    "f": "Sunn Raha Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Tum Hi Ho (Remix)",
+    "f": "Tum Hi Ho (Remix)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tum Hi Ho",
+    "f": "Tum Hi Ho_spotdown.org.mp3"
+   }
+  ]
+ },
+ {
+  "key": "Honey Singh Radio",
+  "name": "Honey Singh",
+  "tracks": [
+   {
+    "t": "Aayi Nai (Stree 2)",
+    "f": "Aayi Nai (From _Stree 2_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Abhi Toh Party Shuru Hui Hai (Khoobsurat)",
+    "f": "Abhi Toh Party Shuru Hui Hai (From _Khoobsurat_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Akh Lad Jaave (Loveyatri - A Journey Of Love)",
+    "f": "Akh Lad Jaave (From _Loveyatri - A Journey Of Love_)_spotdown.org.mp3"
+   },
+   {
+    "t": "All Black",
+    "f": "All Black_spotdown.org.mp3"
+   },
+   {
+    "t": "Amplifier",
+    "f": "Amplifier_spotdown.org.mp3"
+   },
+   {
+    "t": "Angreji Beat",
+    "f": "Angreji Beat_spotdown.org.mp3"
+   },
+   {
+    "t": "Backbone",
+    "f": "Backbone_spotdown.org.mp3"
+   },
+   {
+    "t": "Bijlee Bijlee",
+    "f": "Bijlee Bijlee_spotdown.org.mp3"
+   },
+   {
+    "t": "Blue Eyes",
+    "f": "Blue Eyes_spotdown.org.mp3"
+   },
+   {
+    "t": "Bom Diggy Diggy",
+    "f": "Bom Diggy Diggy_spotdown.org.mp3"
+   },
+   {
+    "t": "Brown Rang",
+    "f": "Brown Rang_spotdown.org.mp3"
+   },
+   {
+    "t": "Buzz (feat. Badshah)",
+    "f": "Buzz (feat. Badshah)_spotdown.org.mp3"
+   },
+   {
+    "t": "Care Ni Karda (Chhalaang)",
+    "f": "Care Ni Karda (From _Chhalaang_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Chaska Ae Yaara Nu",
+    "f": "Chaska Ae Yaara Nu_spotdown.org.mp3"
+   },
+   {
+    "t": "Dance Like",
+    "f": "Dance Like_spotdown.org.mp3"
+   },
+   {
+    "t": "Desi Kalakaar",
+    "f": "Desi Kalakaar_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Chori (Sonu Ke Titu Ki Sweety)",
+    "f": "Dil Chori (From _Sonu Ke Titu Ki Sweety_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dj Waley Babu (feat. Aastha Gill)",
+    "f": "Dj Waley Babu (feat. Aastha Gill)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dope Shope",
+    "f": "Dope Shope_spotdown.org.mp3"
+   },
+   {
+    "t": "Galat Baat Hai (Main Tera Hero)",
+    "f": "Galat Baat Hai (From _Main Tera Hero_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Gallan Goodiyaan",
+    "f": "Gallan Goodiyaan_spotdown.org.mp3"
+   },
+   {
+    "t": "High Heels Te Nachche",
+    "f": "High Heels Te Nachche_spotdown.org.mp3"
+   },
+   {
+    "t": "High Heels",
+    "f": "High Heels_spotdown.org.mp3"
+   },
+   {
+    "t": "High Rated Gabru (Nawabzaade)",
+    "f": "High Rated Gabru (From _Nawabzaade_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Hookah Bar",
+    "f": "Hookah Bar_spotdown.org.mp3"
+   },
+   {
+    "t": "Ice Cream",
+    "f": "Ice Cream_spotdown.org.mp3"
+   },
+   {
+    "t": "Jaguar",
+    "f": "Jaguar_spotdown.org.mp3"
+   },
+   {
+    "t": "Kamariya",
+    "f": "Kamariya_spotdown.org.mp3"
+   },
+   {
+    "t": "Kaun Nachdi (Sonu Ke Titu Ki Sweety)",
+    "f": "Kaun Nachdi (From _Sonu Ke Titu Ki Sweety_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kudi Tu Butter",
+    "f": "Kudi Tu Butter_spotdown.org.mp3"
+   },
+   {
+    "t": "Kukkad",
+    "f": "Kukkad_spotdown.org.mp3"
+   },
+   {
+    "t": "Kya Baat Ay",
+    "f": "Kya Baat Ay_spotdown.org.mp3"
+   },
+   {
+    "t": "Lagdi Lahore Di (Street Dancer 3D)",
+    "f": "Lagdi Lahore Di (From _Street Dancer 3D_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Lahore (Lahore)",
+    "f": "Lahore (From _Lahore_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Lonely",
+    "f": "Lonely_spotdown.org.mp3"
+   },
+   {
+    "t": "Love Dose",
+    "f": "Love Dose_spotdown.org.mp3"
+   },
+   {
+    "t": "Naah",
+    "f": "Naah_spotdown.org.mp3"
+   },
+   {
+    "t": "Nashe Si Chadh Gayi",
+    "f": "Nashe Si Chadh Gayi_spotdown.org.mp3"
+   },
+   {
+    "t": "Party All Night (Boss)",
+    "f": "Party All Night (From _Boss_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Payal",
+    "f": "Payal_spotdown.org.mp3"
+   },
+   {
+    "t": "Saturday Saturday",
+    "f": "Saturday Saturday_spotdown.org.mp3"
+   },
+   {
+    "t": "She Move It Like",
+    "f": "She Move It Like_spotdown.org.mp3"
+   },
+   {
+    "t": "Sirra",
+    "f": "Sirra_spotdown.org.mp3"
+   },
+   {
+    "t": "Softly",
+    "f": "Softly_spotdown.org.mp3"
+   },
+   {
+    "t": "Soni De Nakhre",
+    "f": "Soni De Nakhre_spotdown.org.mp3"
+   },
+   {
+    "t": "Tere Naal Nachna (Nawabzaade)",
+    "f": "Tere Naal Nachna (From _Nawabzaade_)_spotdown.org.mp3"
+   },
+   {
+    "t": "This Party Getting Hot",
+    "f": "This Party Getting Hot_spotdown.org.mp3"
+   },
+   {
+    "t": "Vele",
+    "f": "Vele_spotdown.org.mp3"
+   },
+   {
+    "t": "Wakhra Swag",
+    "f": "Wakhra Swag_spotdown.org.mp3"
+   },
+   {
+    "t": "Yaar Naa Miley (Kick)",
+    "f": "Yaar Naa Miley (From _Kick_)_spotdown.org.mp3"
+   }
+  ]
+ },
+ {
   "key": "KK Radio",
   "name": "KK",
   "tracks": [
@@ -808,6 +1274,212 @@ const STATIONS = [
   ]
  },
  {
+  "key": "Kumar Sanu Radio",
+  "name": "Kumar Sanu",
+  "tracks": [
+   {
+    "t": "Aaj Phir Tum Pe",
+    "f": "Aaj Phir Tum Pe_spotdown.org.mp3"
+   },
+   {
+    "t": "Adayein Bhi Hain Mohabbat Bhi Hai (Dil Hai Ke Manta Nahin)",
+    "f": "Adayein Bhi Hain Mohabbat Bhi Hai (From _Dil Hai Ke Manta Nahin_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Ae Kash Ke Hum",
+    "f": "Ae Kash Ke Hum_spotdown.org.mp3"
+   },
+   {
+    "t": "Baadalon Mein Chup Raha Chand",
+    "f": "Baadalon Mein Chup Raha Chand_spotdown.org.mp3"
+   },
+   {
+    "t": "Bahut Pyar Karte Hai - Female Version",
+    "f": "Bahut Pyar Karte Hai - Female Version_spotdown.org.mp3"
+   },
+   {
+    "t": "Chaaha Toh Bahut",
+    "f": "Chaaha Toh Bahut_spotdown.org.mp3"
+   },
+   {
+    "t": "Chand Se Parda",
+    "f": "Chand Se Parda_spotdown.org.mp3"
+   },
+   {
+    "t": "Chatri Na Khol Barsaat Mein",
+    "f": "Chatri Na Khol Barsaat Mein_spotdown.org.mp3"
+   },
+   {
+    "t": "Chhupana Bhi Nahin Aata (Baazigar)",
+    "f": "Chhupana Bhi Nahin Aata (From _Baazigar_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Chhupana Bhi Nahin Aata (Baazigar)",
+    "f": "Chhupana Bhi Nahin Aata - From _Baazigar- Hindi__spotdown.org.mp3"
+   },
+   {
+    "t": "Chori Chori Dil Tera",
+    "f": "Chori Chori Dil Tera_spotdown.org.mp3"
+   },
+   {
+    "t": "Chura Ke Dil Mera (Main Khiladi Tu Anari)",
+    "f": "Chura Ke Dil Mera (From _Main Khiladi Tu Anari_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Hai Ki Manta Nahin (Dil Hai Ke Manta Nahin)",
+    "f": "Dil Hai Ki Manta Nahin (From _Dil Hai Ke Manta Nahin_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Ka Rishta",
+    "f": "Dil Ka Rishta_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Kehta Hai (Akele Hum Akele Tum)",
+    "f": "Dil Kehta Hai (From _Akele Hum Akele Tum_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Mein Sanam Ki Soorat",
+    "f": "Dil Mein Sanam Ki Soorat_spotdown.org.mp3"
+   },
+   {
+    "t": "Ek Sanam Chahiye Aashiqui Ke Liye (Aashiqui)",
+    "f": "Ek Sanam Chahiye Aashiqui Ke Liye (From _Aashiqui_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Honthon Pe Bas",
+    "f": "Honthon Pe Bas_spotdown.org.mp3"
+   },
+   {
+    "t": "Hum Aapke Dil Mein Rehte Hain (Hum Aapke Dil Mein Rahte Hain)",
+    "f": "Hum Aapke Dil Mein Rehte Hain (From _Hum Aapke Dil Mein Rahte Hain_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Hum Laakh Chupaye",
+    "f": "Hum Laakh Chupaye_spotdown.org.mp3"
+   },
+   {
+    "t": "Is Tarah Aashiqui Ka - Kumar Sanu Version",
+    "f": "Is Tarah Aashiqui Ka - Kumar Sanu Version_spotdown.org.mp3"
+   },
+   {
+    "t": "Jab Jab Pyar Pe Pehra Hua Hai",
+    "f": "Jab Jab Pyar Pe Pehra Hua Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Jab Kisiki Taraf Dil",
+    "f": "Jab Kisiki Taraf Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Jeeye To Jeeye Kaise (Saajan)",
+    "f": "Jeeye To Jeeye Kaise (From _Saajan_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kaash Kahin Aisa Hota (Mohra)",
+    "f": "Kaash Kahin Aisa Hota (From _Mohra_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kahin Mujhe Pyar Hua Toh Nahin",
+    "f": "Kahin Mujhe Pyar Hua Toh Nahin_spotdown.org.mp3"
+   },
+   {
+    "t": "Kitna Haseen Chehra (Dilwale)",
+    "f": "Kitna Haseen Chehra (From _Dilwale_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kitna Majboor Ho Gaya",
+    "f": "Kitna Majboor Ho Gaya_spotdown.org.mp3"
+   },
+   {
+    "t": "Koi Na Koi Chahiye (Deewana)",
+    "f": "Koi Na Koi Chahiye - From _Deewana__spotdown.org.mp3"
+   },
+   {
+    "t": "Madhosh Dil Ki Dhadkan",
+    "f": "Madhosh Dil Ki Dhadkan_spotdown.org.mp3"
+   },
+   {
+    "t": "Maine Pyar Tumhi Se Kiya Hai",
+    "f": "Maine Pyar Tumhi Se Kiya Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Mera Chand Mujhe Aaya Hai Nazar",
+    "f": "Mera Chand Mujhe Aaya Hai Nazar_spotdown.org.mp3"
+   },
+   {
+    "t": "Mera Dil Bhi Kitna Pagal Hai",
+    "f": "Mera Dil Bhi Kitna Pagal Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Mere Khwabon Mein Tu",
+    "f": "Mere Khwabon Mein Tu_spotdown.org.mp3"
+   },
+   {
+    "t": "Mujhko Peena Hain",
+    "f": "Mujhko Peena Hain_spotdown.org.mp3"
+   },
+   {
+    "t": "O Sajan O Sajan",
+    "f": "O Sajan O Sajan_spotdown.org.mp3"
+   },
+   {
+    "t": "Oye Raju",
+    "f": "Oye Raju_spotdown.org.mp3"
+   },
+   {
+    "t": "Saathiya Bin Tere Dil Mane Na",
+    "f": "Saathiya Bin Tere Dil Mane Na_spotdown.org.mp3"
+   },
+   {
+    "t": "Sochenge Tumhe Pyar (Deewana)",
+    "f": "Sochenge Tumhe Pyar (From _Deewana_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tere Pyar Mein Main",
+    "f": "Tere Pyar Mein Main_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Mohabbat Ne Dil",
+    "f": "Teri Mohabbat Ne Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Umeed Tera Intezar (Deewana)",
+    "f": "Teri Umeed Tera Intezar (From _Deewana_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Yaad Yaad Yaad",
+    "f": "Teri Yaad Yaad Yaad_spotdown.org.mp3"
+   },
+   {
+    "t": "To Chalun (Border)",
+    "f": "To Chalun - From _Border__spotdown.org.mp3"
+   },
+   {
+    "t": "Tu Pyar Hai Kisi Aur Ka (Dil Hai Ke Manta Nahin)",
+    "f": "Tu Pyar Hai Kisi Aur Ka (From _Dil Hai Ke Manta Nahin_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tumhare Kehne Par Kitni Mohabbat (Qayamat From Dilwale) - Bollywood Dialogues with Song",
+    "f": "Tumhare Kehne Par _ Kitni Mohabbat (From _Qayamat_ _ From _Dilwale_) - Bollywood Dialogues with Song_spotdown.org.mp3"
+   },
+   {
+    "t": "Tumhein Apna Banane Ki Kasam Khai Hai (Sadak)",
+    "f": "Tumhein Apna Banane Ki Kasam Khai Hai (From _Sadak_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tumse Milne Ki Tamanna Hai",
+    "f": "Tumse Milne Ki Tamanna Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Woh To Hai Albela",
+    "f": "Woh To Hai Albela_spotdown.org.mp3"
+   },
+   {
+    "t": "Yeh Teri Aankhen Jhuki Jhuki",
+    "f": "Yeh Teri Aankhen Jhuki Jhuki_spotdown.org.mp3"
+   }
+  ]
+ },
+ {
   "key": "Shreya Goshal Radio",
   "name": "Shreya Ghoshal",
   "tracks": [
@@ -998,6 +1670,426 @@ const STATIONS = [
    {
     "t": "Zihaal e Miskin",
     "f": "Zihaal e Miskin_spotdown.org.mp3"
+   }
+  ]
+ },
+ {
+  "key": "Top Songs India Radio - Latest",
+  "name": "Top Songs India - Latest",
+  "tracks": [
+   {
+    "t": "Aaj Phir Tum Pe",
+    "f": "Aaj Phir Tum Pe_spotdown.org.mp3"
+   },
+   {
+    "t": "Aarzu (with Asim Azhar)",
+    "f": "Aarzu (with Asim Azhar)_spotdown.org.mp3"
+   },
+   {
+    "t": "Aarzu",
+    "f": "Aarzu_spotdown.org.mp3"
+   },
+   {
+    "t": "Adayein Bhi Hain Mohabbat Bhi Hai (Dil Hai Ke Manta Nahin)",
+    "f": "Adayein Bhi Hain Mohabbat Bhi Hai (From _Dil Hai Ke Manta Nahin_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Ae Kash Ke Hum",
+    "f": "Ae Kash Ke Hum_spotdown.org.mp3"
+   },
+   {
+    "t": "Agar Tum Saath Ho (Tamasha)",
+    "f": "Agar Tum Saath Ho (From _Tamasha_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Apna Bana Le",
+    "f": "Apna Bana Le_spotdown.org.mp3"
+   },
+   {
+    "t": "Arz Kiya Hai Coke Studio Bharat",
+    "f": "Arz Kiya Hai _ Coke Studio Bharat_spotdown.org.mp3"
+   },
+   {
+    "t": "Baadalon Mein Chup Raha Chand",
+    "f": "Baadalon Mein Chup Raha Chand_spotdown.org.mp3"
+   },
+   {
+    "t": "Bahut Pyar Karte Hai - Female Version",
+    "f": "Bahut Pyar Karte Hai - Female Version_spotdown.org.mp3"
+   },
+   {
+    "t": "Bairan",
+    "f": "Bairan_spotdown.org.mp3"
+   },
+   {
+    "t": "Barbaad (Saiyaara)",
+    "f": "Barbaad (From _Saiyaara_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Boom Shaka",
+    "f": "Boom Shaka_spotdown.org.mp3"
+   },
+   {
+    "t": "Boyfriend",
+    "f": "Boyfriend_spotdown.org.mp3"
+   },
+   {
+    "t": "Chaaha Toh Bahut",
+    "f": "Chaaha Toh Bahut_spotdown.org.mp3"
+   },
+   {
+    "t": "Chahun Main Ya Naa (Aashiqui 2)",
+    "f": "Chahun Main Ya Naa (From _Aashiqui 2_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Chand Se Parda",
+    "f": "Chand Se Parda_spotdown.org.mp3"
+   },
+   {
+    "t": "Chatri Na Khol Barsaat Mein",
+    "f": "Chatri Na Khol Barsaat Mein_spotdown.org.mp3"
+   },
+   {
+    "t": "Chhupana Bhi Nahin Aata (Baazigar)",
+    "f": "Chhupana Bhi Nahin Aata (From _Baazigar_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Chhupana Bhi Nahin Aata (Baazigar)",
+    "f": "Chhupana Bhi Nahin Aata - From _Baazigar- Hindi__spotdown.org.mp3"
+   },
+   {
+    "t": "Chori Chori Dil Tera",
+    "f": "Chori Chori Dil Tera_spotdown.org.mp3"
+   },
+   {
+    "t": "Chura Ke Dil Mera (Main Khiladi Tu Anari)",
+    "f": "Chura Ke Dil Mera (From _Main Khiladi Tu Anari_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Darkhaast",
+    "f": "Darkhaast_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Hai Ki Manta Nahin (Dil Hai Ke Manta Nahin)",
+    "f": "Dil Hai Ki Manta Nahin (From _Dil Hai Ke Manta Nahin_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Ka Rishta",
+    "f": "Dil Ka Rishta_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Kehta Hai (Akele Hum Akele Tum)",
+    "f": "Dil Kehta Hai (From _Akele Hum Akele Tum_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Dil Mein Sanam Ki Soorat",
+    "f": "Dil Mein Sanam Ki Soorat_spotdown.org.mp3"
+   },
+   {
+    "t": "Dooron Dooron",
+    "f": "Dooron Dooron_spotdown.org.mp3"
+   },
+   {
+    "t": "Ehsaas",
+    "f": "Ehsaas_spotdown.org.mp3"
+   },
+   {
+    "t": "Ek Sanam Chahiye Aashiqui Ke Liye (Aashiqui)",
+    "f": "Ek Sanam Chahiye Aashiqui Ke Liye (From _Aashiqui_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Finding Her",
+    "f": "Finding Her_spotdown.org.mp3"
+   },
+   {
+    "t": "For A Reason",
+    "f": "For A Reason_spotdown.org.mp3"
+   },
+   {
+    "t": "Hale Dil",
+    "f": "Hale Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Honthon Pe Bas",
+    "f": "Honthon Pe Bas_spotdown.org.mp3"
+   },
+   {
+    "t": "Hum Aapke Dil Mein Rehte Hain (Hum Aapke Dil Mein Rahte Hain)",
+    "f": "Hum Aapke Dil Mein Rehte Hain (From _Hum Aapke Dil Mein Rahte Hain_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Hum Laakh Chupaye",
+    "f": "Hum Laakh Chupaye_spotdown.org.mp3"
+   },
+   {
+    "t": "Inaam (Ft. Badshah)",
+    "f": "Inaam (Ft. Badshah)_spotdown.org.mp3"
+   },
+   {
+    "t": "Is Tarah Aashiqui Ka - Kumar Sanu Version",
+    "f": "Is Tarah Aashiqui Ka - Kumar Sanu Version_spotdown.org.mp3"
+   },
+   {
+    "t": "Ishq Bulaava",
+    "f": "Ishq Bulaava_spotdown.org.mp3"
+   },
+   {
+    "t": "Ishq de Fanniyar - Female Version",
+    "f": "Ishq de Fanniyar - Female Version_spotdown.org.mp3"
+   },
+   {
+    "t": "Ishq",
+    "f": "Ishq_spotdown.org.mp3"
+   },
+   {
+    "t": "Jab Jab Pyar Pe Pehra Hua Hai",
+    "f": "Jab Jab Pyar Pe Pehra Hua Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Jab Kisiki Taraf Dil",
+    "f": "Jab Kisiki Taraf Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Jaiye Sajana",
+    "f": "Jaiye Sajana_spotdown.org.mp3"
+   },
+   {
+    "t": "Jeeye To Jeeye Kaise (Saajan)",
+    "f": "Jeeye To Jeeye Kaise (From _Saajan_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Jo Tum Mere Ho",
+    "f": "Jo Tum Mere Ho_spotdown.org.mp3"
+   },
+   {
+    "t": "KALYANI (with Shreya Ghoshal) - Remix",
+    "f": "KALYANI (with Shreya Ghoshal) - Remix_spotdown.org.mp3"
+   },
+   {
+    "t": "Kaash Kahin Aisa Hota (Mohra)",
+    "f": "Kaash Kahin Aisa Hota (From _Mohra_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kahin Mujhe Pyar Hua Toh Nahin",
+    "f": "Kahin Mujhe Pyar Hua Toh Nahin_spotdown.org.mp3"
+   },
+   {
+    "t": "Khat",
+    "f": "Khat_spotdown.org.mp3"
+   },
+   {
+    "t": "Kitna Haseen Chehra (Dilwale)",
+    "f": "Kitna Haseen Chehra (From _Dilwale_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kitna Majboor Ho Gaya",
+    "f": "Kitna Majboor Ho Gaya_spotdown.org.mp3"
+   },
+   {
+    "t": "Koi Na Koi Chahiye (Deewana)",
+    "f": "Koi Na Koi Chahiye - From _Deewana__spotdown.org.mp3"
+   },
+   {
+    "t": "Madhosh Dil Ki Dhadkan",
+    "f": "Madhosh Dil Ki Dhadkan_spotdown.org.mp3"
+   },
+   {
+    "t": "Maine Pyar Tumhi Se Kiya Hai",
+    "f": "Maine Pyar Tumhi Se Kiya Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Majboor",
+    "f": "Majboor_spotdown.org.mp3"
+   },
+   {
+    "t": "Mann Mera",
+    "f": "Mann Mera_spotdown.org.mp3"
+   },
+   {
+    "t": "Mashooqa - From “Cocktail 2”",
+    "f": "Mashooqa - From “Cocktail 2”_spotdown.org.mp3"
+   },
+   {
+    "t": "Mera Chand Mujhe Aaya Hai Nazar",
+    "f": "Mera Chand Mujhe Aaya Hai Nazar_spotdown.org.mp3"
+   },
+   {
+    "t": "Mera Dil Bhi Kitna Pagal Hai",
+    "f": "Mera Dil Bhi Kitna Pagal Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Mere Khwabon Mein Tu",
+    "f": "Mere Khwabon Mein Tu_spotdown.org.mp3"
+   },
+   {
+    "t": "Mujhko Peena Hain",
+    "f": "Mujhko Peena Hain_spotdown.org.mp3"
+   },
+   {
+    "t": "O Sajan O Sajan",
+    "f": "O Sajan O Sajan_spotdown.org.mp3"
+   },
+   {
+    "t": "O Sanam",
+    "f": "O Sanam_spotdown.org.mp3"
+   },
+   {
+    "t": "Oye Raju",
+    "f": "Oye Raju_spotdown.org.mp3"
+   },
+   {
+    "t": "Pavazha Malli (Think Indie)",
+    "f": "Pavazha Malli - From _Think Indie__spotdown.org.mp3"
+   },
+   {
+    "t": "Raanjhan (Do Patti)",
+    "f": "Raanjhan (From _Do Patti_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Saathiya Bin Tere Dil Mane Na",
+    "f": "Saathiya Bin Tere Dil Mane Na_spotdown.org.mp3"
+   },
+   {
+    "t": "Sahiba",
+    "f": "Sahiba_spotdown.org.mp3"
+   },
+   {
+    "t": "Saiyaara",
+    "f": "Saiyaara_spotdown.org.mp3"
+   },
+   {
+    "t": "Samjhawan",
+    "f": "Samjhawan_spotdown.org.mp3"
+   },
+   {
+    "t": "Shararat",
+    "f": "Shararat_spotdown.org.mp3"
+   },
+   {
+    "t": "Sheesha - Aakhya Mai Aakh Ghali Jo Bairan",
+    "f": "Sheesha - Aakhya Mai Aakh Ghali Jo Bairan_spotdown.org.mp3"
+   },
+   {
+    "t": "Sitaare (Ikkis)",
+    "f": "Sitaare (From _Ikkis_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Sochenge Tumhe Pyar (Deewana)",
+    "f": "Sochenge Tumhe Pyar (From _Deewana_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tere Liye",
+    "f": "Tere Liye_spotdown.org.mp3"
+   },
+   {
+    "t": "Tere Pyar Mein Main",
+    "f": "Tere Pyar Mein Main_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Deewani",
+    "f": "Teri Deewani_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Mohabbat Ne Dil",
+    "f": "Teri Mohabbat Ne Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Umeed Tera Intezar (Deewana)",
+    "f": "Teri Umeed Tera Intezar (From _Deewana_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Teri Yaad Yaad Yaad",
+    "f": "Teri Yaad Yaad Yaad_spotdown.org.mp3"
+   },
+   {
+    "t": "To Chalun (Border)",
+    "f": "To Chalun - From _Border__spotdown.org.mp3"
+   },
+   {
+    "t": "Tu Pyar Hai Kisi Aur Ka (Dil Hai Ke Manta Nahin)",
+    "f": "Tu Pyar Hai Kisi Aur Ka (From _Dil Hai Ke Manta Nahin_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tu Thodi Der Aur Thehar Ja (Half Girlfriend)",
+    "f": "Tu Thodi Der Aur Thehar Ja - From _Half Girlfriend__spotdown.org.mp3"
+   },
+   {
+    "t": "Tum Ho Toh (Saiyaara)",
+    "f": "Tum Ho Toh (From _Saiyaara_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tumhare Kehne Par Kitni Mohabbat (Qayamat From Dilwale) - Bollywood Dialogues with Song",
+    "f": "Tumhare Kehne Par _ Kitni Mohabbat (From _Qayamat_ _ From _Dilwale_) - Bollywood Dialogues with Song_spotdown.org.mp3"
+   },
+   {
+    "t": "Tumhein Apna Banane Ki Kasam Khai Hai (Sadak)",
+    "f": "Tumhein Apna Banane Ki Kasam Khai Hai (From _Sadak_)_spotdown.org.mp3"
+   },
+   {
+    "t": "Tumse Milne Ki Tamanna Hai",
+    "f": "Tumse Milne Ki Tamanna Hai_spotdown.org.mp3"
+   },
+   {
+    "t": "Udi Udi",
+    "f": "Udi Udi_spotdown.org.mp3"
+   },
+   {
+    "t": "Woh To Hai Albela",
+    "f": "Woh To Hai Albela_spotdown.org.mp3"
+   },
+   {
+    "t": "Ye Tune Kya Kiya",
+    "f": "Ye Tune Kya Kiya_spotdown.org.mp3"
+   },
+   {
+    "t": "Yeh Teri Aankhen Jhuki Jhuki",
+    "f": "Yeh Teri Aankhen Jhuki Jhuki_spotdown.org.mp3"
+   },
+   {
+    "t": "Zaalima",
+    "f": "Zaalima_spotdown.org.mp3"
+   }
+  ]
+ },
+ {
+  "key": "YJHD Radio",
+  "name": "YJHD",
+  "tracks": [
+   {
+    "t": "Badtameez Dil",
+    "f": "Badtameez Dil_spotdown.org.mp3"
+   },
+   {
+    "t": "Balam Pichkari",
+    "f": "Balam Pichkari_spotdown.org.mp3"
+   },
+   {
+    "t": "Dilliwaali Girlfriend",
+    "f": "Dilliwaali Girlfriend_spotdown.org.mp3"
+   },
+   {
+    "t": "Ghagra",
+    "f": "Ghagra_spotdown.org.mp3"
+   },
+   {
+    "t": "Ilahi (Reprise)",
+    "f": "Ilahi (Reprise)_spotdown.org.mp3"
+   },
+   {
+    "t": "Ilahi",
+    "f": "Ilahi_spotdown.org.mp3"
+   },
+   {
+    "t": "Kabira (Encore)",
+    "f": "Kabira (Encore)_spotdown.org.mp3"
+   },
+   {
+    "t": "Kabira",
+    "f": "Kabira_spotdown.org.mp3"
+   },
+   {
+    "t": "Subhanallah",
+    "f": "Subhanallah_spotdown.org.mp3"
    }
   ]
  }
