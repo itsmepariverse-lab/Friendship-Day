@@ -1,0 +1,30 @@
+[
+  {
+    "key": "Alka Yagnik Radio",
+    "name": "Alka Yagnik",
+    "tracks": [
+      {
+        "t": "Aankhon Mein Base Ho Tum - Male Version",
+        "f": "Aankhon Mein Base Ho Tum - Male Version_spotdown.org.mp3"
+      },
+      {
+        "t": "Aapke Pyaar Mein Hum",
+        "f": "Aapke Pyaar Mein Hum_spotdown.org.mp3"
+      }
+    ]
+  },
+  {
+    "key": "Honey Singh Radio",
+    "name": "Honey Singh",
+    "tracks": [
+      {
+        "t": "Mundian To Bach Ke",
+        "f": "Mundian To Bach Ke.mp3"
+      },
+      {
+        "t": "Tunak Tunak Tun",
+        "f": "Tunak Tunak Tun.mp3"
+      }
+    ]
+  }
+]

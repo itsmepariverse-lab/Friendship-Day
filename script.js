@@ -1671,7 +1671,7 @@ function initVideos(win) {
    "Ours" is prepended so their own song stays the default track. */
 // Path stays inside this folder so the site can be deployed with
 // "Friendship Day" as the project root (Vercel, Pages, anything static).
-const ALL_STATIONS = typeof STATIONS !== 'undefined' ? STATIONS : [];
+let ALL_STATIONS = typeof STATIONS !== 'undefined' ? STATIONS : [];
 
 const MUSIC_BASE = typeof MUSIC_BASE_URL !== 'undefined' ? MUSIC_BASE_URL : '';
 // Hosted (R2/S3) buckets have station folders at the bucket root - no "assets/music/"
@@ -1680,6 +1680,56 @@ const trackSrc = (station, tr) =>
   tr.src ? tr.src : MUSIC_BASE
     ? `${MUSIC_BASE}${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`
     : `assets/music/${encodeURIComponent(station.key)}/${encodeURIComponent(tr.f)}`;
+
+// ═══════════ DYNAMIC STATION LOADER FROM R2 ═══════════
+// Fetches stations.json from R2 bucket to allow adding new stations without GitHub commits
+// When new stations are detected, emits a 'stations-updated' event to refresh the UI
+let stationsLoaded = false;
+
+async function loadDynamicStations() {
+  if (stationsLoaded) return;
+  stationsLoaded = true;
+
+  try {
+    const cacheKey = 'reetos-stations-cache';
+    const cacheTime = 'reetos-stations-cache-time';
+    const now = Date.now();
+    let cached = null;
+
+    try {
+      const cached_data = localStorage.getItem(cacheKey);
+      const cached_time = localStorage.getItem(cacheTime);
+      if (cached_data && cached_time && now - parseInt(cached_time) < 24 * 60 * 60 * 1000) {
+        cached = JSON.parse(cached_data);
+      }
+    } catch (_) {}
+
+    if (cached && cached.length > 0) {
+      const hadMore = cached.length > ALL_STATIONS.length;
+      ALL_STATIONS = cached;
+      if (hadMore) document.dispatchEvent(new CustomEvent('stations-updated'));
+      return;
+    }
+
+    if (!MUSIC_BASE) return;
+
+    const response = await fetch(`${MUSIC_BASE}stations.json`, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) return;
+
+    const stations = await response.json();
+    if (Array.isArray(stations) && stations.length > 0 && stations.length > ALL_STATIONS.length) {
+      ALL_STATIONS = stations;
+      try { localStorage.setItem(cacheKey, JSON.stringify(stations)); } catch (_) {}
+      try { localStorage.setItem(cacheTime, String(now)); } catch (_) {}
+      document.dispatchEvent(new CustomEvent('stations-updated'));
+    }
+  } catch (_) {
+    // Silently fail - use hardcoded STATIONS as fallback
+  }
+}
+
+// Load dynamic stations on app start (async, won't block)
+loadDynamicStations();
 
 function initMusic(win) {
   const audio = win.querySelector('#muAudio');
@@ -1740,6 +1790,33 @@ function initMusic(win) {
     st._row.classList.add('unavailable');
     st._row.querySelector('.n').textContent = 'no audio';
   }
+
+  // Refresh station list when new stations are dynamically loaded
+  const refreshStations = () => {
+    const newStations = ALL_STATIONS.filter(st => !st._row);
+    if (newStations.length === 0) return;
+
+    newStations.forEach(st => {
+      const row = document.createElement('div');
+      row.className = 'mu-station';
+      row.innerHTML = `<span>${st.name}</span><span class="n">${st.tracks.length}</span>`;
+      row.addEventListener('click', () => showStation(st));
+      stationsEl.appendChild(row);
+      st._row = row;
+
+      if (!MUSIC_BASE && location.protocol !== 'file:') {
+        fetch(trackSrc(st, st.tracks[0]), { method: 'HEAD' })
+          .then(r => { if (!r.ok) flagStation(st); })
+          .catch(() => flagStation(st));
+      }
+    });
+    toast(`${newStations.length} new station${newStations.length > 1 ? 's' : ''} loaded 🎵`);
+  };
+
+  document.addEventListener('stations-updated', refreshStations);
+  win.addEventListener('win-closing', () => {
+    document.removeEventListener('stations-updated', refreshStations);
+  });
 
   function showStation(st) {
     station = st;
