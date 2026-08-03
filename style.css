@@ -848,7 +848,7 @@ html, body {
   border: 1px solid rgba(255,255,255,.14); border-radius: 16px;
   padding: .5rem .6rem .5rem .5rem; box-shadow: 0 10px 28px rgba(20,10,25,.32);
   opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
-  cursor: pointer;
+  cursor: grab;
 }
 .mini-player.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
 .mp-thumb {
@@ -874,6 +874,14 @@ html, body {
 }
 .mp-play:active { transform: scale(.9); }
 .mp-play [data-icon] { width: 15px; height: 15px; }
+.mp-close {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.12); color: #fff; display: grid; place-items: center; cursor: pointer;
+  transition: background .2s ease; margin-left: .3rem;
+}
+.mp-close:hover { background: rgba(255,255,255,.22); }
+.mp-close:active { transform: scale(.9); }
+.mp-close [data-icon] { width: 13px; height: 13px; }
 
 @media (max-width: 768px) {
   .mini-player { bottom: calc(74px + var(--safe-b)); }

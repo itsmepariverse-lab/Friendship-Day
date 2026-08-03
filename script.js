@@ -553,6 +553,7 @@ let cascade = 0;
    initMusic() points at the audio element it owns, and what the mini
    player reads to stay in sync. */
 let musicNowPlaying = null;
+let miniPlayerClosed = false;
 
 function syncMiniPlayer() {
   const bar = $('#miniPlayer');
@@ -560,7 +561,7 @@ function syncMiniPlayer() {
   const win = openWindows.music;
   const minimized = !!(win && win.dataset.min === '1');
   const hasTrack = !!(musicNowPlaying && musicNowPlaying.audio && musicNowPlaying.audio.src);
-  if (!minimized || !hasTrack) { bar.classList.remove('show'); return; }
+  if (!minimized || !hasTrack || miniPlayerClosed) { bar.classList.remove('show'); return; }
   bar.classList.add('show');
   const t = $('#mpTitle'), a = $('#mpArtist'), p = $('#mpPlay');
   if (t) t.textContent = musicNowPlaying.titleEl.textContent || '—';
@@ -578,10 +579,13 @@ function syncMiniPlayer() {
 function initMiniPlayer() {
   const bar = $('#miniPlayer');
   if (!bar) return;
+  let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+
   bar.addEventListener('click', e => {
-    if (e.target.closest('#mpPlay')) return;
+    if (e.target.closest('#mpPlay') || e.target.closest('#mpClose')) return;
     restoreWin('music');
   });
+
   const playBtn = $('#mpPlay');
   playBtn.addEventListener('click', e => {
     e.stopPropagation();
@@ -589,6 +593,38 @@ function initMiniPlayer() {
     const a = musicNowPlaying.audio;
     if (a.paused) a.play().catch(() => {}); else a.pause();
   });
+
+  const closeBtn = $('#mpClose');
+  closeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    miniPlayerClosed = true;
+    bar.classList.remove('show');
+  });
+
+  bar.addEventListener('pointerdown', e => {
+    if (e.target.closest('#mpPlay') || e.target.closest('#mpClose')) return;
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    ox = bar.offsetLeft; oy = bar.offsetTop;
+    bar.setPointerCapture(e.pointerId);
+  });
+
+  bar.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const nx = ox + (e.clientX - sx);
+    const ny = oy + (e.clientY - sy);
+    bar.style.position = 'fixed';
+    bar.style.left = Math.max(8, Math.min(nx, window.innerWidth - bar.offsetWidth - 8)) + 'px';
+    bar.style.bottom = Math.max(80, Math.min(window.innerHeight - ny - bar.offsetHeight, window.innerHeight - 80)) + 'px';
+    bar.style.transform = 'translateX(0) translateY(0)';
+  });
+
+  const stop = e => {
+    dragging = false;
+    try { bar.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  bar.addEventListener('pointerup', stop);
+  bar.addEventListener('pointercancel', stop);
 }
 
 function openApp(id) {
@@ -703,6 +739,7 @@ function restoreWin(id) {
   if (!win) return;
   delete win.dataset.min;
   win.style.display = '';
+  if (id === 'music') miniPlayerClosed = false;
   focusWin(win);
   syncHomeState();
   syncMiniPlayer();
