@@ -27,6 +27,9 @@
             padding: 20px 40px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
             box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         h1 {
@@ -43,9 +46,51 @@
         .video-wrapper {
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border-radius: 8px;
-            overflow: hidden;
             background: #000;
+            position: relative;
         }
+
+        /* Overlay for touch interactions */
+        .touch-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 50px; /* leave room for controls */
+            z-index: 10;
+            touch-action: manipulation;
+        }
+
+        /* Feedback badges (2x speed, skip) */
+        .feedback-badge {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            pointer-events: none;
+            display: none;
+            z-index: 20;
+            font-size: 14px;
+        }
+
+        .seek-feedback {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 20px;
+            border-radius: 50%;
+            font-size: 24px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 20;
+        }
+        .seek-left { left: 15%; }
+        .seek-right { right: 15%; }
 
         .episode-list {
             display: flex;
@@ -83,6 +128,19 @@
             color: white;
         }
 
+        .subtitle-btn {
+            background: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .subtitle-btn:hover { background: #444; }
+
         /* Customizing Plyr colors */
         :root {
             --plyr-color-main: #E50914;
@@ -96,11 +154,20 @@
     </div>
 
     <div class="container">
-        <div class="video-wrapper">
-            <video id="player" controls crossorigin playsinline></video>
+        <div class="video-wrapper" id="video-container">
+            <video id="player" crossorigin playsinline></video>
+            <div class="touch-overlay" id="touch-overlay"></div>
+            <div class="feedback-badge" id="speed-badge">▶▶ 2x Speed</div>
+            <div class="seek-feedback seek-left" id="seek-left">⏪ 10s</div>
+            <div class="seek-feedback seek-right" id="seek-right">⏩ 10s</div>
         </div>
         
-        <h3>Episodes</h3>
+        <label class="subtitle-btn" for="subtitle-upload">
+            📄 Add Subtitles (.srt)
+            <input type="file" id="subtitle-upload" accept=".srt" style="display: none;">
+        </label>
+
+        <h3 style="margin-top: 30px;">Episodes</h3>
         <div class="episode-list" id="episode-list">
             <!-- Episode buttons generated dynamically -->
         </div>
@@ -112,37 +179,60 @@
 
     <script>
         const video = document.getElementById('player');
+        const overlay = document.getElementById('touch-overlay');
+        const speedBadge = document.getElementById('speed-badge');
+        const seekLeft = document.getElementById('seek-left');
+        const seekRight = document.getElementById('seek-right');
         
-        // Base public URL to our Cloudflare R2 bucket (hls folder)
         const baseUrl = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/hls';
-        
-        // Let's assume we have episodes ep01 to ep08
         const episodes = ['ep01', 'ep02', 'ep03', 'ep04', 'ep05', 'ep06', 'ep07', 'ep08'];
+        
         let player;
+        let hls;
+        let currentEpisode = '';
+
+        function initPlyr() {
+            if (player) {
+                player.destroy();
+            }
+            player = new Plyr(video, {
+                captions: { active: true, update: true, language: 'auto' }
+            });
+
+            // Mobile landscape orientation lock
+            player.on('enterfullscreen', () => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            });
+            player.on('exitfullscreen', () => {
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            });
+        }
 
         function loadVideo(episode) {
+            currentEpisode = episode;
             const source = `${baseUrl}/${episode}/index.m3u8`;
+            const savedTime = localStorage.getItem(`mc_progress_${episode}`);
 
             if (Hls.isSupported()) {
-                const hls = new Hls();
+                if (hls) hls.destroy();
+                hls = new Hls();
                 hls.loadSource(source);
                 hls.attachMedia(video);
                 
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    // Initialize Plyr when manifest is loaded
-                    if (!player) {
-                        player = new Plyr(video);
-                    }
+                    initPlyr();
+                    if (savedTime) video.currentTime = parseFloat(savedTime);
                 });
-            }
-            // For Safari which natively supports HLS
-            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = source;
                 video.addEventListener('loadedmetadata', function() {
-                    if (!player) {
-                        player = new Plyr(video);
-                    }
-                });
+                    initPlyr();
+                    if (savedTime) video.currentTime = parseFloat(savedTime);
+                }, { once: true });
             }
 
             // Update UI
@@ -157,13 +247,138 @@
             btn.className = 'episode-card';
             btn.id = `btn-${ep}`;
             btn.innerText = `Episode ${ep.replace('ep0', '').replace('ep', '')}`;
-            btn.onclick = () => loadVideo(ep);
+            btn.onclick = () => {
+                // Auto play when manually clicking an episode
+                loadVideo(ep);
+                video.play().catch(()=> { /* Ignore autoplay blocks */ });
+            };
             listContainer.appendChild(btn);
         });
 
-        // Load first episode by default
-        loadVideo(episodes[0]);
+        // 1. Remember playback position
+        video.addEventListener('timeupdate', () => {
+            if (video.currentTime > 5 && !video.ended) {
+                localStorage.setItem(`mc_progress_${currentEpisode}`, video.currentTime);
+            }
+        });
 
+        // 2. Autoplay next episode
+        video.addEventListener('ended', () => {
+            const currentIndex = episodes.indexOf(currentEpisode);
+            if (currentIndex < episodes.length - 1) {
+                localStorage.removeItem(`mc_progress_${currentEpisode}`); // Clear finished state
+                loadVideo(episodes[currentIndex + 1]);
+                video.play();
+            }
+        });
+
+        // 3. Touch Gestures (Double Tap to Seek, Hold for 2x)
+        let holdTimeout;
+        let lastTap = 0;
+        let isHolding = false;
+
+        function showSeekFeedback(el) {
+            el.style.opacity = '1';
+            setTimeout(() => el.style.opacity = '0', 500);
+        }
+
+        overlay.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return;
+            
+            const now = Date.now();
+            const touchX = e.touches[0].clientX;
+            const screenWidth = window.innerWidth;
+            
+            // Double Tap
+            if (now - lastTap < 300) {
+                clearTimeout(holdTimeout);
+                if (touchX < screenWidth / 2) {
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    showSeekFeedback(seekLeft);
+                } else {
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    showSeekFeedback(seekRight);
+                }
+                lastTap = 0; // reset
+                return;
+            }
+            lastTap = now;
+
+            // Tap and Hold
+            holdTimeout = setTimeout(() => {
+                if (!video.paused) {
+                    isHolding = true;
+                    video.playbackRate = 2.0;
+                    speedBadge.style.display = 'block';
+                }
+            }, 500);
+        });
+
+        const endHold = () => {
+            clearTimeout(holdTimeout);
+            if (isHolding) {
+                video.playbackRate = 1.0;
+                speedBadge.style.display = 'none';
+                isHolding = false;
+            }
+        };
+
+        overlay.addEventListener('touchend', endHold);
+        overlay.addEventListener('touchcancel', endHold);
+        
+        // Let user still click video to pause/play via overlay
+        overlay.addEventListener('click', (e) => {
+            // Prevent interference with double tap
+            if (Date.now() - lastTap > 300) {
+                if (video.paused) video.play();
+                else video.pause();
+            }
+        });
+
+        // 4. Subtitle SRT to VTT Converter
+        function srt2vtt(srt) {
+            let vtt = 'WEBVTT\n\n';
+            let lines = srt.replace(/\r+/g, '').split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                if (line.match(/^\d+$/)) continue; // sequence numbers
+                if (line.match(/^\d{2}:\d{2}:\d{2}/)) {
+                    line = line.replace(/,/g, '.'); // times
+                }
+                vtt += line + '\n';
+            }
+            return vtt;
+        }
+
+        document.getElementById('subtitle-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const vttContent = srt2vtt(e.target.result);
+                const blob = new Blob([vttContent], { type: 'text/vtt' });
+                const url = URL.createObjectURL(blob);
+                
+                // Remove existing custom tracks
+                Array.from(video.querySelectorAll('track.custom-track')).forEach(t => t.remove());
+
+                const track = document.createElement('track');
+                track.kind = 'captions';
+                track.label = file.name.replace('.srt', '');
+                track.srclang = 'en';
+                track.src = url;
+                track.className = 'custom-track';
+                track.default = true;
+                
+                video.appendChild(track);
+                initPlyr(); // Re-init player to pick up the new track
+                alert("Subtitles loaded! Enable them in the player settings gear icon.");
+            };
+            reader.readAsText(file);
+        });
+
+        // Start
+        loadVideo(episodes[0]);
     </script>
 </body>
 </html>
