@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC Season 1 - Streaming</title>
+    
+    <!-- Plyr CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #141414; /* Netflix dark theme */
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .header {
+            width: 100%;
+            padding: 20px 40px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #E50914; /* Netflix Red */
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 90%;
+            margin-top: 40px;
+        }
+
+        .video-wrapper {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .episode-list {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        .episode-card {
+            background-color: #2f2f2f;
+            border-radius: 4px;
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .episode-card:hover {
+            transform: scale(1.05);
+            background-color: #404040;
+        }
+
+        .episode-card.active {
+            background-color: #E50914;
+            color: white;
+        }
+
+        /* Customizing Plyr colors */
+        :root {
+            --plyr-color-main: #E50914;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>MC Season 1</h1>
+    </div>
+
+    <div class="container">
+        <div class="video-wrapper">
+            <video id="player" controls crossorigin playsinline></video>
+        </div>
+        
+        <h3>Episodes</h3>
+        <div class="episode-list" id="episode-list">
+            <!-- Episode buttons generated dynamically -->
+        </div>
+    </div>
+
+    <!-- HLS.js and Plyr.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+    <script>
+        const video = document.getElementById('player');
+        
+        // Base public URL to our Cloudflare R2 bucket (hls folder)
+        const baseUrl = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/hls';
+        
+        // Let's assume we have episodes ep01 to ep08
+        const episodes = ['ep01', 'ep02', 'ep03', 'ep04', 'ep05', 'ep06', 'ep07', 'ep08'];
+        let player;
+
+        function loadVideo(episode) {
+            const source = `${baseUrl}/${episode}/index.m3u8`;
+
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(source);
+                hls.attachMedia(video);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    // Initialize Plyr when manifest is loaded
+                    if (!player) {
+                        player = new Plyr(video);
+                    }
+                });
+            }
+            // For Safari which natively supports HLS
+            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = source;
+                video.addEventListener('loadedmetadata', function() {
+                    if (!player) {
+                        player = new Plyr(video);
+                    }
+                });
+            }
+
+            // Update UI
+            document.querySelectorAll('.episode-card').forEach(card => card.classList.remove('active'));
+            document.getElementById(`btn-${episode}`).classList.add('active');
+        }
+
+        // Generate UI buttons
+        const listContainer = document.getElementById('episode-list');
+        episodes.forEach(ep => {
+            const btn = document.createElement('div');
+            btn.className = 'episode-card';
+            btn.id = `btn-${ep}`;
+            btn.innerText = `Episode ${ep.replace('ep0', '').replace('ep', '')}`;
+            btn.onclick = () => loadVideo(ep);
+            listContainer.appendChild(btn);
+        });
+
+        // Load first episode by default
+        loadVideo(episodes[0]);
+
+    </script>
+</body>
+</html>
