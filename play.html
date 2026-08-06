@@ -53,7 +53,7 @@
         /* Overlay for touch interactions */
         .touch-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 50px; /* leave room for controls */
+            top: 0; left: 0; right: 0; bottom: 56px; /* leave room for Plyr's control bar */
             z-index: 10;
             touch-action: manipulation;
         }
@@ -607,10 +607,13 @@
             const screenWidth = window.innerWidth;
 
             if (now - lastTap < 300 && tapTimeout) {
-                // Double tap: seek
+                // Double tap: undo the single-tap play/pause toggle below, then seek
                 clearTimeout(tapTimeout);
                 tapTimeout = null;
                 lastTap = 0;
+                if (video.paused) video.play().catch(() => {});
+                else video.pause();
+
                 if (touchX < screenWidth / 2) {
                     video.currentTime = Math.max(0, video.currentTime - 10);
                     showSeekFeedback(seekLeft, "⏪ 10s");
@@ -619,13 +622,16 @@
                     showSeekFeedback(seekRight, "⏩ 10s");
                 }
             } else {
-                // Wait to see if a second tap follows; otherwise it's a single tap
                 lastTap = now;
-                tapTimeout = setTimeout(() => {
-                    tapTimeout = null;
-                    // Netflix/YouTube style: Single tap toggles controls visibility
-                    player.toggleControls();
-                }, 300);
+                // Toggle play/pause AND reveal controls immediately, synchronously inside
+                // this touch event — deferring play() via setTimeout gets silently blocked
+                // by mobile autoplay/user-activation policies (MIUI is especially strict).
+                if (video.paused) video.play().catch(() => {});
+                else video.pause();
+                player.toggleControls(true);
+
+                // If no second tap follows within 300ms, this was a genuine single tap.
+                tapTimeout = setTimeout(() => { tapTimeout = null; }, 300);
             }
         });
 
@@ -635,18 +641,19 @@
         let clickTimeout = null;
         overlay.addEventListener('click', (e) => {
             if ('ontouchstart' in window) return; // avoid double-handling on touch devices
-            
+
             if (clickTimeout) {
-                // Double click occurred
+                // Double click occurred: undo the single-click play/pause toggle, then fullscreen
                 clearTimeout(clickTimeout);
                 clickTimeout = null;
+                if (video.paused) video.play().catch(() => {});
+                else video.pause();
                 player.fullscreen.toggle();
             } else {
-                // Single click
-                clickTimeout = setTimeout(() => {
-                    clickTimeout = null;
-                    player.toggleControls();
-                }, 250);
+                if (video.paused) video.play().catch(() => {});
+                else video.pause();
+                player.toggleControls(true);
+                clickTimeout = setTimeout(() => { clickTimeout = null; }, 250);
             }
         });
 
