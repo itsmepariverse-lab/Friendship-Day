@@ -201,6 +201,71 @@
         /* Customizing Plyr colors */
         :root {
             --plyr-color-main: #E50914;
+            /* Subtitle Customization Variables */
+            --sub-font-family: 'Inter', sans-serif;
+            --sub-color: #ffffff;
+            --sub-bg: rgba(0, 0, 0, 0.7);
+            --sub-size: 18px;
+            --sub-bottom: 20px;
+        }
+
+        /* Target Plyr's custom captions */
+        .plyr__captions .plyr__caption {
+            font-family: var(--sub-font-family) !important;
+            color: var(--sub-color) !important;
+            background-color: var(--sub-bg) !important;
+            font-size: var(--sub-size) !important;
+            line-height: 1.4 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+        }
+        .plyr__captions {
+            bottom: var(--sub-bottom) !important;
+        }
+
+        /* Subtitle Settings Modal */
+        .settings-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 300px;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.2s ease-out;
+        }
+        .settings-modal.active { 
+            opacity: 1; 
+            visibility: visible; 
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .settings-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
+        .settings-header h3 { margin: 0; }
+        .close-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+        
+        .setting-row { display: flex; flex-direction: column; gap: 5px; }
+        .setting-row label { font-size: 14px; color: #ccc; }
+        .setting-row select, .setting-row input[type="color"], .setting-row input[type="range"] {
+            width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff;
+        }
+        .setting-row input[type="range"] { padding: 0; }
+        .setting-row input[type="color"] { height: 40px; padding: 2px; }
+
+        .subtitle-controls-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -229,10 +294,44 @@
             </div>
         </div>
         
-        <label class="subtitle-btn" for="subtitle-upload">
-            📄 Add Subtitles (.srt)
-            <input type="file" id="subtitle-upload" accept=".srt" style="display: none;">
-        </label>
+        <div class="subtitle-controls-row">
+            <label class="subtitle-btn" for="subtitle-upload">
+                📄 Upload Custom (.srt)
+                <input type="file" id="subtitle-upload" accept=".srt" style="display: none;">
+            </label>
+            <button class="subtitle-btn" id="open-subtitle-settings">⚙️ Subtitle Settings</button>
+        </div>
+
+        <div class="settings-modal" id="subtitle-settings-modal">
+            <div class="settings-header">
+                <h3>Subtitle Settings</h3>
+                <button class="close-btn" id="close-subtitle-settings">&times;</button>
+            </div>
+            <div class="setting-row">
+                <label>Font Family</label>
+                <select id="set-font">
+                    <option value="'Inter', sans-serif">Sans-Serif</option>
+                    <option value="'Merriweather', serif">Serif</option>
+                    <option value="monospace">Monospace</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label>Text Color</label>
+                <input type="color" id="set-color" value="#ffffff">
+            </div>
+            <div class="setting-row">
+                <label>Background Opacity</label>
+                <input type="range" id="set-bg" min="0" max="1" step="0.1" value="0.7">
+            </div>
+            <div class="setting-row">
+                <label>Font Size (<span id="size-val">18</span>px)</label>
+                <input type="range" id="set-size" min="12" max="36" step="1" value="18">
+            </div>
+            <div class="setting-row">
+                <label>Position Offset (<span id="pos-val">20</span>px)</label>
+                <input type="range" id="set-pos" min="0" max="100" step="5" value="20">
+            </div>
+        </div>
 
         <h3 style="margin-top: 30px;">Episodes</h3>
         <div class="episode-list" id="episode-list">
@@ -296,6 +395,16 @@
             currentEpisode = episode;
             const source = `${baseUrl}/${episode}/index.m3u8`;
             const savedTime = localStorage.getItem(`mc_progress_${episode}`);
+
+            // Load episode subtitle track automatically
+            Array.from(video.querySelectorAll('track')).forEach(t => t.remove());
+            const track = document.createElement('track');
+            track.kind = 'captions';
+            track.label = 'English';
+            track.srclang = 'en';
+            track.src = `assets/subtitles/${episode}.vtt`;
+            track.default = true;
+            video.appendChild(track);
 
             if (Hls.isSupported()) {
                 if (hls) hls.destroy();
@@ -411,28 +520,65 @@
             }
         });
 
-        // 3. Touch Gestures (Single Tap to Play/Pause, Double Tap to Seek, Hold for 2x)
+        // 3. Touch Gestures (Single Tap to Toggle Controls, Slide to Seek, Double Tap, Hold)
         let holdTimeout;
         let tapTimeout = null;
         let lastTap = 0;
         let isHolding = false;
+        
+        let touchStartX = 0;
+        let touchStartTime = 0;
+        let isScrubbing = false;
+        let initialVideoTime = 0;
 
-        function showSeekFeedback(el) {
+        function showSeekFeedback(el, customText) {
+            if(customText) el.textContent = customText;
             el.style.opacity = '1';
             setTimeout(() => el.style.opacity = '0', 500);
         }
 
         overlay.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return;
+            
+            touchStartX = e.touches[0].clientX;
+            touchStartTime = Date.now();
+            isScrubbing = false;
+            initialVideoTime = video.currentTime;
 
             // Tap and Hold
             holdTimeout = setTimeout(() => {
-                if (!video.paused) {
+                if (!video.paused && !isScrubbing) {
                     isHolding = true;
                     video.playbackRate = 2.0;
                     speedBadge.style.display = 'block';
                 }
             }, 500);
+        });
+        
+        overlay.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) return;
+            const touchX = e.touches[0].clientX;
+            const diffX = touchX - touchStartX;
+            
+            // If moved more than 20px horizontally, start scrubbing
+            if (Math.abs(diffX) > 20) {
+                isScrubbing = true;
+                clearTimeout(holdTimeout);
+                
+                // Scrub ratio: 1px = 0.5 seconds
+                const seekDelta = diffX * 0.5; 
+                let newTime = initialVideoTime + seekDelta;
+                newTime = Math.max(0, Math.min(newTime, video.duration || 0));
+                
+                video.currentTime = newTime;
+                
+                // Show live feedback
+                if (seekDelta > 0) {
+                    showSeekFeedback(seekRight, `+${Math.round(seekDelta)}s`);
+                } else {
+                    showSeekFeedback(seekLeft, `${Math.round(seekDelta)}s`);
+                }
+            }
         });
 
         const endHold = () => {
@@ -448,7 +594,12 @@
 
         overlay.addEventListener('touchend', (e) => {
             const wasHolding = endHold();
-            if (wasHolding) return;
+            if (wasHolding || isScrubbing) {
+                // Restore feedback elements to default text
+                seekLeft.textContent = "⏪ 10s";
+                seekRight.textContent = "⏩ 10s";
+                return;
+            }
 
             e.preventDefault(); // stop the synthetic click that would otherwise double-fire this
             const now = Date.now();
@@ -462,35 +613,53 @@
                 lastTap = 0;
                 if (touchX < screenWidth / 2) {
                     video.currentTime = Math.max(0, video.currentTime - 10);
-                    showSeekFeedback(seekLeft);
+                    showSeekFeedback(seekLeft, "⏪ 10s");
                 } else {
                     video.currentTime = Math.min(video.duration, video.currentTime + 10);
-                    showSeekFeedback(seekRight);
+                    showSeekFeedback(seekRight, "⏩ 10s");
                 }
             } else {
                 // Wait to see if a second tap follows; otherwise it's a single tap
                 lastTap = now;
                 tapTimeout = setTimeout(() => {
                     tapTimeout = null;
-                    if (video.paused) video.play();
-                    else video.pause();
+                    // Netflix/YouTube style: Single tap toggles controls visibility
+                    player.toggleControls();
                 }, 300);
             }
         });
 
         overlay.addEventListener('touchcancel', endHold);
 
-        // Desktop mouse click (no touch events fire, so this is unaffected by the tap logic above)
-        overlay.addEventListener('click', () => {
+        // Desktop mouse click & double click
+        let clickTimeout = null;
+        overlay.addEventListener('click', (e) => {
             if ('ontouchstart' in window) return; // avoid double-handling on touch devices
-            if (video.paused) video.play();
-            else video.pause();
+            
+            if (clickTimeout) {
+                // Double click occurred
+                clearTimeout(clickTimeout);
+                clickTimeout = null;
+                player.fullscreen.toggle();
+            } else {
+                // Single click
+                clickTimeout = setTimeout(() => {
+                    clickTimeout = null;
+                    player.toggleControls();
+                }, 250);
+            }
         });
 
         // 4. Keyboard shortcuts (desktop)
         document.addEventListener('keydown', (e) => {
+            // Handle Escape for modal first
+            if (e.key === 'Escape' && settingsModal.classList.contains('active')) {
+                settingsModal.classList.remove('active');
+                return;
+            }
+
             const tag = document.activeElement.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT') return;
 
             switch (e.key) {
                 case ' ':
@@ -514,7 +683,7 @@
             }
         });
 
-        // 5. Subtitle SRT to VTT Converter
+        // 5. Subtitle SRT to VTT Converter (Manual Upload)
         function srt2vtt(srt) {
             let vtt = 'WEBVTT\n\n';
             let lines = srt.replace(/\r+/g, '').split('\n');
@@ -538,7 +707,7 @@
                 const blob = new Blob([vttContent], { type: 'text/vtt' });
                 const url = URL.createObjectURL(blob);
                 
-                // Remove existing custom tracks
+                // Remove existing custom tracks (except default one)
                 Array.from(video.querySelectorAll('track.custom-track')).forEach(t => t.remove());
 
                 const track = document.createElement('track');
@@ -550,9 +719,64 @@
                 track.default = true;
                 
                 video.appendChild(track);
-                alert("Subtitles loaded! Enable them in the player settings gear icon.");
+                alert("Custom subtitles loaded! Enable them in the player settings gear icon.");
             };
             reader.readAsText(file);
+        });
+
+        // 6. Subtitle Settings Logic
+        const settingsModal = document.getElementById('subtitle-settings-modal');
+        const openSettingsBtn = document.getElementById('open-subtitle-settings');
+        const closeSettingsBtn = document.getElementById('close-subtitle-settings');
+        
+        const setFont = document.getElementById('set-font');
+        const setColor = document.getElementById('set-color');
+        const setBg = document.getElementById('set-bg');
+        const setSize = document.getElementById('set-size');
+        const setPos = document.getElementById('set-pos');
+
+        // Load saved preferences
+        const savedSettings = JSON.parse(localStorage.getItem('mc_subtitle_prefs') || '{}');
+        if (savedSettings.font) setFont.value = savedSettings.font;
+        if (savedSettings.color) setColor.value = savedSettings.color;
+        if (savedSettings.bgOpacity) setBg.value = savedSettings.bgOpacity;
+        if (savedSettings.size) setSize.value = savedSettings.size;
+        if (savedSettings.pos) setPos.value = savedSettings.pos;
+
+        function applySubtitleSettings() {
+            const root = document.documentElement;
+            root.style.setProperty('--sub-font-family', setFont.value);
+            root.style.setProperty('--sub-color', setColor.value);
+            root.style.setProperty('--sub-bg', `rgba(0, 0, 0, ${setBg.value})`);
+            root.style.setProperty('--sub-size', `${setSize.value}px`);
+            root.style.setProperty('--sub-bottom', `${setPos.value}px`);
+            
+            document.getElementById('size-val').textContent = setSize.value;
+            document.getElementById('pos-val').textContent = setPos.value;
+
+            // Save to localStorage
+            localStorage.setItem('mc_subtitle_prefs', JSON.stringify({
+                font: setFont.value,
+                color: setColor.value,
+                bgOpacity: setBg.value,
+                size: setSize.value,
+                pos: setPos.value
+            }));
+        }
+        
+        applySubtitleSettings();
+
+        // Event Listeners for Settings
+        [setFont, setColor, setBg, setSize, setPos].forEach(input => {
+            input.addEventListener('input', applySubtitleSettings);
+        });
+
+        openSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('active');
+        });
+        
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
         });
 
         // Start
