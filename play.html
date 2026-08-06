@@ -127,6 +127,32 @@
             z-index: 26; /* above the up-next card too */
         }
 
+        .theater-btn {
+            top: 12px;
+            left: 12px;
+            right: auto;
+            transform: none;
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+            z-index: 26;
+        }
+        .theater-btn.active { background: rgba(229,9,20,0.85); }
+
+        /* Purely visual — sits above the video, below the interactive buttons,
+           and is pointer-events:none so every existing tap/click/keyboard
+           gesture keeps working on the layers beneath it unchanged. */
+        #theater-canvas {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 56px;
+            z-index: 11;
+            pointer-events: none;
+            background: #000;
+            display: none;
+            width: 100%;
+            height: calc(100% - 56px);
+        }
+
         .up-next-overlay {
             position: absolute;
             bottom: 70px;
@@ -296,6 +322,7 @@
     <div class="container">
         <div class="video-wrapper" id="video-container">
             <video id="player" crossorigin playsinline></video>
+            <canvas id="theater-canvas"></canvas>
             <div class="touch-overlay" id="touch-overlay"></div>
             <div class="feedback-badge" id="speed-badge">▶▶ 2x Speed</div>
             <div class="seek-feedback seek-left" id="seek-left">⏪ 10s</div>
@@ -303,6 +330,7 @@
             <div class="ep-nav-btn" id="ep-prev-btn" title="Previous Episode">&#10094;</div>
             <div class="ep-nav-btn" id="ep-next-btn" title="Next Episode">&#10095;</div>
             <div class="ep-nav-btn settings-gear-btn" id="fs-subtitle-settings-btn" title="Subtitle Settings">&#9881;</div>
+            <div class="ep-nav-btn theater-btn" id="theater-toggle-btn" title="Theater Mode">&#127916;</div>
             <div class="up-next-overlay" id="up-next-overlay">
                 <div class="up-next-label">Next Episode</div>
                 <div class="up-next-title" id="up-next-title"></div>
@@ -376,6 +404,7 @@
         const prevBtn = document.getElementById('ep-prev-btn');
         const nextBtn = document.getElementById('ep-next-btn');
         const fsSubtitleSettingsBtn = document.getElementById('fs-subtitle-settings-btn');
+        const theaterToggleBtn = document.getElementById('theater-toggle-btn');
 
         const baseUrl = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/hls';
         const episodes = ['ep01', 'ep02', 'ep03', 'ep04', 'ep05', 'ep06', 'ep07', 'ep08'];
@@ -409,6 +438,7 @@
                 prevBtn.classList.toggle('nav-hidden', hidden);
                 nextBtn.classList.toggle('nav-hidden', hidden);
                 fsSubtitleSettingsBtn.classList.toggle('nav-hidden', hidden);
+                theaterToggleBtn.classList.toggle('nav-hidden', hidden);
             };
             new MutationObserver(syncNavVisibility).observe(player.elements.container, {
                 attributes: true,
@@ -838,6 +868,176 @@
                 || openSettingsBtn.contains(e.target) || fsSubtitleSettingsBtn.contains(e.target);
             if (!settingsModal.contains(e.target) && !clickedTrigger) {
                 settingsModal.classList.remove('active');
+            }
+        });
+
+        // 7. Theater Mode — 3D cinema view, purely visual (pointer-events:none canvas),
+        // so every existing tap/click/keyboard control keeps working underneath it.
+        // Three.js is lazy-loaded from CDN only the first time this is turned on.
+        const theaterCanvas = document.getElementById('theater-canvas');
+        let THREE = null;
+        let theater = null;
+        let theaterLoading = false;
+
+        theaterCanvas.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            disableTheaterMode();
+        });
+
+        function loadThreeJs() {
+            return new Promise((resolve, reject) => {
+                if (window.THREE) return resolve();
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        function buildTheaterScene() {
+            const renderer = new THREE.WebGLRenderer({ canvas: theaterCanvas, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            scene.fog = new THREE.FogExp2(0x000000, 0.06);
+
+            const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+            camera.position.set(0, 0.3, 4.2);
+            camera.lookAt(0, 0.25, -2);
+
+            // Curved cinema screen showing the same <video> element as a live texture
+            const videoTexture = new THREE.VideoTexture(video);
+            videoTexture.colorSpace = THREE.SRGBColorSpace;
+            videoTexture.minFilter = THREE.LinearFilter;
+            videoTexture.magFilter = THREE.LinearFilter;
+
+            const screenGeo = new THREE.PlaneGeometry(6, 3.2, 32, 18);
+            const posAttr = screenGeo.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                const nx = posAttr.getX(i) / 3;
+                posAttr.setZ(i, -0.6 * nx * nx);
+            }
+            screenGeo.computeVertexNormals();
+            const screenMesh = new THREE.Mesh(
+                screenGeo,
+                new THREE.MeshBasicMaterial({ map: videoTexture, toneMapped: false })
+            );
+            screenMesh.position.set(0, 0.3, -2);
+            scene.add(screenMesh);
+
+            // Dark cinema room shell
+            const room = new THREE.Mesh(
+                new THREE.BoxGeometry(14, 8, 12),
+                new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9, side: THREE.BackSide })
+            );
+            room.position.set(0, 1, -2);
+            scene.add(room);
+
+            scene.add(new THREE.AmbientLight(0x111111, 1));
+
+            const glowLight = new THREE.PointLight(0x554433, 6, 12, 2);
+            glowLight.position.set(0, 0.3, -1.2);
+            scene.add(glowLight);
+
+            // Tiny offscreen canvas for average-color sampling (drives the glow light,
+            // mimicking bias lighting off the screen — same idea as TV backlighting)
+            const sampleCanvas = document.createElement('canvas');
+            sampleCanvas.width = 16;
+            sampleCanvas.height = 16;
+            const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+
+            return {
+                renderer, scene, camera, videoTexture, glowLight, sampleCanvas, sampleCtx,
+                rafId: null, active: false, lastSampleTime: 0
+            };
+        }
+
+        function resizeTheater() {
+            if (!theater) return;
+            const rect = theaterCanvas.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+            theater.camera.aspect = rect.width / rect.height;
+            theater.camera.updateProjectionMatrix();
+            theater.renderer.setSize(rect.width, rect.height, false);
+        }
+
+        function sampleGlowColor(now) {
+            if (now - theater.lastSampleTime < 150) return;
+            theater.lastSampleTime = now;
+            try {
+                theater.sampleCtx.drawImage(video, 0, 0, 16, 16);
+                const data = theater.sampleCtx.getImageData(0, 0, 16, 16).data;
+                let r = 0, g = 0, b = 0;
+                const pixels = data.length / 4;
+                for (let i = 0; i < data.length; i += 4) {
+                    r += data[i]; g += data[i + 1]; b += data[i + 2];
+                }
+                r = Math.min(255, (r / pixels) * 1.4);
+                g = Math.min(255, (g / pixels) * 1.4);
+                b = Math.min(255, (b / pixels) * 1.4);
+                theater.glowLight.color.lerp(new THREE.Color(r / 255, g / 255, b / 255), 0.15);
+            } catch (err) {
+                // Frame not readable yet (still buffering) — just skip this sample
+            }
+        }
+
+        function theaterLoop(now) {
+            if (!theater || !theater.active) return;
+            if (!video.paused) {
+                theater.videoTexture.needsUpdate = true;
+                sampleGlowColor(now);
+            }
+            theater.renderer.render(theater.scene, theater.camera);
+            theater.rafId = requestAnimationFrame(theaterLoop);
+        }
+
+        async function enableTheaterMode() {
+            if (theaterLoading) return;
+            if (!theater) {
+                theaterLoading = true;
+                try {
+                    await loadThreeJs();
+                    THREE = window.THREE;
+                    theater = buildTheaterScene();
+                    window.addEventListener('resize', resizeTheater);
+                } catch (err) {
+                    console.error('Theater Mode failed to load:', err);
+                    theaterLoading = false;
+                    return;
+                }
+                theaterLoading = false;
+            }
+            theaterCanvas.style.display = 'block';
+            resizeTheater();
+            theater.active = true;
+            theaterToggleBtn.classList.add('active');
+            theater.rafId = requestAnimationFrame(theaterLoop);
+        }
+
+        function disableTheaterMode() {
+            theaterCanvas.style.display = 'none';
+            theaterToggleBtn.classList.remove('active');
+            if (theater) {
+                theater.active = false;
+                if (theater.rafId) cancelAnimationFrame(theater.rafId);
+            }
+        }
+
+        theaterToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (theater && theater.active) disableTheaterMode();
+            else enableTheaterMode();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!theater || !theater.active) return;
+            if (document.hidden) {
+                if (theater.rafId) cancelAnimationFrame(theater.rafId);
+            } else {
+                theater.rafId = requestAnimationFrame(theaterLoop);
             }
         });
 
