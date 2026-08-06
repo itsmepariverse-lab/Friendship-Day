@@ -116,6 +116,17 @@
         #ep-prev-btn { left: 12px; }
         #ep-next-btn { right: 12px; }
 
+        .settings-gear-btn {
+            top: 12px;
+            right: 12px;
+            left: auto;
+            transform: none;
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+            z-index: 26; /* above the up-next card too */
+        }
+
         .up-next-overlay {
             position: absolute;
             bottom: 70px;
@@ -261,6 +272,13 @@
         }
         .setting-row input[type="range"] { padding: 0; }
         .setting-row input[type="color"] { height: 40px; padding: 2px; }
+        .setting-row-inline {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .setting-row-inline label { font-size: 14px; color: #fff; }
+        .setting-row-inline input[type="checkbox"] { width: 18px; height: 18px; }
 
         .subtitle-controls-row {
             display: flex;
@@ -284,6 +302,7 @@
             <div class="seek-feedback seek-right" id="seek-right">⏩ 10s</div>
             <div class="ep-nav-btn" id="ep-prev-btn" title="Previous Episode">&#10094;</div>
             <div class="ep-nav-btn" id="ep-next-btn" title="Next Episode">&#10095;</div>
+            <div class="ep-nav-btn settings-gear-btn" id="fs-subtitle-settings-btn" title="Subtitle Settings">&#9881;</div>
             <div class="up-next-overlay" id="up-next-overlay">
                 <div class="up-next-label">Next Episode</div>
                 <div class="up-next-title" id="up-next-title"></div>
@@ -292,45 +311,50 @@
                     <button id="up-next-play">Play (<span id="up-next-count">5</span>)</button>
                 </div>
             </div>
+
+            <!-- Lives inside the fullscreen container so it stays usable in fullscreen -->
+            <div class="settings-modal" id="subtitle-settings-modal">
+                <div class="settings-header">
+                    <h3>Subtitle Settings</h3>
+                    <button class="close-btn" id="close-subtitle-settings">&times;</button>
+                </div>
+                <div class="setting-row setting-row-inline">
+                    <label for="set-captions-toggle">Show Captions</label>
+                    <input type="checkbox" id="set-captions-toggle" checked>
+                </div>
+                <div class="setting-row">
+                    <label>Font Family</label>
+                    <select id="set-font">
+                        <option value="'Inter', sans-serif">Sans-Serif</option>
+                        <option value="'Merriweather', serif">Serif</option>
+                        <option value="monospace">Monospace</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>Text Color</label>
+                    <input type="color" id="set-color" value="#ffffff">
+                </div>
+                <div class="setting-row">
+                    <label>Background Opacity</label>
+                    <input type="range" id="set-bg" min="0" max="1" step="0.1" value="0.7">
+                </div>
+                <div class="setting-row">
+                    <label>Font Size (<span id="size-val">18</span>px)</label>
+                    <input type="range" id="set-size" min="12" max="36" step="1" value="18">
+                </div>
+                <div class="setting-row">
+                    <label>Position Offset (<span id="pos-val">20</span>px)</label>
+                    <input type="range" id="set-pos" min="0" max="100" step="5" value="20">
+                </div>
+            </div>
         </div>
-        
+
         <div class="subtitle-controls-row">
             <label class="subtitle-btn" for="subtitle-upload">
                 📄 Upload Custom (.srt)
                 <input type="file" id="subtitle-upload" accept=".srt" style="display: none;">
             </label>
             <button class="subtitle-btn" id="open-subtitle-settings">⚙️ Subtitle Settings</button>
-        </div>
-
-        <div class="settings-modal" id="subtitle-settings-modal">
-            <div class="settings-header">
-                <h3>Subtitle Settings</h3>
-                <button class="close-btn" id="close-subtitle-settings">&times;</button>
-            </div>
-            <div class="setting-row">
-                <label>Font Family</label>
-                <select id="set-font">
-                    <option value="'Inter', sans-serif">Sans-Serif</option>
-                    <option value="'Merriweather', serif">Serif</option>
-                    <option value="monospace">Monospace</option>
-                </select>
-            </div>
-            <div class="setting-row">
-                <label>Text Color</label>
-                <input type="color" id="set-color" value="#ffffff">
-            </div>
-            <div class="setting-row">
-                <label>Background Opacity</label>
-                <input type="range" id="set-bg" min="0" max="1" step="0.1" value="0.7">
-            </div>
-            <div class="setting-row">
-                <label>Font Size (<span id="size-val">18</span>px)</label>
-                <input type="range" id="set-size" min="12" max="36" step="1" value="18">
-            </div>
-            <div class="setting-row">
-                <label>Position Offset (<span id="pos-val">20</span>px)</label>
-                <input type="range" id="set-pos" min="0" max="100" step="5" value="20">
-            </div>
         </div>
 
         <h3 style="margin-top: 30px;">Episodes</h3>
@@ -351,6 +375,7 @@
         const seekRight = document.getElementById('seek-right');
         const prevBtn = document.getElementById('ep-prev-btn');
         const nextBtn = document.getElementById('ep-next-btn');
+        const fsSubtitleSettingsBtn = document.getElementById('fs-subtitle-settings-btn');
 
         const baseUrl = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/hls';
         const episodes = ['ep01', 'ep02', 'ep03', 'ep04', 'ep05', 'ep06', 'ep07', 'ep08'];
@@ -383,6 +408,7 @@
                 const hidden = player.elements.container.classList.contains('plyr--hide-controls');
                 prevBtn.classList.toggle('nav-hidden', hidden);
                 nextBtn.classList.toggle('nav-hidden', hidden);
+                fsSubtitleSettingsBtn.classList.toggle('nav-hidden', hidden);
             };
             new MutationObserver(syncNavVisibility).observe(player.elements.container, {
                 attributes: true,
@@ -405,6 +431,7 @@
             track.src = `assets/subtitles/${episode}.vtt`;
             track.default = true;
             video.appendChild(track);
+            applyCaptionsPref();
 
             if (Hls.isSupported()) {
                 if (hls) hls.destroy();
@@ -735,12 +762,13 @@
         const settingsModal = document.getElementById('subtitle-settings-modal');
         const openSettingsBtn = document.getElementById('open-subtitle-settings');
         const closeSettingsBtn = document.getElementById('close-subtitle-settings');
-        
+
         const setFont = document.getElementById('set-font');
         const setColor = document.getElementById('set-color');
         const setBg = document.getElementById('set-bg');
         const setSize = document.getElementById('set-size');
         const setPos = document.getElementById('set-pos');
+        const setCaptionsToggle = document.getElementById('set-captions-toggle');
 
         // Load saved preferences
         const savedSettings = JSON.parse(localStorage.getItem('mc_subtitle_prefs') || '{}');
@@ -749,6 +777,11 @@
         if (savedSettings.bgOpacity) setBg.value = savedSettings.bgOpacity;
         if (savedSettings.size) setSize.value = savedSettings.size;
         if (savedSettings.pos) setPos.value = savedSettings.pos;
+        if (typeof savedSettings.captionsEnabled === 'boolean') setCaptionsToggle.checked = savedSettings.captionsEnabled;
+
+        function applyCaptionsPref() {
+            if (player) player.toggleCaptions(setCaptionsToggle.checked);
+        }
 
         function applySubtitleSettings() {
             const root = document.documentElement;
@@ -767,10 +800,11 @@
                 color: setColor.value,
                 bgOpacity: setBg.value,
                 size: setSize.value,
-                pos: setPos.value
+                pos: setPos.value,
+                captionsEnabled: setCaptionsToggle.checked
             }));
         }
-        
+
         applySubtitleSettings();
 
         // Event Listeners for Settings
@@ -778,12 +812,33 @@
             input.addEventListener('input', applySubtitleSettings);
         });
 
-        openSettingsBtn.addEventListener('click', () => {
-            settingsModal.classList.add('active');
+        setCaptionsToggle.addEventListener('change', () => {
+            applyCaptionsPref();
+            applySubtitleSettings();
         });
-        
+
+        function openSubtitleSettings() {
+            settingsModal.classList.add('active');
+        }
+
+        openSettingsBtn.addEventListener('click', openSubtitleSettings);
+        fsSubtitleSettingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openSubtitleSettings();
+        });
+
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('active');
+        });
+
+        // Close on click/tap outside the modal
+        document.addEventListener('click', (e) => {
+            if (!settingsModal.classList.contains('active')) return;
+            const clickedTrigger = e.target === openSettingsBtn || e.target === fsSubtitleSettingsBtn
+                || openSettingsBtn.contains(e.target) || fsSubtitleSettingsBtn.contains(e.target);
+            if (!settingsModal.contains(e.target) && !clickedTrigger) {
+                settingsModal.classList.remove('active');
+            }
         });
 
         // Start
