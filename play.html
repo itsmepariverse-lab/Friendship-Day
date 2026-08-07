@@ -251,6 +251,73 @@
             --plyr-color-main: #E50914;
         }
 
+        /* ── Touch Lock Toggle ───────────────────────── */
+        #touch-lock-btn {
+            position: absolute;
+            bottom: 70px; /* sits just above Plyr's control bar */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 18px;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 99px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: background 0.2s, border-color 0.2s, color 0.2s, opacity 0.3s;
+            white-space: nowrap;
+            z-index: 30;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #touch-lock-btn:active { background: rgba(255,255,255,0.2); }
+        #touch-lock-btn svg { flex-shrink: 0; }
+
+        /* Locked state — button turns Netflix-red-tinted */
+        #touch-lock-btn.locked {
+            background: rgba(229,9,20,0.35);
+            border-color: rgba(229,9,20,0.8);
+            color: #ffbaba;
+        }
+
+        /* Auto-hide the button when Plyr hides its controls (unlocked only) */
+        .plyr--hide-controls #touch-lock-btn:not(.locked) {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* When LOCKED: the button fades out after the auto-hide delay
+           but tapping the shield will bring it back temporarily.
+           We use a helper class .lock-peek to show it. */
+        #touch-lock-btn.locked {
+            transition: background 0.2s, border-color 0.2s, color 0.2s,
+                        opacity 0.4s ease, transform 0.4s ease;
+        }
+        /* hidden state while locked (auto-hide fired) */
+        body.lock-hidden #touch-lock-btn.locked {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(8px);
+        }
+
+        /* Full-screen transparent shield that eats every touch except the lock btn */
+        #touch-lock-shield {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 20; /* above touch-overlay (10) & theater canvas (11), below btn (30) */
+            background: transparent;
+            cursor: not-allowed;
+        }
+        body.touch-locked #touch-lock-shield { display: block; }
 
     </style>
 </head>
@@ -286,6 +353,26 @@
                 </div>
             </div>
 
+            <!-- Touch Lock shield (blocks accidental touches when locked) -->
+            <div id="touch-lock-shield"></div>
+
+            <!-- Touch Lock toggle button -->
+            <button id="touch-lock-btn" title="Lock / unlock touch">
+                <!-- unlocked icon -->
+                <svg id="lock-icon-open" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                </svg>
+                <!-- locked icon -->
+                <svg id="lock-icon-closed" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                     style="display:none">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span id="lock-label">Lock touch</span>
+            </button>
 
         </div>
 
@@ -525,6 +612,56 @@
             }
         });
 
+        // ── Touch Lock ──────────────────────────────────────────────────────
+        const touchLockBtn    = document.getElementById('touch-lock-btn');
+        const lockIconOpen    = document.getElementById('lock-icon-open');
+        const lockIconClosed  = document.getElementById('lock-icon-closed');
+        const lockLabel       = document.getElementById('lock-label');
+        const lockShield      = document.getElementById('touch-lock-shield');
+        let touchLocked = false;
+        let lockHideTimer = null;
+        const LOCK_HIDE_DELAY = 3500; // ms — same feel as MX / VLC
+
+        // Start (or restart) the auto-hide countdown while locked
+        function scheduleLockHide() {
+            clearTimeout(lockHideTimer);
+            document.body.classList.remove('lock-hidden');
+            lockHideTimer = setTimeout(() => {
+                if (touchLocked) document.body.classList.add('lock-hidden');
+            }, LOCK_HIDE_DELAY);
+        }
+
+        // Tap anywhere on the shield → peek controls for LOCK_HIDE_DELAY ms
+        lockShield.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!touchLocked) return;
+            // Show Plyr controls + lock button briefly
+            player.toggleControls(true);
+            scheduleLockHide();
+        });
+
+        touchLockBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            touchLocked = !touchLocked;
+            document.body.classList.toggle('touch-locked', touchLocked);
+            touchLockBtn.classList.toggle('locked', touchLocked);
+            lockIconOpen.style.display   = touchLocked ? 'none'  : 'block';
+            lockIconClosed.style.display = touchLocked ? 'block' : 'none';
+            lockLabel.textContent        = touchLocked ? 'Unlock touch' : 'Lock touch';
+
+            if (touchLocked) {
+                // Show controls when first locking, then auto-hide after delay
+                player.toggleControls(true);
+                scheduleLockHide();
+            } else {
+                // Unlocking — cancel any pending hide, restore visibility
+                clearTimeout(lockHideTimer);
+                document.body.classList.remove('lock-hidden');
+                player.toggleControls(true);
+            }
+        });
+        // ───────────────────────────────────────────────────────────────────
+
         // 3. Touch Gestures (Single Tap to Toggle Controls, Slide to Seek, Double Tap, Hold)
         let holdTimeout;
         let tapTimeout = null;
@@ -543,6 +680,7 @@
         }
 
         overlay.addEventListener('touchstart', (e) => {
+            if (touchLocked) return; // shield handles it; ignore here
             if (e.touches.length > 1) return;
             
             touchStartX = e.touches[0].clientX;
@@ -561,6 +699,7 @@
         });
         
         overlay.addEventListener('touchmove', (e) => {
+            if (touchLocked) return;
             if (e.touches.length > 1) return;
             const touchX = e.touches[0].clientX;
             const diffX = touchX - touchStartX;
@@ -598,6 +737,7 @@
         };
 
         overlay.addEventListener('touchend', (e) => {
+            if (touchLocked) return;
             const wasHolding = endHold();
             if (wasHolding || isScrubbing) {
                 // Restore feedback elements to default text
