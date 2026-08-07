@@ -18,4 +18,10 @@ Friendship Day/assets/music/*/
 .env.local
 .vercel
 
-.vercel
+# Local-only Python scripts (upload/conversion tools, not needed on Vercel)
+r2_hls_upload.py
+r2_upload.py
+r2_cors_setup.py
+hls_converter.py
+hf_upload.py
+convert_srt.py

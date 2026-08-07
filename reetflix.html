@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reetFlix - Who's Watching?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #141414;
+            --text: #fff;
+            --red: #E50914;
+            --gray: #808080;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Navbar */
+        .navbar {
+            padding: 20px 4%;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .logo {
+            color: var(--red);
+            font-size: 28px;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        /* Hero */
+        .hero {
+            height: 70vh;
+            background: linear-gradient(to top, var(--bg) 0%, rgba(20,20,20,0) 100%), 
+                        url('https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/assets/covers/MainVaapasAaunga-bg.jpg') center/cover no-repeat;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 4% 40px;
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            margin: 0 0 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.45);
+        }
+
+        .hero-desc {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            color: #e5e5e5;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.45);
+        }
+
+        .play-btn {
+            background: white;
+            color: black;
+            padding: 10px 30px;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        .play-btn:hover {
+            background: rgba(255,255,255,0.75);
+        }
+
+        /* Catalog */
+        .catalog-container {
+            padding: 20px 4%;
+            margin-top: -50px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .row-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            color: #e5e5e5;
+        }
+
+        .media-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .media-row::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .media-card {
+            flex: 0 0 calc(20% - 10px);
+            min-width: 200px;
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            text-decoration: none;
+        }
+
+        .media-card:hover {
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .media-poster {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #333;
+            object-fit: cover;
+            display: block;
+        }
+
+        .media-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px 10px 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            color: white;
+        }
+
+        .media-card:hover .media-info {
+            opacity: 1;
+        }
+        
+        .media-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .media-type {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="logo">reetFlix</a>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Main Vaapas Aaunga</h1>
+            <p class="hero-desc">When life throws a curveball, can true love find its way back home? A heartwarming journey of rediscovery, family, and second chances.</p>
+            <a href="play.html?id=main-vaapas-aaunga" class="play-btn">
+                <span>▶ Play</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="catalog-container">
+        <h2 class="row-title">Trending Now</h2>
+        <div class="media-row" id="trending-row">
+            <!-- Populated by JS -->
+        </div>
+    </main>
+
+    <!-- Import catalog library -->
+    <script src="catalog.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const trendingRow = document.getElementById('trending-row');
+
+            Object.entries(CATALOG).forEach(([id, item]) => {
+                const card = document.createElement('a');
+                card.href = `play.html?id=${id}`;
+                card.className = 'media-card';
+
+                const img = document.createElement('img');
+                img.className = 'media-poster';
+                img.alt = item.title;
+                img.src = item.thumbnail || '';
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.style.display = 'none'; // hide broken img, CSS bg color shows
+                };
+
+                const info = document.createElement('div');
+                info.className = 'media-info';
+                info.innerHTML = `
+                    <div class="media-title">${item.title}</div>
+                    <div class="media-type">${item.type === 'movie' ? 'Movie' : 'Series'}</div>
+                `;
+
+                card.appendChild(img);
+                card.appendChild(info);
+                trendingRow.appendChild(card);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#141414">
-    <title>MC Season 1 - Streaming</title>
+    <title>reetFlix</title>
     
     <!-- Plyr CSS -->
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
@@ -222,101 +222,20 @@
             color: white;
         }
 
-        .subtitle-btn {
-            background: #333;
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            display: inline-block;
-            margin-top: 15px;
-            transition: background 0.2s;
-        }
-        .subtitle-btn:hover { background: #444; }
+
 
         /* Customizing Plyr colors */
         :root {
             --plyr-color-main: #E50914;
-            /* Subtitle Customization Variables */
-            --sub-font-family: 'Inter', sans-serif;
-            --sub-color: #ffffff;
-            --sub-bg: rgba(0, 0, 0, 0.7);
-            --sub-size: 18px;
-            --sub-bottom: 20px;
         }
 
-        /* Target Plyr's custom captions */
-        .plyr__captions .plyr__caption {
-            font-family: var(--sub-font-family) !important;
-            color: var(--sub-color) !important;
-            background-color: var(--sub-bg) !important;
-            font-size: var(--sub-size) !important;
-            line-height: 1.4 !important;
-            padding: 4px 8px !important;
-            border-radius: 4px !important;
-        }
-        .plyr__captions {
-            bottom: var(--sub-bottom) !important;
-        }
 
-        /* Subtitle Settings Modal */
-        .settings-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            background: #222;
-            padding: 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 300px;
-            max-width: 90%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: all 0.2s ease-out;
-        }
-        .settings-modal.active { 
-            opacity: 1; 
-            visibility: visible; 
-            pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        .settings-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
-        .settings-header h3 { margin: 0; }
-        .close-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
-        
-        .setting-row { display: flex; flex-direction: column; gap: 5px; }
-        .setting-row label { font-size: 14px; color: #ccc; }
-        .setting-row select, .setting-row input[type="color"], .setting-row input[type="range"] {
-            width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff;
-        }
-        .setting-row input[type="range"] { padding: 0; }
-        .setting-row input[type="color"] { height: 40px; padding: 2px; }
-        .setting-row-inline {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .setting-row-inline label { font-size: 14px; color: #fff; }
-        .setting-row-inline input[type="checkbox"] { width: 18px; height: 18px; }
-
-        .subtitle-controls-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>MC Season 1</h1>
+        <h1 id="page-title">reetFlix</h1>
     </div>
 
     <div class="container">
@@ -329,7 +248,7 @@
             <div class="seek-feedback seek-right" id="seek-right">⏩ 10s</div>
             <div class="ep-nav-btn" id="ep-prev-btn" title="Previous Episode">&#10094;</div>
             <div class="ep-nav-btn" id="ep-next-btn" title="Next Episode">&#10095;</div>
-            <div class="ep-nav-btn settings-gear-btn" id="fs-subtitle-settings-btn" title="Subtitle Settings">&#9881;</div>
+            <div class="ep-nav-btn settings-gear-btn" id="fs-subtitle-settings-btn" style="display:none"></div>
             <div class="ep-nav-btn theater-btn" id="theater-toggle-btn" title="Theater Mode">&#127916;</div>
             <div class="up-next-overlay" id="up-next-overlay">
                 <div class="up-next-label">Next Episode</div>
@@ -340,58 +259,19 @@
                 </div>
             </div>
 
-            <!-- Lives inside the fullscreen container so it stays usable in fullscreen -->
-            <div class="settings-modal" id="subtitle-settings-modal">
-                <div class="settings-header">
-                    <h3>Subtitle Settings</h3>
-                    <button class="close-btn" id="close-subtitle-settings">&times;</button>
-                </div>
-                <div class="setting-row setting-row-inline">
-                    <label for="set-captions-toggle">Show Captions</label>
-                    <input type="checkbox" id="set-captions-toggle" checked>
-                </div>
-                <div class="setting-row">
-                    <label>Font Family</label>
-                    <select id="set-font">
-                        <option value="'Inter', sans-serif">Sans-Serif</option>
-                        <option value="'Merriweather', serif">Serif</option>
-                        <option value="monospace">Monospace</option>
-                    </select>
-                </div>
-                <div class="setting-row">
-                    <label>Text Color</label>
-                    <input type="color" id="set-color" value="#ffffff">
-                </div>
-                <div class="setting-row">
-                    <label>Background Opacity</label>
-                    <input type="range" id="set-bg" min="0" max="1" step="0.1" value="0.7">
-                </div>
-                <div class="setting-row">
-                    <label>Font Size (<span id="size-val">18</span>px)</label>
-                    <input type="range" id="set-size" min="12" max="36" step="1" value="18">
-                </div>
-                <div class="setting-row">
-                    <label>Position Offset (<span id="pos-val">20</span>px)</label>
-                    <input type="range" id="set-pos" min="0" max="100" step="5" value="20">
-                </div>
-            </div>
+
         </div>
 
-        <div class="subtitle-controls-row">
-            <label class="subtitle-btn" for="subtitle-upload">
-                📄 Upload Custom (.srt)
-                <input type="file" id="subtitle-upload" accept=".srt" style="display: none;">
-            </label>
-            <button class="subtitle-btn" id="open-subtitle-settings">⚙️ Subtitle Settings</button>
-        </div>
 
-        <h3 style="margin-top: 30px;">Episodes</h3>
+
+        <h3 id="episodes-header" style="margin-top: 30px;">Episodes</h3>
         <div class="episode-list" id="episode-list">
             <!-- Episode buttons generated dynamically -->
         </div>
     </div>
 
-    <!-- HLS.js and Plyr.js -->
+    <!-- Catalog and Libraries -->
+    <script src="catalog.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
@@ -407,7 +287,25 @@
         const theaterToggleBtn = document.getElementById('theater-toggle-btn');
 
         const baseUrl = 'https://pub-b8f191bed429408cb704c0e9d9dc5b11.r2.dev/hls';
-        const episodes = ['ep01', 'ep02', 'ep03', 'ep04', 'ep05', 'ep06', 'ep07', 'ep08'];
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const catalogId = urlParams.get('id') || 'mc-season-1';
+        const activeMedia = CATALOG[catalogId];
+
+        if (!activeMedia) {
+            document.getElementById('page-title').innerText = "Media Not Found";
+        } else {
+            document.getElementById('page-title').innerText = activeMedia.title;
+            document.title = "reetFlix - " + activeMedia.title;
+        }
+
+        const episodes = activeMedia ? activeMedia.episodes : [];
+        const isStandalone = activeMedia && activeMedia.type === 'movie';
+
+        if (isStandalone) {
+            document.getElementById('episodes-header').style.display = 'none';
+            document.getElementById('episode-list').style.display = 'none';
+        }
         
         let player;
         let hls;
@@ -415,7 +313,7 @@
 
         function initPlyr() {
             player = new Plyr(video, {
-                captions: { active: true, update: true, language: 'auto' },
+                captions: { active: false, update: false },
                 fullscreen: { container: '.video-wrapper' }
             });
 
@@ -437,7 +335,6 @@
                 const hidden = player.elements.container.classList.contains('plyr--hide-controls');
                 prevBtn.classList.toggle('nav-hidden', hidden);
                 nextBtn.classList.toggle('nav-hidden', hidden);
-                fsSubtitleSettingsBtn.classList.toggle('nav-hidden', hidden);
                 theaterToggleBtn.classList.toggle('nav-hidden', hidden);
             };
             new MutationObserver(syncNavVisibility).observe(player.elements.container, {
@@ -449,28 +346,44 @@
         function loadVideo(episode) {
             hideUpNext();
             currentEpisode = episode;
-            const source = `${baseUrl}/${episode}/index.m3u8`;
+            // Use activeMedia.videoId if it's a movie, else episode
+            const videoFolder = isStandalone ? activeMedia.videoId : episode;
+            const source = `${baseUrl}/${videoFolder}/index.m3u8`;
             const savedTime = localStorage.getItem(`mc_progress_${episode}`);
 
-            // Load episode subtitle track automatically
+            // Subtitle tracks removed — captions not in use
             Array.from(video.querySelectorAll('track')).forEach(t => t.remove());
-            const track = document.createElement('track');
-            track.kind = 'captions';
-            track.label = 'English';
-            track.srclang = 'en';
-            track.src = `assets/subtitles/${episode}.vtt`;
-            track.default = true;
-            video.appendChild(track);
-            applyCaptionsPref();
 
             if (Hls.isSupported()) {
                 if (hls) hls.destroy();
-                hls = new Hls();
+                hls = new Hls({
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 600,
+                });
                 hls.loadSource(source);
                 hls.attachMedia(video);
 
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
                     if (savedTime) video.currentTime = parseFloat(savedTime);
+                    video.play().catch(() => {}); // auto-play after load
+                });
+                
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.error("fatal network error encountered, try to recover");
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.error("fatal media error encountered, try to recover");
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                hls.destroy();
+                                break;
+                        }
+                    }
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = source;
@@ -480,19 +393,26 @@
             }
 
             // Update UI
-            document.querySelectorAll('.episode-card').forEach(card => card.classList.remove('active'));
-            document.getElementById(`btn-${episode}`).classList.add('active');
+            if (!isStandalone) {
+                document.querySelectorAll('.episode-card').forEach(card => card.classList.remove('active'));
+                const activeBtn = document.getElementById(`btn-${episode}`);
+                if (activeBtn) activeBtn.classList.add('active');
+            }
             updateNavButtons();
         }
 
         function goToEpisode(offset) {
             const idx = episodes.indexOf(currentEpisode) + offset;
             if (idx < 0 || idx >= episodes.length) return;
-            loadVideo(episodes[idx]);
-            video.play().catch(() => { /* Ignore autoplay blocks */ });
+            loadVideo(episodes[idx]); // loadVideo auto-plays via MANIFEST_PARSED
         }
 
         function updateNavButtons() {
+            if (isStandalone) {
+                prevBtn.classList.add('disabled');
+                nextBtn.classList.add('disabled');
+                return;
+            }
             const idx = episodes.indexOf(currentEpisode);
             prevBtn.classList.toggle('disabled', idx <= 0);
             nextBtn.classList.toggle('disabled', idx >= episodes.length - 1);
@@ -503,18 +423,18 @@
 
         // Generate UI buttons
         const listContainer = document.getElementById('episode-list');
-        episodes.forEach(ep => {
-            const btn = document.createElement('div');
-            btn.className = 'episode-card';
-            btn.id = `btn-${ep}`;
-            btn.innerText = `Episode ${ep.replace('ep0', '').replace('ep', '')}`;
-            btn.onclick = () => {
-                // Auto play when manually clicking an episode
-                loadVideo(ep);
-                video.play().catch(()=> { /* Ignore autoplay blocks */ });
-            };
-            listContainer.appendChild(btn);
-        });
+        if (!isStandalone) {
+            episodes.forEach(ep => {
+                const btn = document.createElement('div');
+                btn.className = 'episode-card';
+                btn.id = `btn-${ep}`;
+                btn.innerText = `Episode ${ep.replace('ep0', '').replace('ep', '')}`;
+                btn.onclick = () => {
+                    loadVideo(ep); // auto-plays via MANIFEST_PARSED
+                };
+                listContainer.appendChild(btn);
+            });
+        }
 
         // 1. Remember playback position
         video.addEventListener('timeupdate', () => {
@@ -532,6 +452,7 @@
         let pendingNextEpisode = null;
 
         function showUpNext(nextEpisode) {
+            if (isStandalone) return;
             pendingNextEpisode = nextEpisode;
             upNextTitle.textContent = `Episode ${nextEpisode.replace('ep0', '').replace('ep', '')}`;
             let count = 5;
@@ -716,12 +637,6 @@
 
         // 4. Keyboard shortcuts (desktop)
         document.addEventListener('keydown', (e) => {
-            // Handle Escape for modal first
-            if (e.key === 'Escape' && settingsModal.classList.contains('active')) {
-                settingsModal.classList.remove('active');
-                return;
-            }
-
             const tag = document.activeElement.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT') return;
 
@@ -747,129 +662,7 @@
             }
         });
 
-        // 5. Subtitle SRT to VTT Converter (Manual Upload)
-        function srt2vtt(srt) {
-            let vtt = 'WEBVTT\n\n';
-            let lines = srt.replace(/\r+/g, '').split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-                if (line.match(/^\d+$/)) continue; // sequence numbers
-                if (line.match(/^\d{2}:\d{2}:\d{2}/)) {
-                    line = line.replace(/,/g, '.'); // times
-                }
-                vtt += line + '\n';
-            }
-            return vtt;
-        }
 
-        document.getElementById('subtitle-upload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const vttContent = srt2vtt(e.target.result);
-                const blob = new Blob([vttContent], { type: 'text/vtt' });
-                const url = URL.createObjectURL(blob);
-                
-                // Remove existing custom tracks (except default one)
-                Array.from(video.querySelectorAll('track.custom-track')).forEach(t => t.remove());
-
-                const track = document.createElement('track');
-                track.kind = 'captions';
-                track.label = file.name.replace('.srt', '');
-                track.srclang = 'en';
-                track.src = url;
-                track.className = 'custom-track';
-                track.default = true;
-                
-                video.appendChild(track);
-                alert("Custom subtitles loaded! Enable them in the player settings gear icon.");
-            };
-            reader.readAsText(file);
-        });
-
-        // 6. Subtitle Settings Logic
-        const settingsModal = document.getElementById('subtitle-settings-modal');
-        const openSettingsBtn = document.getElementById('open-subtitle-settings');
-        const closeSettingsBtn = document.getElementById('close-subtitle-settings');
-
-        const setFont = document.getElementById('set-font');
-        const setColor = document.getElementById('set-color');
-        const setBg = document.getElementById('set-bg');
-        const setSize = document.getElementById('set-size');
-        const setPos = document.getElementById('set-pos');
-        const setCaptionsToggle = document.getElementById('set-captions-toggle');
-
-        // Load saved preferences
-        const savedSettings = JSON.parse(localStorage.getItem('mc_subtitle_prefs') || '{}');
-        if (savedSettings.font) setFont.value = savedSettings.font;
-        if (savedSettings.color) setColor.value = savedSettings.color;
-        if (savedSettings.bgOpacity) setBg.value = savedSettings.bgOpacity;
-        if (savedSettings.size) setSize.value = savedSettings.size;
-        if (savedSettings.pos) setPos.value = savedSettings.pos;
-        if (typeof savedSettings.captionsEnabled === 'boolean') setCaptionsToggle.checked = savedSettings.captionsEnabled;
-
-        function applyCaptionsPref() {
-            if (player) player.toggleCaptions(setCaptionsToggle.checked);
-        }
-
-        function applySubtitleSettings() {
-            const root = document.documentElement;
-            root.style.setProperty('--sub-font-family', setFont.value);
-            root.style.setProperty('--sub-color', setColor.value);
-            root.style.setProperty('--sub-bg', `rgba(0, 0, 0, ${setBg.value})`);
-            root.style.setProperty('--sub-size', `${setSize.value}px`);
-            root.style.setProperty('--sub-bottom', `${setPos.value}px`);
-            
-            document.getElementById('size-val').textContent = setSize.value;
-            document.getElementById('pos-val').textContent = setPos.value;
-
-            // Save to localStorage
-            localStorage.setItem('mc_subtitle_prefs', JSON.stringify({
-                font: setFont.value,
-                color: setColor.value,
-                bgOpacity: setBg.value,
-                size: setSize.value,
-                pos: setPos.value,
-                captionsEnabled: setCaptionsToggle.checked
-            }));
-        }
-
-        applySubtitleSettings();
-
-        // Event Listeners for Settings
-        [setFont, setColor, setBg, setSize, setPos].forEach(input => {
-            input.addEventListener('input', applySubtitleSettings);
-        });
-
-        setCaptionsToggle.addEventListener('change', () => {
-            applyCaptionsPref();
-            applySubtitleSettings();
-        });
-
-        function openSubtitleSettings() {
-            settingsModal.classList.add('active');
-        }
-
-        openSettingsBtn.addEventListener('click', openSubtitleSettings);
-        fsSubtitleSettingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openSubtitleSettings();
-        });
-
-        closeSettingsBtn.addEventListener('click', () => {
-            settingsModal.classList.remove('active');
-        });
-
-        // Close on click/tap outside the modal
-        document.addEventListener('click', (e) => {
-            if (!settingsModal.classList.contains('active')) return;
-            const clickedTrigger = e.target === openSettingsBtn || e.target === fsSubtitleSettingsBtn
-                || openSettingsBtn.contains(e.target) || fsSubtitleSettingsBtn.contains(e.target);
-            if (!settingsModal.contains(e.target) && !clickedTrigger) {
-                settingsModal.classList.remove('active');
-            }
-        });
 
         // 7. Theater Mode — 3D cinema view, purely visual (pointer-events:none canvas),
         // so every existing tap/click/keyboard control keeps working underneath it.
@@ -1041,9 +834,15 @@
             }
         });
 
-        // Start
+        // Start: resume from last watched episode or play from ep01
         initPlyr();
-        loadVideo(episodes[0]);
+        if (isStandalone) {
+            loadVideo(activeMedia.videoId); // use the actual videoId, not 'standalone'
+        } else {
+            // Find the last episode that has a saved progress
+            const lastWatched = episodes.slice().reverse().find(ep => localStorage.getItem(`mc_progress_${ep}`));
+            loadVideo(lastWatched || episodes[0]);
+        }
     </script>
 </body>
 </html>
